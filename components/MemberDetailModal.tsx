@@ -11,6 +11,7 @@ export interface BPHMember {
   instagram?: string;
   linkedin?: string;
   email?: string;
+  division?: string;
 }
 
 export const MemberDetailModal = ({

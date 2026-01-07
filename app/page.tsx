@@ -220,7 +220,7 @@ export default function Home() {
                   </span>
                 </>
               }
-              description="GenBI Koordinator Komisariat Jawa Timur merupakan komunitas penerima beasiswa yang bernaung secara spesifik di bawah Kantor Perwakilan Bank Indonesia Provinsi Jawa Timur. Berbeda dengan korwil lain, fokus kami meliputi sinergi 9 Perguruan Tinggi Negeri maupun Swasta di wilayah Surabaya, Madura, dan Bojonegoro."
+              description="GenBI Koordinator Komisariat Jawa Timur menaungi mahasiswa penerima beasiswa Bank Indonesia dari 9 Perguruan Tinggi Negeri dan Swasta di wilayah Surabaya, Madura, dan Bojonegoro. Kami bersinergi untuk mengembangkan potensi kepemimpinan dan berkontribusi bagi masyarakat."
               className="mb-0"
             />
           </div>
@@ -240,7 +240,7 @@ export default function Home() {
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
-                  title: "Komisariat Dashboard",
+                  title: "Profil Kampus Mitra",
                   desc: "Pantau profil dan kinerja 9 Komisariat.",
                   icon: (
                     <LayoutDashboard className="w-10 h-10" strokeWidth={1.5} />
@@ -440,7 +440,7 @@ export default function Home() {
                     size="lg"
                     className="w-full sm:w-auto transition-all shadow-lg shadow-cyan-500/20"
                   >
-                    Cek Syarat & Ketentuan
+                    Panduan & Syarat Beasiswa
                   </Button>
                 </Link>
                 <a

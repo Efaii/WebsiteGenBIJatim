@@ -29,6 +29,7 @@ import {
   FileText,
   Banknote,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // --- Data ---
 const KORKOM_STRUCTURE: {
@@ -79,98 +80,158 @@ const KORKOM_STRUCTURE: {
   ],
   divisions: [
     {
-      role: "Ketua Divisi Pengembangan & Pendidikan",
+      role: "Ketua Divisi",
       name: "Rangga Prashagi",
       image: "/assets/images/individu.jpg",
       major: "UTM",
+      division: "Pengembangan & Pendidikan",
     },
     {
-      role: "Sekben Divisi Pengembangan & Pendidikan",
+      role: "Sekretaris & Bendahara",
       name: "Afrillia Dwi Arifianti",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "Pengembangan & Pendidikan",
     },
     {
-      role: "Anggota Divisi Pengembangan & Pendidikan",
+      role: "Anggota",
       name: "M. Farhan Al-Ansori",
       image: "/assets/images/individu.jpg",
       major: "PENS",
+      division: "Pengembangan & Pendidikan",
     },
     {
-      role: "Anggota Divisi Pengembangan & Pendidikan",
+      role: "Anggota",
       name: "Novita Nilla Fauzia",
       image: "/assets/images/individu.jpg",
       major: "UTM",
+      division: "Pengembangan & Pendidikan",
     },
     {
-      role: "Anggota Divisi Pengembangan & Pendidikan",
+      role: "Anggota",
       name: "Ifan Zamroni",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "Pengembangan & Pendidikan",
     },
     // Sinergi
     {
-      role: "Ketua Divisi Sinergi Komisariat",
+      role: "Ketua Divisi",
       name: "Reno Alfa Reza",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "Sinergi",
     },
     {
-      role: "Sekben Divisi Sinergi Komisariat",
+      role: "Sekretaris & Bendahara",
       name: "Theressa Marry Christiyani",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "Sinergi",
     },
     {
-      role: "Anggota Divisi Sinergi Komisariat",
+      role: "Anggota",
       name: "Jevon Savero",
       image: "/assets/images/individu.jpg",
       major: "ITS",
+      division: "Sinergi",
     },
     {
-      role: "Anggota Divisi Sinergi Komisariat",
+      role: "Anggota",
       name: "Karin Devia Melawati",
       image: "/assets/images/individu.jpg",
       major: "UINSA",
+      division: "Sinergi",
     },
     {
-      role: "Anggota Divisi Sinergi Komisariat",
+      role: "Anggota",
       name: "Windy Satria Darmawan",
       image: "/assets/images/individu.jpg",
       major: "UNAIR",
+      division: "Sinergi",
     },
     // PR & Medkom
     {
-      role: "Ketua Divisi PR & Medkom",
+      role: "Ketua Divisi",
       name: "Fathir Ainur Rochim",
       image: "/assets/images/individu.jpg",
       major: "UNUGIRI",
+      division: "PR",
     },
     {
-      role: "Sekben Divisi PR & Medkom",
+      role: "Sekretaris & Bendahara",
       name: "Meidy Dwi Cahyani",
       image: "/assets/images/individu.jpg",
       major: "UTM",
+      division: "PR",
     },
     {
-      role: "Anggota Divisi PR & Medkom",
+      role: "Anggota",
       name: "Dhiaulhaqi An Nazmi",
       image: "/assets/images/individu.jpg",
       major: "UINSA",
+      division: "PR",
     },
     {
-      role: "Anggota Divisi PR & Medkom",
+      role: "Anggota",
       name: "Bagas Aji Dariansyah",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "PR",
     },
     {
-      role: "Anggota Divisi PR & Medkom",
+      role: "Anggota",
       name: "M. Rakha Syailendra",
       image: "/assets/images/individu.jpg",
       major: "UPNVJT",
+      division: "PR",
     },
   ],
+};
+
+const MemberListItem = ({
+  member,
+  onClick,
+  hideRole = false,
+}: {
+  member: BPHMember;
+  onClick: () => void;
+  hideRole?: boolean;
+}) => {
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-4 p-3 rounded-xl border border-transparent hover:bg-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group/item",
+        hideRole ? "py-4" : ""
+      )}
+    >
+      <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover/item:border-cyan-400 transition-colors">
+        <Image
+          src={member.image}
+          alt={member.name}
+          width={48}
+          height={48}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="flex-1 text-left flex flex-col justify-center min-h-[3rem]">
+        <p className="font-bold text-white text-sm group-hover/item:text-cyan-200 transition-colors line-clamp-1 leading-tight">
+          {member.name}
+        </p>
+        {!hideRole && (
+          <p className="text-xs text-blue-200/60 mt-0.5 leading-snug">
+            {member.role}
+          </p>
+        )}
+      </div>
+      {member.major && (
+        <span className="text-[10px] font-bold text-cyan-200 bg-white/10 border border-white/10 px-2 py-0.5 rounded">
+          {member.major}
+        </span>
+      )}
+    </div>
+  );
 };
 
 export default function AboutPage() {
@@ -178,9 +239,7 @@ export default function AboutPage() {
 
   // Helper to filter divisions
   const getDivisionMembers = (divName: string) => {
-    return KORKOM_STRUCTURE.divisions.filter((m) =>
-      m.role.toLowerCase().includes(divName.toLowerCase())
-    );
+    return KORKOM_STRUCTURE.divisions.filter((m) => m.division === divName);
   };
 
   return (
@@ -199,9 +258,9 @@ export default function AboutPage() {
           <div className="container relative mx-auto px-6 text-center z-10">
             <SlideUp delay={0.2}>
               <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                Mengenal Lebih Dekat <br />
+                Siapa Kami? <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-200 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
-                  GenBI Jawa Timur
+                  Profil GenBI Jatim
                 </span>
               </h1>
             </SlideUp>
@@ -215,20 +274,20 @@ export default function AboutPage() {
         </section>
 
         {/* About GenBI Definition Section */}
-        <section className="py-20 relative z-10">
+        <section className="py-24 relative z-10 bg-white/5 border-b border-white/5">
           <div className="container mx-auto px-6 max-w-4xl text-center">
             <FadeIn>
               <SectionHeader
-                title="Tentang GenBI"
+                title="Tentang GenBI Jatim"
                 align="center"
-                description="GenBI (Generasi Baru Indonesia) adalah komunitas penerima beasiswa Bank Indonesia yang terdiri dari mahasiswa terpilih dari berbagai Perguruan Tinggi Negeri (PTN) dan Swasta (PTS) di seluruh Indonesia. Di Jawa Timur, GenBI hadir sebagai wadah inkubator kepemimpinan yang dibina langsung oleh Kantor Perwakilan Bank Indonesia Provinsi Jawa Timur, bertujuan untuk mencetak 'Future Leaders' yang cerdas, berintegritas, dan berkontribusi nyata bagi kemajuan bangsa."
+                description="Lebih dari sekadar penerima beasiswa, GenBI Jawa Timur adalah inkubator kepemimpinan yang dirancang untuk mencetak generasi 'Energi Baru'. Di sini, integritas intelektual bertemu dengan kepekaan sosial. Kami bergerak melampaui batas kampus, bersinergi sebagai mitra strategis Bank Indonesia dalam mengawal stabilitas ekonomi, mengakselerasi literasi keuangan, dan memberdayakan masyarakat melalui aksi nyata yang berdampak dan berkelanjutan."
               />
             </FadeIn>
           </div>
         </section>
 
         {/* Vision & Mission */}
-        <section className="py-20 relative bg-white/5 border-y border-white/5">
+        <section className="py-24 relative bg-transparent">
           <div className="container mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               {/* Stats Card (Left) */}
@@ -270,54 +329,57 @@ export default function AboutPage() {
               {/* Text Content (Right) */}
               <div className="space-y-8 order-1 md:order-2">
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                    Visi Kami
-                  </h2>
-                  <p className="text-lg text-blue-100/80 leading-relaxed">
-                    Mewujudkan{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      GenBI Jawa Timur
-                    </span>{" "}
-                    sebagai{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      wadah kolaborasi sinergis antar komisariat
-                    </span>{" "}
-                    yang{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      berdampak nyata
-                    </span>{" "}
-                    bagi{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      masyarakat
-                    </span>{" "}
-                    dan{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      lingkungan
-                    </span>
-                  </p>
+                  <FadeIn>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                      Visi Kami
+                    </h2>
+                  </FadeIn>
+                  <FadeIn delay={0.2}>
+                    <p className="text-lg text-blue-100/80 leading-relaxed">
+                      Mewujudkan{" "}
+                      <span className="text-cyan-400 font-semibold">
+                        GenBI Jawa Timur
+                      </span>{" "}
+                      sebagai{" "}
+                      <span className="text-cyan-400 font-semibold">
+                        wadah kolaborasi sinergis antar komisariat
+                      </span>{" "}
+                      yang{" "}
+                      <span className="text-cyan-400 font-semibold">
+                        berdampak nyata
+                      </span>{" "}
+                      bagi{" "}
+                      <span className="text-cyan-400 font-semibold">
+                        masyarakat
+                      </span>{" "}
+                      dan{" "}
+                      <span className="text-cyan-400 font-semibold">
+                        lingkungan
+                      </span>
+                    </p>
+                  </FadeIn>
                 </div>
                 <div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                    Misi Kami
-                  </h2>
-                  <StaggerContainer className="space-y-4">
+                  <FadeIn>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                      Misi Kami
+                    </h2>
+                  </FadeIn>
+                  <div className="space-y-4">
                     {[
                       "Memperkuat solidaritas dan komunikasi lintas komisariat melalui kegiatan kolaboratif",
                       "Menghadirkan program berdampak yang selaras dengan pilar utama Bank Indonesia (Pendidikan, Sosial, Lingkungan, dan Ekonomi)",
                       "Mempererat hubungan serta membangun jejaring strategis antara anggota aktif dan alumni",
                       "Mewujudkan sistem dokumentasi dan pelaporan kinerja yang terukur, transparan, dan berkelanjutan",
                     ].map((item, index) => (
-                      <StaggerItem
-                        key={index}
-                        className="flex items-start gap-4"
-                      >
+                      <SlideUp key={index} className="flex items-start gap-4">
                         <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-sm font-bold mt-1 flex-shrink-0">
                           {index + 1}
                         </div>
                         <p className="text-blue-100/80">{item}</p>
-                      </StaggerItem>
+                      </SlideUp>
                     ))}
-                  </StaggerContainer>
+                  </div>
                 </div>
               </div>
             </div>
@@ -325,12 +387,12 @@ export default function AboutPage() {
         </section>
 
         {/* Strategic Roles / 3 Pillars */}
-        <section className="py-20 relative">
+        <section className="py-24 relative bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 text-center">
             <SectionHeader
-              title="Peran Strategis"
+              title="3 Pilar Peran Utama"
               align="center"
-              description=""
+              description="Tiga fungsi strategis yang dijalankan setiap anggota GenBI sebagai mitra Bank Indonesia."
             />
             <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
@@ -354,11 +416,11 @@ export default function AboutPage() {
                 },
               ].map((value, i) => (
                 <StaggerItem key={i}>
-                  <Card className="group bg-white/5 backdrop-blur-md border border-white/10 hover:border-cyan-500/30 transition-all hover:shadow-xl hover:shadow-cyan-500/10 h-full relative overflow-hidden">
-                    <div
-                      className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${value.color} opacity-10 blur-3xl rounded-full -mr-10 -mt-10 transition-opacity group-hover:opacity-20`}
-                    ></div>
-                    <CardContent className="p-8 pt-12 relative z-10 flex flex-col items-center">
+                  <Card
+                    variant="glass"
+                    className="h-full flex flex-col items-center text-center p-8 pt-12 group cursor-default relative overflow-hidden"
+                  >
+                    <CardContent className="p-0 relative z-10 flex flex-col items-center">
                       <div className="text-blue-200/50 mb-6 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110 group-hover:-translate-y-1">
                         {value.icon}
                       </div>
@@ -377,14 +439,14 @@ export default function AboutPage() {
         </section>
 
         {/* Core Values */}
-        <section className="py-20 relative bg-white/5 border-y border-white/5">
+        <section className="py-24 relative bg-transparent">
           <div className="container mx-auto px-6 relative z-10">
             <SectionHeader
-              title="DNA GenBI Jatim"
-              description="Karakter dan prinsip dasar yang membentuk identitas serta etos kerja setiap anggota."
+              title="Nilai & Budaya Kerja"
+              description="Prinsip dasar yang menjadi DNA setiap langkah dan keputusan kami."
             />
 
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
                   title: "Dedikasi",
@@ -412,11 +474,11 @@ export default function AboutPage() {
                 },
               ].map((val, i) => (
                 <StaggerItem key={i}>
-                  <Card className="h-full bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all text-center group hover:-translate-y-2 relative overflow-hidden">
-                    <div
-                      className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${val.color} opacity-10 blur-2xl rounded-full -mr-8 -mt-8 transition-opacity group-hover:opacity-20`}
-                    ></div>
-                    <CardContent className="p-6 relative z-10 flex flex-col items-center">
+                  <Card
+                    variant="glass"
+                    className="h-full group text-center flex flex-col items-center justify-center p-6 relative overflow-hidden"
+                  >
+                    <CardContent className="p-0 relative z-10 flex flex-col items-center">
                       <div className="text-blue-200/50 mb-4 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110">
                         {val.icon}
                       </div>
@@ -435,14 +497,14 @@ export default function AboutPage() {
         </section>
 
         {/* History / Milestones */}
-        <section className="py-20 relative overflow-hidden">
+        <section className="py-24 relative overflow-hidden bg-white/5 border-y border-white/5">
           {/* Decorative Line (Desktop) */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent -translate-x-1/2 hidden md:block"></div>
 
           <div className="container mx-auto px-6 relative z-10">
             <SectionHeader
-              title="Jejak Langkah & Milestone"
-              className="mb-20" // History timeline needs slightly more space or sticking to standard? Standard is mb-16. Original was mb-20. Let's keep strict mb-16 as requested, or mb-20 if design demands. User said "sekarang sudah rapi, tapi..." implying he wants strict rules. SectionHeader uses mb-16. I will stick to standard SectionHeader which has mb-16.
+              title="Sejarah Perjalanan"
+              description="Rekam jejak dedikasi GenBI Jawa Timur dari masa ke masa."
             />
 
             <div className="space-y-12 md:space-y-0 relative">
@@ -510,23 +572,26 @@ export default function AboutPage() {
         </section>
 
         {/* Organizational Structure */}
-        <section className="py-20 relative bg-white/5 border-t border-white/5">
+        <section className="py-24 relative bg-transparent">
           <div className="container mx-auto px-6 relative z-10">
             <SectionHeader
-              title="Struktur Organisasi"
+              title="Kepengurusan Wilayah"
               description="Tim solid yang berdedikasi penuh menggerakkan visi menjadi aksi nyata, Periode 2025/2026."
             />
 
             <div className="max-w-6xl mx-auto">
-              <StaggerItem>
-                {/* Leaders Section */}
-                <div className="flex flex-col items-center mb-12">
+              {/* Leaders Section */}
+              <div className="flex flex-col items-center mb-12">
+                <FadeIn delay={0.1}>
                   <div className="mb-6 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                     <Crown
                       className="w-16 h-16 text-cyan-300"
                       strokeWidth={1}
                     />
                   </div>
+                </FadeIn>
+
+                <FadeIn delay={0.2}>
                   <div className="flex items-center gap-4 mb-8 w-full justify-center">
                     <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
                     <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
@@ -534,22 +599,23 @@ export default function AboutPage() {
                     </h3>
                     <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
                   </div>
+                </FadeIn>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-16 justify-center max-w-2xl">
-                    {KORKOM_STRUCTURE.bph
-                      .filter(
-                        (m) =>
-                          m.role.toLowerCase().includes("ketua") &&
-                          !m.role.toLowerCase().includes("divisi")
-                      )
-                      .map((member, idx) => (
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-16 justify-center max-w-2xl">
+                  {KORKOM_STRUCTURE.bph
+                    .filter(
+                      (m) =>
+                        m.role.toLowerCase().includes("ketua") &&
+                        !m.role.toLowerCase().includes("divisi")
+                    )
+                    .map((member, idx) => (
+                      <StaggerItem key={idx}>
                         <Card
-                          key={idx}
                           onClick={() => setSelectedMember(member)}
-                          className="bg-white/5 backdrop-blur-md border border-white/10 p-8 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-2 cursor-pointer group hover:border-cyan-500/30"
+                          variant="glass"
+                          className="p-8 flex flex-col items-center text-center cursor-pointer group"
                         >
                           <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors relative">
-                            <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-colors z-10"></div>
                             <Image
                               src={member.image}
                               alt={member.name}
@@ -570,528 +636,292 @@ export default function AboutPage() {
                             </span>
                           )}
                         </Card>
-                      ))}
-                  </div>
+                      </StaggerItem>
+                    ))}
+                </StaggerContainer>
+              </div>
 
-                  {/* Secretaries & Treasurers */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
-                    {/* Secretaries */}
-                    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors group">
-                      <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                        <FileText
-                          className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
-                          strokeWidth={1.5}
-                        />
-                        <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                          Sekretaris
-                        </h3>
-                      </div>
-                      <div className="space-y-4">
-                        {KORKOM_STRUCTURE.bph
-                          .filter((m) =>
-                            m.role.toLowerCase().includes("sekretaris")
-                          )
-                          .map((member, idx) => (
-                            <div
-                              key={idx}
-                              onClick={() => setSelectedMember(member)}
-                              className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                            >
-                              <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                <Image
-                                  src={member.image}
-                                  alt={member.name}
-                                  width={48}
-                                  height={48}
-                                  className="w-full h-full object-cover transition-all"
-                                />
-                              </div>
-                              <div className="flex-1 text-left">
-                                <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                  {member.name}
-                                </p>
-                                <p className="text-xs text-blue-200/60">
-                                  {member.role}
-                                </p>
-                              </div>
-                              {member.major && (
-                                <span className="text-[10px] font-bold text-cyan-200 bg-white/10 border border-white/10 px-2 py-0.5 rounded">
-                                  {member.major}
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Treasurers */}
-                    <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors group">
-                      <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                        <Banknote
-                          className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
-                          strokeWidth={1.5}
-                        />
-                        <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                          Bendahara
-                        </h3>
-                      </div>
-                      <div className="space-y-4">
-                        {KORKOM_STRUCTURE.bph
-                          .filter((m) =>
-                            m.role.toLowerCase().includes("bendahara")
-                          )
-                          .map((member, idx) => (
-                            <div
-                              key={idx}
-                              onClick={() => setSelectedMember(member)}
-                              className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                            >
-                              <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                <Image
-                                  src={member.image}
-                                  alt={member.name}
-                                  width={48}
-                                  height={48}
-                                  className="w-full h-full object-cover transition-all"
-                                />
-                              </div>
-                              <div className="flex-1 text-left">
-                                <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                  {member.name}
-                                </p>
-                                <p className="text-xs text-blue-200/60">
-                                  {member.role}
-                                </p>
-                              </div>
-                              {member.major && (
-                                <span className="text-[10px] font-bold text-cyan-200 bg-white/10 border border-white/10 px-2 py-0.5 rounded">
-                                  {member.major}
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Divisions */}
-                  <div className="w-full">
-                    <div className="flex items-center gap-4 mb-8 w-full justify-center">
-                      <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
-                      <h3 className="text-xl font-bold text-white uppercase tracking-widest">
-                        Divisi & Bidang
+              <SlideUp delay={0.2}>
+                {/* Secretaries & Treasurers */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
+                  {/* Secretaries */}
+                  {/* Secretaries */}
+                  <Card variant="glass" className="p-6 group">
+                    <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                      <FileText
+                        className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                        strokeWidth={1.5}
+                      />
+                      <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                        Sekretaris
                       </h3>
-                      <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
                     </div>
+                    <div className="space-y-4">
+                      {KORKOM_STRUCTURE.bph
+                        .filter((m) =>
+                          m.role.toLowerCase().includes("sekretaris")
+                        )
+                        .map((member, idx) => (
+                          <MemberListItem
+                            key={idx}
+                            member={member}
+                            onClick={() => setSelectedMember(member)}
+                          />
+                        ))}
+                    </div>
+                  </Card>
 
-                    <SlideUp delay={0.5}>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 align-start">
-                        {/* Development */}
-                        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/5 backdrop-blur-md border border-white/10 h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <BookOpen
-                                  className="w-6 h-6"
-                                  strokeWidth={1.5}
-                                />
-                              </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Pengembangan <br /> & Pendidikan
-                              </h4>
-                            </div>
-
-                            <div className="space-y-4">
-                              {getDivisionMembers("Pengembangan & Pendidikan")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Ketua Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              {getDivisionMembers("Pengembangan & Pendidikan")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekben")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Sekben Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers(
-                                    "Pengembangan & Pendidikan"
-                                  )
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
-                                    )
-                                    .map((member, idx) => (
-                                      <li
-                                        key={idx}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                        className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
-                                      >
-                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
-                                          <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            width={32}
-                                            height={32}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </div>
-                                        <div className="flex-1 flex justify-between items-center">
-                                          <span className="font-medium text-blue-50">
-                                            {member.name}
-                                          </span>
-                                          <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                            {member.major}
-                                          </span>
-                                        </div>
-                                      </li>
-                                    ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Sinergi */}
-                        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/5 backdrop-blur-md border border-white/10 h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <Users className="w-6 h-6" strokeWidth={1.5} />
-                              </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Sinergi <br /> Komisariat
-                              </h4>
-                            </div>
-
-                            <div className="space-y-4">
-                              {getDivisionMembers("Sinergi")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Ketua Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              {getDivisionMembers("Sinergi")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekben")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Sekben Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers("Sinergi")
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
-                                    )
-                                    .map((member, idx) => (
-                                      <li
-                                        key={idx}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                        className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
-                                      >
-                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
-                                          <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            width={32}
-                                            height={32}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </div>
-                                        <div className="flex-1 flex justify-between items-center">
-                                          <span className="font-medium text-blue-50">
-                                            {member.name}
-                                          </span>
-                                          <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                            {member.major}
-                                          </span>
-                                        </div>
-                                      </li>
-                                    ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* PR Medkom */}
-                        <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/5 backdrop-blur-md border border-white/10 h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <Megaphone
-                                  className="w-6 h-6"
-                                  strokeWidth={1.5}
-                                />
-                              </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Public Relation <br /> & Medkom
-                              </h4>
-                            </div>
-
-                            <div className="space-y-4">
-                              {getDivisionMembers("PR")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Ketua Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              {getDivisionMembers("PR")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekben")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-4 border-b border-white/10 pb-4 cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    onClick={() => setSelectedMember(member)}
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex-shrink-0">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-0.5">
-                                        Sekben Divisi
-                                      </p>
-                                      <div className="flex justify-between items-center">
-                                        <p className="font-bold text-white leading-tight">
-                                          {member.name}
-                                        </p>
-                                        <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                          {member.major}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers("PR")
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
-                                    )
-                                    .map((member, idx) => (
-                                      <li
-                                        key={idx}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                        className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer"
-                                      >
-                                        <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0">
-                                          <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            width={32}
-                                            height={32}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        </div>
-                                        <div className="flex-1 flex justify-between items-center">
-                                          <span className="font-medium text-blue-50">
-                                            {member.name}
-                                          </span>
-                                          <span className="text-[10px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-cyan-200">
-                                            {member.major}
-                                          </span>
-                                        </div>
-                                      </li>
-                                    ))}
-                                </ul>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </SlideUp>
-                  </div>
+                  {/* Treasurers */}
+                  {/* Treasurers */}
+                  <Card variant="glass" className="p-6 group">
+                    <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                      <Banknote
+                        className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                        strokeWidth={1.5}
+                      />
+                      <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                        Bendahara
+                      </h3>
+                    </div>
+                    <div className="space-y-4">
+                      {KORKOM_STRUCTURE.bph
+                        .filter((m) =>
+                          m.role.toLowerCase().includes("bendahara")
+                        )
+                        .map((member, idx) => (
+                          <MemberListItem
+                            key={idx}
+                            member={member}
+                            onClick={() => setSelectedMember(member)}
+                          />
+                        ))}
+                    </div>
+                  </Card>
                 </div>
-              </StaggerItem>
+              </SlideUp>
+
+              {/* Divisions */}
+              <div className="w-full">
+                <SlideUp delay={0.3}>
+                  <div className="flex items-center gap-4 mb-8 w-full justify-center">
+                    <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
+                    <h3 className="text-xl font-bold text-white uppercase tracking-widest">
+                      Divisi & Bidang
+                    </h3>
+                    <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
+                  </div>
+                </SlideUp>
+
+                <SlideUp delay={0.5}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
+                    {/* Development */}
+                    <Card variant="glass" className="h-full group">
+                      <CardContent className="p-8 pt-8">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                            <BookOpen className="w-6 h-6" strokeWidth={1.5} />
+                          </div>
+                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                            Pengembangan <br /> & Pendidikan
+                          </h4>
+                        </div>
+
+                        <div className="space-y-4">
+                          {getDivisionMembers("Pengembangan & Pendidikan")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("ketua")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          {getDivisionMembers("Pengembangan & Pendidikan")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("sekretaris")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          <div>
+                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                              Anggota
+                            </p>
+                            <ul className="space-y-2 text-sm">
+                              {getDivisionMembers("Pengembangan & Pendidikan")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("anggota")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    hideRole={true}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Sinergi */}
+                    <Card variant="glass" className="h-full group">
+                      <CardContent className="p-8 pt-8">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                            <Users className="w-6 h-6" strokeWidth={1.5} />
+                          </div>
+                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                            Sinergi <br /> Komisariat
+                          </h4>
+                        </div>
+
+                        <div className="space-y-4">
+                          {getDivisionMembers("Sinergi")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("ketua")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          {getDivisionMembers("Sinergi")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("sekretaris")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          <div>
+                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                              Anggota
+                            </p>
+                            <ul className="space-y-2 text-sm">
+                              {getDivisionMembers("Sinergi")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("anggota")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    hideRole={true}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* PR Medkom */}
+                    <Card variant="glass" className="h-full group">
+                      <CardContent className="p-8 pt-8">
+                        <div className="flex items-center gap-4 mb-8">
+                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                            <Megaphone className="w-6 h-6" strokeWidth={1.5} />
+                          </div>
+                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                            Public Relation <br /> & Medkom
+                          </h4>
+                        </div>
+
+                        <div className="space-y-4">
+                          {getDivisionMembers("PR")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("ketua")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          {getDivisionMembers("PR")
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("sekretaris")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+
+                          <div>
+                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                              Anggota
+                            </p>
+                            <ul className="space-y-2 text-sm">
+                              {getDivisionMembers("PR")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("anggota")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    hideRole={true}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </SlideUp>
+              </div>
+              {/* Removed StaggerItem derived closing tag if it matched opening */}
             </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="py-20 border-t border-white/5 bg-transparent">
+        <section className="py-24 border-t border-white/5 bg-white/5">
           <div className="container mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Tertarik Berkolaborasi?
-            </h2>
-            <p className="text-blue-200/80 mb-8 max-w-xl mx-auto">
-              Kami selalu terbuka untuk membangun sinergi positif dengan
-              berbagai pihak demi dampak yang lebih luas.
-            </p>
-            <Link href="/contact" className="inline-block">
-              <Button size="lg" variant="secondary">
-                Hubungi Kami
-              </Button>
-            </Link>
+            <FadeIn>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                Tertarik Berkolaborasi?
+              </h2>
+            </FadeIn>
+            <FadeIn delay={0.2}>
+              <p className="text-blue-200/80 mb-8 max-w-xl mx-auto">
+                Kami selalu terbuka untuk membangun sinergi positif dengan
+                berbagai pihak demi dampak yang lebih luas.
+              </p>
+            </FadeIn>
+            <FadeIn delay={0.4}>
+              <Link href="/contact" className="inline-block">
+                <Button size="lg" variant="secondary">
+                  Hubungi Kami
+                </Button>
+              </Link>
+            </FadeIn>
           </div>
         </section>
       </main>
