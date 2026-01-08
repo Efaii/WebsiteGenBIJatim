@@ -45,37 +45,45 @@ const KORKOM_STRUCTURE: {
       role: "Ketua Umum",
       name: "Anggia Citra Okta Ferina",
       image: "/assets/images/individu.jpg",
-      major: "UNESA",
+      university: "UNESA",
+      major: "S1 Manajemen Pendidikan",
+      instagram: "@ahmadfulan",
+      linkedin: "ahmad-fulan",
     },
     {
       role: "Wakil Ketua Umum",
       name: "Rikza Haikal Siraji",
       image: "/assets/images/individu.jpg",
-      major: "UPN Veteran Jatim",
+      university: "UPN Veteran Jatim",
+      major: "S1 Agroteknologi",
     },
     {
       role: "Sekretaris 1",
       name: "Saltsa Ari Purbo A. F.",
       image: "/assets/images/individu.jpg",
-      major: "UNAIR",
+      university: "UNAIR",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Sekretaris 2",
       name: "Eni Setiyowati",
       image: "/assets/images/individu.jpg",
-      major: "UNUGIRI",
+      university: "UNUGIRI",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Bendahara 1",
       name: "Caroline Febriyanti",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Bendahara 2",
       name: "M. Ivan Ferdiansyah P.",
       image: "/assets/images/individu.jpg",
-      major: "UINSA",
+      university: "UINSA",
+      major: "S1 Manajemen Pendidikan",
     },
   ],
   divisions: [
@@ -83,108 +91,122 @@ const KORKOM_STRUCTURE: {
       role: "Ketua Divisi",
       name: "Rangga Prashagi",
       image: "/assets/images/individu.jpg",
-      major: "UTM",
+      university: "UTM",
       division: "Pengembangan & Pendidikan",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Sekretaris & Bendahara",
       name: "Afrillia Dwi Arifianti",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "Pengembangan & Pendidikan",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "M. Farhan Al-Ansori",
       image: "/assets/images/individu.jpg",
-      major: "PENS",
+      university: "PENS",
       division: "Pengembangan & Pendidikan",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Novita Nilla Fauzia",
       image: "/assets/images/individu.jpg",
-      major: "UTM",
+      university: "UTM",
       division: "Pengembangan & Pendidikan",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Ifan Zamroni",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "Pengembangan & Pendidikan",
+      major: "S1 Manajemen Pendidikan",
     },
     // Sinergi
     {
       role: "Ketua Divisi",
       name: "Reno Alfa Reza",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "Sinergi",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Sekretaris & Bendahara",
       name: "Theressa Marry Christiyani",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "Sinergi",
     },
     {
       role: "Anggota",
       name: "Jevon Savero",
       image: "/assets/images/individu.jpg",
-      major: "ITS",
+      university: "ITS",
       division: "Sinergi",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Karin Devia Melawati",
       image: "/assets/images/individu.jpg",
-      major: "UINSA",
+      university: "UINSA",
       division: "Sinergi",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Windy Satria Darmawan",
       image: "/assets/images/individu.jpg",
-      major: "UNAIR",
+      university: "UNAIR",
       division: "Sinergi",
+      major: "S1 Manajemen Pendidikan",
     },
     // PR & Medkom
     {
       role: "Ketua Divisi",
       name: "Fathir Ainur Rochim",
       image: "/assets/images/individu.jpg",
-      major: "UNUGIRI",
+      university: "UNUGIRI",
       division: "PR",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Sekretaris & Bendahara",
       name: "Meidy Dwi Cahyani",
       image: "/assets/images/individu.jpg",
-      major: "UTM",
+      university: "UTM",
       division: "PR",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Dhiaulhaqi An Nazmi",
       image: "/assets/images/individu.jpg",
-      major: "UINSA",
+      university: "UINSA",
       division: "PR",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "Bagas Aji Dariansyah",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "PR",
+      major: "S1 Manajemen Pendidikan",
     },
     {
       role: "Anggota",
       name: "M. Rakha Syailendra",
       image: "/assets/images/individu.jpg",
-      major: "UPNVJT",
+      university: "UPNVJT",
       division: "PR",
+      major: "S1 Manajemen Pendidikan",
     },
   ],
 };
@@ -225,11 +247,6 @@ const MemberListItem = ({
           </p>
         )}
       </div>
-      {member.major && (
-        <span className="text-[10px] font-bold text-cyan-200 bg-white/10 border border-white/10 px-2 py-0.5 rounded">
-          {member.major}
-        </span>
-      )}
     </div>
   );
 };
@@ -274,20 +291,21 @@ export default function AboutPage() {
         </section>
 
         {/* About GenBI Definition Section */}
-        <section className="py-24 relative z-10 bg-white/5 border-b border-white/5">
+        <section className="py-20 relative z-10 bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 max-w-4xl text-center">
             <FadeIn>
               <SectionHeader
                 title="Tentang GenBI Jatim"
                 align="center"
                 description="Lebih dari sekadar penerima beasiswa, GenBI Jawa Timur adalah inkubator kepemimpinan yang dirancang untuk mencetak generasi 'Energi Baru'. Di sini, integritas intelektual bertemu dengan kepekaan sosial. Kami bergerak melampaui batas kampus, bersinergi sebagai mitra strategis Bank Indonesia dalam mengawal stabilitas ekonomi, mengakselerasi literasi keuangan, dan memberdayakan masyarakat melalui aksi nyata yang berdampak dan berkelanjutan."
+                className="mb-0"
               />
             </FadeIn>
           </div>
         </section>
 
         {/* Vision & Mission */}
-        <section className="py-24 relative bg-transparent">
+        <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
               {/* Stats Card (Left) */}
@@ -387,7 +405,7 @@ export default function AboutPage() {
         </section>
 
         {/* Strategic Roles / 3 Pillars */}
-        <section className="py-24 relative bg-white/5 border-y border-white/5">
+        <section className="py-20 relative bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 text-center">
             <SectionHeader
               title="3 Pilar Peran Utama"
@@ -439,7 +457,7 @@ export default function AboutPage() {
         </section>
 
         {/* Core Values */}
-        <section className="py-24 relative bg-transparent">
+        <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
             <SectionHeader
               title="Nilai & Budaya Kerja"
@@ -497,7 +515,7 @@ export default function AboutPage() {
         </section>
 
         {/* History / Milestones */}
-        <section className="py-24 relative overflow-hidden bg-white/5 border-y border-white/5">
+        <section className="py-20 relative overflow-hidden bg-white/5 border-y border-white/5">
           {/* Decorative Line (Desktop) */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent -translate-x-1/2 hidden md:block"></div>
 
@@ -529,8 +547,9 @@ export default function AboutPage() {
                   title: "Komunitas Terbaik",
                   desc: "Meraih penghargaan sebagai Koordinator Komisariat paling produktif dan berdampak di ajang GenBI Award.",
                 },
-              ].map((item, i) => {
+              ].map((item, i, arr) => {
                 const isEven = i % 2 === 0;
+                const isLast = i === arr.length - 1;
                 return (
                   <SlideUp
                     key={i}
@@ -549,7 +568,11 @@ export default function AboutPage() {
                       <span className="text-cyan-400 font-bold tracking-widest mb-1 block text-lg">
                         {item.year}
                       </span>
-                      <h3 className="text-2xl font-bold text-white mb-3">
+                      <h3
+                        className={`text-2xl font-bold text-white ${
+                          isLast ? "mb-0" : "mb-3"
+                        }`}
+                      >
                         {item.title}
                       </h3>
                       <p className="text-blue-200/70 leading-relaxed max-w-sm">
@@ -572,7 +595,7 @@ export default function AboutPage() {
         </section>
 
         {/* Organizational Structure */}
-        <section className="py-24 relative bg-transparent">
+        <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
             <SectionHeader
               title="Kepengurusan Wilayah"
@@ -601,7 +624,7 @@ export default function AboutPage() {
                   </div>
                 </FadeIn>
 
-                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-16 justify-center max-w-2xl">
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
                   {KORKOM_STRUCTURE.bph
                     .filter(
                       (m) =>
@@ -630,11 +653,6 @@ export default function AboutPage() {
                           <p className="text-sm font-semibold text-blue-200/60 mb-2">
                             {member.role}
                           </p>
-                          {member.major && (
-                            <span className="text-xs text-cyan-200 font-bold bg-white/10 border border-white/10 py-1 px-3 rounded">
-                              {member.major}
-                            </span>
-                          )}
                         </Card>
                       </StaggerItem>
                     ))}
@@ -643,7 +661,7 @@ export default function AboutPage() {
 
               <SlideUp delay={0.2}>
                 {/* Secretaries & Treasurers */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-12">
                   {/* Secretaries */}
                   {/* Secretaries */}
                   <Card variant="glass" className="p-6 group">
@@ -902,7 +920,7 @@ export default function AboutPage() {
         </section>
 
         {/* CTA */}
-        <section className="py-24 border-t border-white/5 bg-white/5">
+        <section className="py-20 bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 text-center">
             <FadeIn>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -936,6 +954,7 @@ export default function AboutPage() {
           <MemberDetailModal
             member={selectedMember}
             onClose={() => setSelectedMember(null)}
+            contextTitle="Fungsionaris GenBI Korkom Jatim"
           />
         )}
       </AnimatePresence>
