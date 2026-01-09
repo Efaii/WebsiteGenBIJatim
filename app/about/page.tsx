@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { MemberDetailModal, BPHMember } from "@/components/MemberDetailModal";
+import { ProkerDetailModal, ProkerData } from "@/components/ProkerDetailModal";
 import CountUp from "@/components/CountUp";
 import {
   Megaphone,
@@ -37,6 +38,15 @@ const KORKOM_STRUCTURE: {
   university: string;
   bph: BPHMember[];
   divisions: BPHMember[];
+  proker: ProkerData[];
+  documents: {
+    id: number;
+    title: string;
+    fileType: string;
+    date: string;
+    size: string;
+    url: string;
+  }[];
 } = {
   name: "GenBI Koordinator Komisariat Jawa Timur",
   university: "Jawa Timur",
@@ -209,6 +219,102 @@ const KORKOM_STRUCTURE: {
       major: "S1 Manajemen Pendidikan",
     },
   ],
+  proker: [
+    {
+      id: 1,
+      title: "GenBI Jatim Leadership Camp",
+      status: "Completed",
+      date: "Des 2024",
+      description:
+        "Kegiatan pelatihan kepemimpinan intensif untuk seluruh anggota baru GenBI Jawa Timur.",
+      description_long:
+        "GenBI Jatim Leadership Camp adalah program unggulan tahunan yang dirancang khusus untuk membekali anggota baru dengan soft-skill kepemimpinan, manajemen organisasi, dan wawasan kebanksentralan. \n\nSelama 3 hari 2 malam, peserta digembleng melalui sesi materi dari expert, simulasi Focus Group Discussion (FGD), dan outbound yang melatih kekompakan. Kegiatan ini menjadi gerbang utama internalisasi nilai-nilai GenBI yaitu Dedikasi, Prestasi, dan Kontribusi.",
+      objectives: [
+        "Membangun karakter kepemimpinan yang tangguh dan adaptif.",
+        "Mempererat bonding antar anggota dari berbagai komisariat kampus.",
+        "Meningkatkan pemahaman tentang tugas dan fungsi Bank Indonesia.",
+      ],
+      benefits: [
+        "Sertifikat tingkat provinsi.",
+        "Networking dengan 500+ mahasiswa berprestasi se-Jatim.",
+        "Pengembangan skill public speaking dan critical thinking.",
+      ],
+      gallery: [
+        "/assets/images/galeri/1.jpg",
+        "/assets/images/galeri/2.jpg",
+        "/assets/images/galeri/3.jpg",
+      ],
+      documentation:
+        "https://drive.google.com/drive/folders/12_kAqqvQKFkqvJDEjCAds_ZVcdNskO2h?usp=drive_link",
+      newsUrl: "/news/genbi-jatim-leadership-camp",
+    },
+    {
+      id: 2,
+      title: "Rapat Koordinasi Wilayah (Rakorwil)",
+      status: "On-going",
+      date: "Feb 2025",
+      description:
+        "Forum diskusi strategis antar ketua komisariat se-Jawa Timur untuk penyelarasan program kerja.",
+      description_long:
+        "Rakorwil merupakan forum legislatif tertinggi di tingkat wilayah yang mempertemukan seluruh Ketua Komisariat dan Badan Pengurus Harian (BPH) GenBI Koordinator Komisariat Jawa Timur. \n\nAgenda utama meliputi evaluasi kinerja triwulanan, penyelarasan Rencana Anggaran Biaya (RAB), dan penetapan kalender kegiatan terpadu untuk satu periode ke depan. Forum ini memastikan setiap komisariat berjalan dalam satu visi yang sama.",
+      objectives: [
+        "Menyelaraskan agenda kerja antar komisariat.",
+        "Mengevaluasi kendala dan tantangan di setiap kampus.",
+        "Merumuskan strategi kolaborasi lintas komisariat.",
+      ],
+      benefits: [
+        "Terciptanya kalender kegiatan yang terintegrasi.",
+        "Solusi taktis untuk permasalahan organisasi.",
+      ],
+      gallery: [],
+    },
+    {
+      id: 3,
+      title: "GenBI Jatim Award 2025",
+      status: "Upcoming",
+      date: "Mei 2025",
+      description:
+        "Ajang penghargaan bagi komisariat, divisi, dan anggota dengan kinerja terbaik periode ini.",
+      description_long:
+        "Malam penganugerahan bergengsi untuk mengapresiasi kerja keras dan dedikasi seluruh elemen GenBI Jawa Timur. \n\nTerdapat berbagai kategori nominasi mulai dari 'The Most Active Commissariat', 'Best Social Project', hingga 'Male & Female of The Year'. Acara ini juga dimeriahkan dengan penampilan seni dari bakat-bakat terbaik anggota GenBI.",
+      objectives: [
+        "Memberikan apresiasi kepada anggota dan komisariat berprestasi.",
+        "Memotivasi peningkatan kualitas kinerja organisasi.",
+        "Menjadi ajang selebrasi dan silaturahmi akbar.",
+      ],
+      benefits: [
+        "Trophy dan sertifikat penghargaan eksklusif.",
+        "Eksposur prestasi di media sosial GenBI Jatim.",
+      ],
+      gallery: [],
+    },
+  ],
+  documents: [
+    {
+      id: 1,
+      title: "SK Pengurus Wilayah GenBI Jatim 2025-2026",
+      fileType: "PDF",
+      date: "10 Jan 2025",
+      size: "2.4 MB",
+      url: "#",
+    },
+    {
+      id: 2,
+      title: "Grand Design GenBI Jatim 2025",
+      fileType: "PDF",
+      date: "15 Jan 2025",
+      size: "5.1 MB",
+      url: "#",
+    },
+    {
+      id: 3,
+      title: "SOP Administrasi & Keuangan",
+      fileType: "DOCX",
+      date: "20 Jan 2025",
+      size: "1.2 MB",
+      url: "#",
+    },
+  ],
 };
 
 const MemberListItem = ({
@@ -253,6 +359,10 @@ const MemberListItem = ({
 
 export default function AboutPage() {
   const [selectedMember, setSelectedMember] = useState<BPHMember | null>(null);
+  const [selectedProker, setSelectedProker] = useState<ProkerData | null>(null);
+  const [activeTab, setActiveTab] = useState<"struktur" | "proker" | "arsip">(
+    "struktur"
+  );
 
   // Helper to filter divisions
   const getDivisionMembers = (divName: string) => {
@@ -602,162 +712,106 @@ export default function AboutPage() {
               description="Tim solid yang berdedikasi penuh menggerakkan visi menjadi aksi nyata, Periode 2025/2026."
             />
 
-            <div className="max-w-6xl mx-auto">
-              {/* Leaders Section */}
-              <div className="flex flex-col items-center mb-12">
-                <FadeIn delay={0.1}>
-                  <div className="mb-6 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                    <Crown
-                      className="w-16 h-16 text-cyan-300"
-                      strokeWidth={1}
-                    />
-                  </div>
-                </FadeIn>
-
-                <FadeIn delay={0.2}>
-                  <div className="flex items-center gap-4 mb-8 w-full justify-center">
-                    <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
-                    <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
-                      Leaders
-                    </h3>
-                    <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
-                  </div>
-                </FadeIn>
-
-                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
-                  {KORKOM_STRUCTURE.bph
-                    .filter(
-                      (m) =>
-                        m.role.toLowerCase().includes("ketua") &&
-                        !m.role.toLowerCase().includes("divisi")
-                    )
-                    .map((member, idx) => (
-                      <StaggerItem key={idx}>
-                        <Card
-                          onClick={() => setSelectedMember(member)}
-                          variant="glass"
-                          className="p-8 flex flex-col items-center text-center cursor-pointer group"
-                        >
-                          <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors relative">
-                            <Image
-                              src={member.image}
-                              alt={member.name}
-                              width={96}
-                              height={96}
-                              className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                            />
-                          </div>
-                          <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
-                            {member.name}
-                          </h3>
-                          <p className="text-sm font-semibold text-blue-200/60 mb-2">
-                            {member.role}
-                          </p>
-                        </Card>
-                      </StaggerItem>
-                    ))}
-                </StaggerContainer>
+            {/* Tabs Navigation */}
+            <div className="flex justify-center mb-12">
+              <div className="flex bg-white/5 backdrop-blur-md p-1 rounded-full border border-white/10">
+                {[
+                  { id: "struktur", label: "Struktur Organisasi" },
+                  { id: "proker", label: "Program Kerja" },
+                  { id: "arsip", label: "Arsip & Dokumen" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={cn(
+                      "px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300",
+                      activeTab === tab.id
+                        ? "bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                        : "text-blue-200/60 hover:text-white hover:bg-white/5"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <SlideUp delay={0.2}>
-                {/* Secretaries & Treasurers */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-12">
-                  {/* Secretaries */}
-                  {/* Secretaries */}
-                  <Card variant="glass" className="p-6 group">
-                    <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                      <FileText
-                        className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
-                        strokeWidth={1.5}
-                      />
-                      <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                        Sekretaris
-                      </h3>
-                    </div>
-                    <div className="space-y-4">
+            <div className="max-w-6xl mx-auto min-h-[500px]">
+              {/* Tab 1: Struktur Organisasi */}
+              {activeTab === "struktur" && (
+                <div className="space-y-12 animate-in fade-in duration-500">
+                  {/* Leaders Section */}
+                  <div className="flex flex-col items-center mb-12">
+                    <FadeIn delay={0.1}>
+                      <div className="mb-6 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                        <Crown
+                          className="w-16 h-16 text-cyan-300"
+                          strokeWidth={1}
+                        />
+                      </div>
+                    </FadeIn>
+
+                    <FadeIn delay={0.2}>
+                      <div className="flex items-center gap-4 mb-8 w-full justify-center">
+                        <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
+                        <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
+                          Leaders
+                        </h3>
+                        <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
+                      </div>
+                    </FadeIn>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
                       {KORKOM_STRUCTURE.bph
-                        .filter((m) =>
-                          m.role.toLowerCase().includes("sekretaris")
+                        .filter(
+                          (m) =>
+                            m.role.toLowerCase().includes("ketua") &&
+                            !m.role.toLowerCase().includes("divisi")
                         )
                         .map((member, idx) => (
-                          <MemberListItem
-                            key={idx}
-                            member={member}
-                            onClick={() => setSelectedMember(member)}
-                          />
+                          <StaggerItem key={idx}>
+                            <Card
+                              onClick={() => setSelectedMember(member)}
+                              variant="glass"
+                              className="p-8 flex flex-col items-center text-center cursor-pointer group"
+                            >
+                              <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors relative">
+                                <Image
+                                  src={member.image}
+                                  alt={member.name}
+                                  width={96}
+                                  height={96}
+                                  className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                                />
+                              </div>
+                              <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                                {member.name}
+                              </h3>
+                              <p className="text-sm font-semibold text-blue-200/60 mb-2">
+                                {member.role}
+                              </p>
+                            </Card>
+                          </StaggerItem>
                         ))}
                     </div>
-                  </Card>
-
-                  {/* Treasurers */}
-                  {/* Treasurers */}
-                  <Card variant="glass" className="p-6 group">
-                    <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                      <Banknote
-                        className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
-                        strokeWidth={1.5}
-                      />
-                      <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                        Bendahara
-                      </h3>
-                    </div>
-                    <div className="space-y-4">
-                      {KORKOM_STRUCTURE.bph
-                        .filter((m) =>
-                          m.role.toLowerCase().includes("bendahara")
-                        )
-                        .map((member, idx) => (
-                          <MemberListItem
-                            key={idx}
-                            member={member}
-                            onClick={() => setSelectedMember(member)}
-                          />
-                        ))}
-                    </div>
-                  </Card>
-                </div>
-              </SlideUp>
-
-              {/* Divisions */}
-              <div className="w-full">
-                <SlideUp delay={0.3}>
-                  <div className="flex items-center gap-4 mb-8 w-full justify-center">
-                    <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
-                    <h3 className="text-xl font-bold text-white uppercase tracking-widest">
-                      Divisi & Bidang
-                    </h3>
-                    <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
                   </div>
-                </SlideUp>
 
-                <SlideUp delay={0.5}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
-                    {/* Development */}
-                    <Card variant="glass" className="h-full group">
-                      <CardContent className="p-8 pt-8">
-                        <div className="flex items-center gap-4 mb-8">
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                            <BookOpen className="w-6 h-6" strokeWidth={1.5} />
-                          </div>
-                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                            Pengembangan <br /> & Pendidikan
-                          </h4>
+                  <SlideUp delay={0.2}>
+                    {/* Secretaries & Treasurers */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-12">
+                      {/* Secretaries */}
+                      <Card variant="glass" className="p-6 group">
+                        <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                          <FileText
+                            className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                            strokeWidth={1.5}
+                          />
+                          <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                            Sekretaris
+                          </h3>
                         </div>
-
                         <div className="space-y-4">
-                          {getDivisionMembers("Pengembangan & Pendidikan")
-                            .filter((m) =>
-                              m.role.toLowerCase().includes("ketua")
-                            )
-                            .map((member, idx) => (
-                              <MemberListItem
-                                key={idx}
-                                member={member}
-                                onClick={() => setSelectedMember(member)}
-                              />
-                            ))}
-
-                          {getDivisionMembers("Pengembangan & Pendidikan")
+                          {KORKOM_STRUCTURE.bph
                             .filter((m) =>
                               m.role.toLowerCase().includes("sekretaris")
                             )
@@ -768,153 +822,345 @@ export default function AboutPage() {
                                 onClick={() => setSelectedMember(member)}
                               />
                             ))}
+                        </div>
+                      </Card>
 
-                          <div>
-                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                              Anggota
-                            </p>
-                            <ul className="space-y-2 text-sm">
+                      {/* Treasurers */}
+                      <Card variant="glass" className="p-6 group">
+                        <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                          <Banknote
+                            className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                            strokeWidth={1.5}
+                          />
+                          <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                            Bendahara
+                          </h3>
+                        </div>
+                        <div className="space-y-4">
+                          {KORKOM_STRUCTURE.bph
+                            .filter((m) =>
+                              m.role.toLowerCase().includes("bendahara")
+                            )
+                            .map((member, idx) => (
+                              <MemberListItem
+                                key={idx}
+                                member={member}
+                                onClick={() => setSelectedMember(member)}
+                              />
+                            ))}
+                        </div>
+                      </Card>
+                    </div>
+                  </SlideUp>
+
+                  {/* Divisions */}
+                  <div className="w-full">
+                    <SlideUp delay={0.3}>
+                      <div className="flex items-center gap-4 mb-8 w-full justify-center">
+                        <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
+                        <h3 className="text-xl font-bold text-white uppercase tracking-widest">
+                          Divisi & Bidang
+                        </h3>
+                        <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
+                      </div>
+                    </SlideUp>
+
+                    <SlideUp delay={0.5}>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
+                        {/* Development */}
+                        <Card variant="glass" className="h-full group">
+                          <CardContent className="p-8 pt-8">
+                            <div className="flex items-center gap-4 mb-8">
+                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                <BookOpen
+                                  className="w-6 h-6"
+                                  strokeWidth={1.5}
+                                />
+                              </div>
+                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                Pengembangan <br /> & Pendidikan
+                              </h4>
+                            </div>
+
+                            <div className="space-y-4">
                               {getDivisionMembers("Pengembangan & Pendidikan")
                                 .filter((m) =>
-                                  m.role.toLowerCase().includes("anggota")
+                                  m.role.toLowerCase().includes("ketua")
                                 )
                                 .map((member, idx) => (
                                   <MemberListItem
                                     key={idx}
                                     member={member}
-                                    hideRole={true}
                                     onClick={() => setSelectedMember(member)}
                                   />
                                 ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
 
-                    {/* Sinergi */}
-                    <Card variant="glass" className="h-full group">
-                      <CardContent className="p-8 pt-8">
-                        <div className="flex items-center gap-4 mb-8">
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                            <Users className="w-6 h-6" strokeWidth={1.5} />
-                          </div>
-                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                            Sinergi <br /> Komisariat
-                          </h4>
-                        </div>
+                              {getDivisionMembers("Pengembangan & Pendidikan")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("sekretaris")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
 
-                        <div className="space-y-4">
-                          {getDivisionMembers("Sinergi")
-                            .filter((m) =>
-                              m.role.toLowerCase().includes("ketua")
-                            )
-                            .map((member, idx) => (
-                              <MemberListItem
-                                key={idx}
-                                member={member}
-                                onClick={() => setSelectedMember(member)}
-                              />
-                            ))}
+                              <div>
+                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                  Anggota
+                                </p>
+                                <ul className="space-y-2 text-sm">
+                                  {getDivisionMembers(
+                                    "Pengembangan & Pendidikan"
+                                  )
+                                    .filter((m) =>
+                                      m.role.toLowerCase().includes("anggota")
+                                    )
+                                    .map((member, idx) => (
+                                      <MemberListItem
+                                        key={idx}
+                                        member={member}
+                                        hideRole={true}
+                                        onClick={() =>
+                                          setSelectedMember(member)
+                                        }
+                                      />
+                                    ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
 
-                          {getDivisionMembers("Sinergi")
-                            .filter((m) =>
-                              m.role.toLowerCase().includes("sekretaris")
-                            )
-                            .map((member, idx) => (
-                              <MemberListItem
-                                key={idx}
-                                member={member}
-                                onClick={() => setSelectedMember(member)}
-                              />
-                            ))}
+                        {/* Sinergi */}
+                        <Card variant="glass" className="h-full group">
+                          <CardContent className="p-8 pt-8">
+                            <div className="flex items-center gap-4 mb-8">
+                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                <Users className="w-6 h-6" strokeWidth={1.5} />
+                              </div>
+                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                Sinergi <br /> Komisariat
+                              </h4>
+                            </div>
 
-                          <div>
-                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                              Anggota
-                            </p>
-                            <ul className="space-y-2 text-sm">
+                            <div className="space-y-4">
                               {getDivisionMembers("Sinergi")
                                 .filter((m) =>
-                                  m.role.toLowerCase().includes("anggota")
+                                  m.role.toLowerCase().includes("ketua")
                                 )
                                 .map((member, idx) => (
                                   <MemberListItem
                                     key={idx}
                                     member={member}
-                                    hideRole={true}
                                     onClick={() => setSelectedMember(member)}
                                   />
                                 ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
 
-                    {/* PR Medkom */}
-                    <Card variant="glass" className="h-full group">
-                      <CardContent className="p-8 pt-8">
-                        <div className="flex items-center gap-4 mb-8">
-                          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                            <Megaphone className="w-6 h-6" strokeWidth={1.5} />
-                          </div>
-                          <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                            Public Relation <br /> & Medkom
-                          </h4>
-                        </div>
+                              {getDivisionMembers("Sinergi")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("sekretaris")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
 
-                        <div className="space-y-4">
-                          {getDivisionMembers("PR")
-                            .filter((m) =>
-                              m.role.toLowerCase().includes("ketua")
-                            )
-                            .map((member, idx) => (
-                              <MemberListItem
-                                key={idx}
-                                member={member}
-                                onClick={() => setSelectedMember(member)}
-                              />
-                            ))}
+                              <div>
+                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                  Anggota
+                                </p>
+                                <ul className="space-y-2 text-sm">
+                                  {getDivisionMembers("Sinergi")
+                                    .filter((m) =>
+                                      m.role.toLowerCase().includes("anggota")
+                                    )
+                                    .map((member, idx) => (
+                                      <MemberListItem
+                                        key={idx}
+                                        member={member}
+                                        hideRole={true}
+                                        onClick={() =>
+                                          setSelectedMember(member)
+                                        }
+                                      />
+                                    ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
 
-                          {getDivisionMembers("PR")
-                            .filter((m) =>
-                              m.role.toLowerCase().includes("sekretaris")
-                            )
-                            .map((member, idx) => (
-                              <MemberListItem
-                                key={idx}
-                                member={member}
-                                onClick={() => setSelectedMember(member)}
-                              />
-                            ))}
+                        {/* PR Medkom */}
+                        <Card variant="glass" className="h-full group">
+                          <CardContent className="p-8 pt-8">
+                            <div className="flex items-center gap-4 mb-8">
+                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                <Megaphone
+                                  className="w-6 h-6"
+                                  strokeWidth={1.5}
+                                />
+                              </div>
+                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                Public Relation <br /> & Medkom
+                              </h4>
+                            </div>
 
-                          <div>
-                            <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                              Anggota
-                            </p>
-                            <ul className="space-y-2 text-sm">
+                            <div className="space-y-4">
                               {getDivisionMembers("PR")
                                 .filter((m) =>
-                                  m.role.toLowerCase().includes("anggota")
+                                  m.role.toLowerCase().includes("ketua")
                                 )
                                 .map((member, idx) => (
                                   <MemberListItem
                                     key={idx}
                                     member={member}
-                                    hideRole={true}
                                     onClick={() => setSelectedMember(member)}
                                   />
                                 ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+
+                              {getDivisionMembers("PR")
+                                .filter((m) =>
+                                  m.role.toLowerCase().includes("sekretaris")
+                                )
+                                .map((member, idx) => (
+                                  <MemberListItem
+                                    key={idx}
+                                    member={member}
+                                    onClick={() => setSelectedMember(member)}
+                                  />
+                                ))}
+
+                              <div>
+                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                  Anggota
+                                </p>
+                                <ul className="space-y-2 text-sm">
+                                  {getDivisionMembers("PR")
+                                    .filter((m) =>
+                                      m.role.toLowerCase().includes("anggota")
+                                    )
+                                    .map((member, idx) => (
+                                      <MemberListItem
+                                        key={idx}
+                                        member={member}
+                                        hideRole={true}
+                                        onClick={() =>
+                                          setSelectedMember(member)
+                                        }
+                                      />
+                                    ))}
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </SlideUp>
                   </div>
-                </SlideUp>
-              </div>
-              {/* Removed StaggerItem derived closing tag if it matched opening */}
+                </div>
+              )}
+
+              {/* Tab 2: Program Kerja */}
+              {activeTab === "proker" && (
+                <StaggerContainer className="grid gap-6">
+                  {KORKOM_STRUCTURE.proker.map((item) => (
+                    <StaggerItem key={item.id}>
+                      <Card
+                        onClick={() => setSelectedProker(item)}
+                        variant="glass"
+                        className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center group hover:border-cyan-500/30 transition-all duration-300 cursor-pointer"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-cyan-500/30 transition-colors">
+                          <span className="text-xs font-bold text-cyan-400 uppercase">
+                            {item.date.split(" ")[0]}
+                          </span>
+                          <span className="text-xl font-bold text-white">
+                            {item.date.split(" ")[1]}
+                          </span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
+                              {item.title}
+                            </h3>
+                            <span
+                              className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider",
+                                item.status === "Completed"
+                                  ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                  : item.status === "On-going"
+                                  ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 animate-pulse"
+                                  : "bg-blue-500/10 text-blue-300 border-blue-500/20"
+                              )}
+                            >
+                              {item.status}
+                            </span>
+                          </div>
+                          <p className="text-blue-100/70 text-sm leading-relaxed mb-4">
+                            {item.description}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 text-xs h-8"
+                          >
+                            Lihat Detail
+                          </Button>
+                        </div>
+                      </Card>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              )}
+
+              {/* Tab 3: Arsip */}
+              {activeTab === "arsip" && (
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {KORKOM_STRUCTURE.documents.length > 0 ? (
+                    KORKOM_STRUCTURE.documents.map((doc) => (
+                      <StaggerItem key={doc.id}>
+                        <div
+                          onClick={() =>
+                            alert(`Memulai unduhan dokumen: ${doc.title}`)
+                          }
+                          className="block h-full cursor-pointer"
+                        >
+                          <Card
+                            variant="glass"
+                            className="p-6 h-full hover:bg-white/10 transition-all duration-300 group hover:-translate-y-1 hover:border-cyan-500/30"
+                          >
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                                <FileText size={24} />
+                              </div>
+                              <div className="px-2 py-1 rounded text-[10px] font-bold bg-white/5 border border-white/10 text-blue-200">
+                                {doc.fileType}
+                              </div>
+                            </div>
+                            <h3 className="font-bold text-white text-lg mb-2 line-clamp-2 group-hover:text-cyan-300 transition-colors">
+                              {doc.title}
+                            </h3>
+                            <div className="flex items-center justify-between text-xs text-blue-200/50 mt-4">
+                              <span>{doc.date}</span>
+                              <span>{doc.size}</span>
+                            </div>
+                          </Card>
+                        </div>
+                      </StaggerItem>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-12 text-center text-blue-200/50 italic bg-white/5 rounded-2xl border border-dashed border-white/10">
+                      Belum ada dokumen yang diunggah.
+                    </div>
+                  )}
+                </StaggerContainer>
+              )}
             </div>
           </div>
         </section>
@@ -955,6 +1201,12 @@ export default function AboutPage() {
             member={selectedMember}
             onClose={() => setSelectedMember(null)}
             contextTitle="Fungsionaris GenBI Korkom Jatim"
+          />
+        )}
+        {selectedProker && (
+          <ProkerDetailModal
+            item={selectedProker}
+            onClose={() => setSelectedProker(null)}
           />
         )}
       </AnimatePresence>

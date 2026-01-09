@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import {
@@ -53,6 +54,7 @@ const NEWS = [
     category: "Kegiatan",
     date: "10 Desember 2024",
     image_color: "bg-orange-100",
+    image: "/assets/images/raker.jpg",
     snippet:
       "Program pelatihan kepemimpinan intensif selama 3 hari untuk pengurus inti GenBI Jatim...",
   },
@@ -171,45 +173,58 @@ export default function NewsPage() {
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredNews.map((news) => (
               <StaggerItem key={news.id}>
-                <Card className="group bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 overflow-hidden flex flex-col h-full">
-                  <div
-                    className={`h-48 w-full ${news.image_color} relative overflow-hidden flex items-center justify-center`}
-                  >
-                    {/* Placeholder Image */}
-                    <div className="text-primary/20 transform group-hover:scale-110 transition-transform duration-500">
-                      <svg
-                        className="w-20 h-20"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z" />
-                      </svg>
+                <Link
+                  href={`/news/${news.title.toLowerCase().replace(/ /g, "-")}`}
+                  className="block h-full"
+                >
+                  <Card className="group bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer">
+                    <div
+                      className={`h-48 w-full ${news.image_color} relative overflow-hidden flex items-center justify-center`}
+                    >
+                      {/* Image or Placeholder */}
+                      {(news as any).image ? (
+                        <img
+                          src={(news as any).image}
+                          alt={news.title}
+                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="text-primary/20 transform group-hover:scale-110 transition-transform duration-500">
+                          <svg
+                            className="w-20 h-20"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4">
+                        <span className="px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs font-bold rounded-full shadow-sm">
+                          {news.category}
+                        </span>
+                      </div>
                     </div>
-                    <div className="absolute top-4 left-4">
-                      <span className="px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs font-bold rounded-full shadow-sm">
-                        {news.category}
+                    <CardHeader className="p-6 pb-2">
+                      <div className="text-xs font-medium text-blue-200/60 mb-2 flex items-center gap-2">
+                        <span>📅 {news.date}</span>
+                      </div>
+                      <CardTitle className="text-xl font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
+                        {news.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 pt-2 flex-1">
+                      <p className="text-blue-100/70 text-sm leading-relaxed line-clamp-3">
+                        {news.snippet}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0 mt-auto">
+                      <span className="text-sm font-semibold text-cyan-200 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Baca Selengkapnya <span>→</span>
                       </span>
-                    </div>
-                  </div>
-                  <CardHeader className="p-6 pb-2">
-                    <div className="text-xs font-medium text-blue-200/60 mb-2 flex items-center gap-2">
-                      <span>📅 {news.date}</span>
-                    </div>
-                    <CardTitle className="text-xl font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
-                      {news.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 pt-2 flex-1">
-                    <p className="text-blue-100/70 text-sm leading-relaxed line-clamp-3">
-                      {news.snippet}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="p-6 pt-0 mt-auto">
-                    <span className="text-sm font-semibold text-cyan-200 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 cursor-pointer">
-                      Baca Selengkapnya <span>→</span>
-                    </span>
-                  </CardFooter>
-                </Card>
+                    </CardFooter>
+                  </Card>
+                </Link>
               </StaggerItem>
             ))}
           </StaggerContainer>
