@@ -12,7 +12,9 @@ import {
   StaggerContainer,
   StaggerItem,
 } from "@/components/MotionWrapper";
+import { SectionHeader } from "@/components/SectionHeader";
 import Image from "next/image";
+import { Search, Calendar, ChevronDown, ArrowRight } from "lucide-react";
 
 // List Data Komisariat
 const YEARS = ["Semua Tahun", "2025-2026", "2024-2025"];
@@ -33,7 +35,7 @@ const COMMISSARIATS = [
     university: "UPN Veteran Jawa Timur",
     year: "2025-2026",
     members: 50,
-    logo: "/assets/logos/upn.svg",
+    logo: "/assets/logos/upnvjt.svg",
     color: "from-green-600 to-emerald-500",
   },
   {
@@ -96,7 +98,7 @@ const COMMISSARIATS = [
     university: "UIN Madura",
     year: "2025-2026",
     members: 50,
-    logo: "/assets/logos/uinmadura.svg",
+    logo: "/assets/logos/uinMadura.svg",
     color: "from-green-500 to-lime-500",
   },
 ];
@@ -158,23 +160,21 @@ export default function CommissariatPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
 
-      <main className="flex-1 container mx-auto px-4 py-12 relative z-10">
+      <main className="flex-1 container mx-auto px-4 py-20 relative z-10">
         {/* Header & Stats Dashboard */}
-        <section className="mb-16">
-          <SlideUp className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
-              Pusat Data Komisariat
-            </h1>
-            <p className="text-lg text-blue-100/70 max-w-2xl mx-auto">
-              Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9
-              Komisariat GenBI di Jawa Timur.
-            </p>
-          </SlideUp>
+        <section className="mb-20">
+          <SectionHeader
+            title="Pusat Data Komisariat"
+            description="Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9 Komisariat GenBI di Jawa Timur."
+          />
 
           <FadeIn delay={0.2}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Stat 1 */}
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/30 transition-colors">
+              <Card
+                variant="glass"
+                className="p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-colors"
+              >
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-colors"></div>
                 <div className="relative z-10">
                   <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
@@ -183,14 +183,17 @@ export default function CommissariatPage() {
                   <p className="text-4xl font-bold text-white">
                     {totalMembers}+
                   </p>
-                  <div className="mt-4 text-xs text-cyan-200 bg-cyan-500/10 inline-block px-2 py-1 rounded border border-cyan-500/20">
+                  <div className="mt-4 text-xs font-medium text-cyan-200 bg-cyan-500/10 inline-block px-3 py-1 rounded-full border border-cyan-500/20">
                     Se-Jawa Timur
                   </div>
                 </div>
-              </div>
+              </Card>
 
               {/* Stat 2 */}
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+              <Card
+                variant="glass"
+                className="p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors"
+              >
                 <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-colors"></div>
                 <div className="relative z-10">
                   <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
@@ -199,15 +202,18 @@ export default function CommissariatPage() {
                   <p className="text-4xl font-bold text-white">
                     {totalCommissariats}
                   </p>
-                  <div className="mt-4 text-xs text-blue-200 bg-blue-500/10 inline-block px-2 py-1 rounded border border-blue-500/20">
+                  <div className="mt-4 text-xs font-medium text-blue-200 bg-blue-500/10 inline-block px-3 py-1 rounded-full border border-blue-500/20">
                     Perguruan Tinggi Negeri
                   </div>
                 </div>
-              </div>
+              </Card>
 
               {/* Stat 3 */}
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl relative overflow-hidden group hover:border-purple-500/30 transition-colors">
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-colors"></div>
+              <Card
+                variant="glass"
+                className="p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-colors"
+              >
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-colors"></div>
                 <div className="relative z-10">
                   <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
                     Total Program Kerja
@@ -215,11 +221,11 @@ export default function CommissariatPage() {
                   <p className="text-4xl font-bold text-white">
                     {totalPrograms}+
                   </p>
-                  <div className="mt-4 text-xs text-purple-200 bg-purple-500/10 inline-block px-2 py-1 rounded border border-purple-500/20">
+                  <div className="mt-4 text-xs font-medium text-indigo-200 bg-indigo-500/10 inline-block px-3 py-1 rounded-full border border-indigo-500/20">
                     Terealisasi Tahun Ini
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
           </FadeIn>
         </section>
@@ -232,7 +238,7 @@ export default function CommissariatPage() {
           <aside className="lg:col-span-1 lg:order-last space-y-8">
             <FadeIn delay={0.4}>
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 tracking-tight">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
@@ -259,9 +265,15 @@ export default function CommissariatPage() {
                     </div>
                   ))}
                 </div>
-                <Button variant="secondary" className="w-full mt-6 text-xs h-9">
-                  Lihat Semua Aktivitas
-                </Button>
+                <Link href="/news" className="w-full">
+                  <Button
+                    variant="secondary"
+                    className="w-full mt-6 text-sm h-10 rounded-full flex items-center justify-center gap-2 group hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all font-medium"
+                  >
+                    Lihat Semua Aktivitas
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
               </div>
             </FadeIn>
           </aside>
@@ -274,22 +286,21 @@ export default function CommissariatPage() {
               className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between relative z-30"
             >
               <div className="relative w-full md:w-96">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50">
-                  🔍
-                </span>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Cari komisariat..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
+                  className="w-full pl-12 pr-4 py-3 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
               <div className="relative w-full md:w-auto">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full md:w-64 px-6 py-3 pr-10 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white font-bold text-left hover:bg-white/10 transition-colors flex items-center justify-between cursor-pointer"
+                  className="w-full md:w-64 pl-12 py-3 pr-6 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white font-bold text-left hover:bg-white/10 transition-colors flex items-center justify-between cursor-pointer"
                 >
                   <span className="truncate">{filterYear}</span>
                   <span
@@ -297,12 +308,12 @@ export default function CommissariatPage() {
                       isDropdownOpen ? "rotate-180" : ""
                     }`}
                   >
-                    ▼
+                    <ChevronDown className="w-4 h-4" />
                   </span>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar">
+                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar">
                     <div className="p-1 space-y-1">
                       {YEARS.map((year) => (
                         <button
@@ -311,10 +322,10 @@ export default function CommissariatPage() {
                             setFilterYear(year);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+                          className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                             filterYear === year
                               ? "bg-cyan-500/20 text-cyan-200"
-                              : "text-blue-100/80 hover:bg-white/10 hover:text-white"
+                              : "text-blue-100/80 hover:bg-white/10 hover:text-white hover:pl-6"
                           }`}
                         >
                           {year}
@@ -339,30 +350,31 @@ export default function CommissariatPage() {
               {filteredCommissariats.length > 0 ? (
                 filteredCommissariats.map((comm) => (
                   <StaggerItem key={comm.id}>
-                    <Card className="group hover:bg-white/10 bg-white/5 backdrop-blur-md border border-white/10 shadow-lg hover:shadow-cyan-500/10 transition-all h-full flex flex-col justify-between">
+                    <Card
+                      variant="glass"
+                      className="group h-full flex flex-col justify-between"
+                    >
                       <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-4">
                           {/* Logo Placeholder */}
-                          <div
-                            className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                              comm.color || "from-blue-600 to-cyan-500"
-                            } flex items-center justify-center text-white font-bold text-lg shadow-lg`}
-                          >
-                            {/* Use first letter if no logo, or mock logo */}
-                            {comm.name
-                              .replace("Komisariat ", "")
-                              .substring(0, 2)}
+                          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                            <Image
+                              src={comm.logo}
+                              alt={`${comm.name} Logo`}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-contain p-3 brightness-0 invert opacity-80 group-hover:opacity-100 group-hover:brightness-100 group-hover:invert-0 transition-all duration-300"
+                            />
                           </div>
-                          <span className="text-xs font-mono text-blue-200/50 bg-white/5 px-2 py-1 rounded border border-white/5">
-                            ID: {comm.id.toString().padStart(3, "0")}
-                          </span>
+                          <div>
+                            <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors tracking-tight">
+                              {comm.name}
+                            </h3>
+                            <p className="text-xs text-blue-200/60 line-clamp-1">
+                              {comm.university}
+                            </p>
+                          </div>
                         </div>
-                        <CardTitle className="text-lg text-white group-hover:text-cyan-200 transition-colors leading-tight">
-                          {comm.name}
-                        </CardTitle>
-                        <p className="text-xs text-blue-200/60 line-clamp-1">
-                          {comm.university}
-                        </p>
                       </CardHeader>
 
                       <div className="px-6 py-2">
@@ -392,9 +404,10 @@ export default function CommissariatPage() {
                         >
                           <Button
                             variant="secondary"
-                            className="w-full text-sm h-10 group-hover:bg-cyan-500/10 group-hover:text-cyan-300 group-hover:border-cyan-500/30"
+                            className="w-full text-sm h-10 rounded-full group-hover:bg-cyan-500/10 group-hover:text-cyan-300 group-hover:border-cyan-500/30 transition-all flex items-center justify-center gap-2"
                           >
                             Kunjungi Profil
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                           </Button>
                         </Link>
                       </div>

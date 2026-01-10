@@ -137,12 +137,19 @@ export default function NewsDetailPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col font-sans selection:bg-cyan-500 selection:text-white bg-[#0f1016]">
+    <div className="flex min-h-screen flex-col font-sans selection:bg-cyan-500 selection:text-white bg-[#020617] relative overflow-hidden">
+      {/* Background Orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob optimize-gpu"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 optimize-gpu"></div>
+
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-20">
+      <main className="flex-1 pt-24 pb-20 relative">
         {/* Article Header */}
         <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden flex items-end">
+          {/* Subtle Background Elements (Mesh Gradient) for Hero */}
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none mix-blend-screen optimize-gpu"></div>
+
           <div className="absolute inset-0 z-0">
             <Image
               src={data.heroImage}

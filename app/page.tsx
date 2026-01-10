@@ -426,7 +426,7 @@ export default function Home() {
           <div className="container relative px-6 mx-auto text-center z-10 text-white">
             <div className="max-w-4xl mx-auto">
               <SectionHeader
-                title="Jadilah Energi Baru untuk Indonesia Maju"
+                title="Jadilah Energi Baru untuk InDy onesia Maju"
                 description="Bergabunglah dengan ekosistem kepemimpinan terbesar di Jawa Timur. Persiapkan dirimu untuk seleksi penerima beasiswa tahun 2026."
                 className="mb-6"
               />
