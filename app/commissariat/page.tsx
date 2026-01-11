@@ -17,7 +17,7 @@ import Image from "next/image";
 import { Search, Calendar, ChevronDown, ArrowRight } from "lucide-react";
 
 // List Data Komisariat
-const YEARS = ["Semua Tahun", "2025-2026", "2024-2025"];
+const YEARS = ["Semua Tahun", "2025-2026"];
 
 const COMMISSARIATS = [
   {

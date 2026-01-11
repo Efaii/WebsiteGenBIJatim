@@ -9,7 +9,13 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { Download, ExternalLink, ArrowRight } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  ArrowRight,
+  Instagram,
+  Mail,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FadeIn,
@@ -1400,8 +1406,11 @@ export default function CommissariatDetail({
                   {/* Text Info */}
                   <div className="text-center md:text-left flex-1 space-y-3">
                     <div className="space-y-1">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                      <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm shadow-sm text-sm font-medium text-blue-100 transition-colors hover:bg-white/20 hover:border-white/30 cursor-default mb-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                        </span>
                         Komisariat Aktif
                       </div>
                       <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
@@ -1424,7 +1433,7 @@ export default function CommissariatDetail({
                         className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
                       >
                         <span className="group-hover/social:scale-110 transition-transform">
-                          📸
+                          <Instagram className="w-4 h-4" />
                         </span>{" "}
                         <span className="font-medium text-sm">
                           {data.socials.instagram}
@@ -1435,7 +1444,7 @@ export default function CommissariatDetail({
                         className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
                       >
                         <span className="group-hover/social:scale-110 transition-transform">
-                          ✉️
+                          <Mail className="w-4 h-4" />
                         </span>{" "}
                         <span className="font-medium text-sm">
                           {data.socials.email}
@@ -1449,7 +1458,7 @@ export default function CommissariatDetail({
 
             {/* Tabs Navigation */}
             <FadeIn delay={0.2} className="flex justify-center mt-12 mb-8">
-              <div className="flex flex-wrap items-center justify-center gap-2 bg-white/5 backdrop-blur-md p-1.5 rounded-3xl md:rounded-full border border-white/10">
+              <div className="flex flex-wrap items-center justify-center gap-2 bg-white/5 backdrop-blur-md p-1.5 rounded-3xl md:rounded-full border border-white/10 relative">
                 {[
                   { id: "profil", label: "Profil & Kepengurusan" },
                   { id: "proker", label: "Program Kerja" },
@@ -1460,12 +1469,19 @@ export default function CommissariatDetail({
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as TabType)}
                     className={cn(
-                      "px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-300",
+                      "px-6 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
                       activeTab === tab.id
-                        ? "bg-cyan-500/20 text-cyan-200 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                        : "text-blue-200/60 hover:text-white hover:bg-white/5 border border-transparent"
+                        ? "text-cyan-200"
+                        : "text-blue-200/60 hover:text-white"
                     )}
                   >
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
                     {tab.label}
                   </button>
                 ))}
@@ -1476,8 +1492,16 @@ export default function CommissariatDetail({
 
         {/* Content Sections */}
         <div className="container mx-auto px-6 min-h-[400px]">
-          {/* Tab 1: Profil */}
-          {activeTab === "profil" && (
+          <AnimatePresence mode="wait">
+            {/* Tab 1: Profil */}
+            {activeTab === "profil" && (
+              <motion.div
+                key="profil"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
             <StaggerContainer className="space-y-20">
               {/* Tentang Kami */}
               <StaggerItem>
@@ -1682,12 +1706,20 @@ export default function CommissariatDetail({
                   </div>
                 </div>
               </section>
-            </StaggerContainer>
+              </StaggerContainer>
+            </motion.div>
           )}
 
           {/* Tab 2: Proker */}
           {activeTab === "proker" && (
-            <StaggerContainer className="grid gap-6">
+            <motion.div
+              key="proker"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StaggerContainer className="grid gap-6">
               {data.proker.map((item) => (
                 <StaggerItem key={item.id}>
                   <div className="flex flex-col md:flex-row gap-6 bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
@@ -1730,12 +1762,20 @@ export default function CommissariatDetail({
                   </div>
                 </StaggerItem>
               ))}
-            </StaggerContainer>
+              </StaggerContainer>
+            </motion.div>
           )}
 
           {/* Tab 3: Awardee */}
           {activeTab === "awardee" && (
-            <div className="space-y-6">
+            <motion.div
+              key="awardee"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-2xl font-bold">Daftar Awardee</h3>
                 <input
@@ -1786,12 +1826,20 @@ export default function CommissariatDetail({
                   </table>
                 </div>
               </div>
-            </div>
+              </div>
+            </motion.div>
           )}
 
           {/* Tab 4: Arsip */}
           {activeTab === "arsip" && (
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <motion.div
+              key="arsip"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {data.documents.map((doc) => (
                 <StaggerItem key={doc.id}>
                   <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group">
@@ -1822,8 +1870,10 @@ export default function CommissariatDetail({
                   </div>
                 </StaggerItem>
               ))}
-            </StaggerContainer>
+              </StaggerContainer>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </main>
 

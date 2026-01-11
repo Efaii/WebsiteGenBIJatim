@@ -14,7 +14,7 @@ import {
   StaggerItem,
 } from "@/components/MotionWrapper";
 import Image from "next/image";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { MemberDetailModal, BPHMember } from "@/components/MemberDetailModal";
 import { ProkerDetailModal, ProkerData } from "@/components/ProkerDetailModal";
 import CountUp from "@/components/CountUp";
@@ -714,7 +714,7 @@ export default function AboutPage() {
 
             {/* Tabs Navigation */}
             <div className="flex justify-center mb-12">
-              <div className="flex bg-white/5 backdrop-blur-md p-1 rounded-full border border-white/10">
+              <div className="flex bg-white/5 backdrop-blur-md p-1 rounded-full border border-white/10 relative">
                 {[
                   { id: "struktur", label: "Struktur Organisasi" },
                   { id: "proker", label: "Program Kerja" },
@@ -724,12 +724,19 @@ export default function AboutPage() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={cn(
-                      "px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300",
+                      "px-6 py-2 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
                       activeTab === tab.id
-                        ? "bg-cyan-500/20 text-cyan-200 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
-                        : "text-blue-200/60 hover:text-white hover:bg-white/5 border border-transparent"
+                        ? "text-cyan-200"
+                        : "text-blue-200/60 hover:text-white"
                     )}
                   >
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
                     {tab.label}
                   </button>
                 ))}
@@ -737,9 +744,17 @@ export default function AboutPage() {
             </div>
 
             <div className="max-w-6xl mx-auto min-h-[500px]">
-              {/* Tab 1: Struktur Organisasi */}
-              {activeTab === "struktur" && (
-                <div className="space-y-12 animate-in fade-in duration-500">
+              <AnimatePresence mode="wait">
+                {/* Tab 1: Struktur Organisasi */}
+                {activeTab === "struktur" && (
+                  <motion.div
+                    key="struktur"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                <div className="space-y-12">
                   {/* Leaders Section */}
                   <div className="flex flex-col items-center mb-12">
                     <FadeIn delay={0.1}>
@@ -761,7 +776,7 @@ export default function AboutPage() {
                       </div>
                     </FadeIn>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
+                    <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
                       {KORKOM_STRUCTURE.bph
                         .filter(
                           (m) =>
@@ -793,7 +808,7 @@ export default function AboutPage() {
                             </Card>
                           </StaggerItem>
                         ))}
-                    </div>
+                    </StaggerContainer>
                   </div>
 
                   <SlideUp delay={0.2}>
@@ -866,208 +881,227 @@ export default function AboutPage() {
                     </SlideUp>
 
                     <SlideUp delay={0.5}>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
+                      <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
                         {/* Development */}
-                        <Card variant="glass" className="h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <BookOpen
-                                  className="w-6 h-6"
-                                  strokeWidth={1.5}
-                                />
+                        <StaggerItem>
+                          <Card variant="glass" className="h-full group">
+                            <CardContent className="p-8 pt-8">
+                              <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                  <BookOpen
+                                    className="w-6 h-6"
+                                    strokeWidth={1.5}
+                                  />
+                                </div>
+                                <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                  Pengembangan <br /> & Pendidikan
+                                </h4>
                               </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Pengembangan <br /> & Pendidikan
-                              </h4>
-                            </div>
 
-                            <div className="space-y-4">
-                              {getDivisionMembers("Pengembangan & Pendidikan")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
-                                  />
-                                ))}
-
-                              {getDivisionMembers("Pengembangan & Pendidikan")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekretaris")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
-                                  />
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers(
-                                    "Pengembangan & Pendidikan"
+                              <div className="space-y-4">
+                                {getDivisionMembers("Pengembangan & Pendidikan")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("ketua")
                                   )
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                {getDivisionMembers("Pengembangan & Pendidikan")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("sekretaris")
+                                  )
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                <div>
+                                  <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                    Anggota
+                                  </p>
+                                  <ul className="space-y-2 text-sm">
+                                    {getDivisionMembers(
+                                      "Pengembangan & Pendidikan"
                                     )
-                                    .map((member, idx) => (
-                                      <MemberListItem
-                                        key={idx}
-                                        member={member}
-                                        hideRole={true}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                      />
-                                    ))}
-                                </ul>
+                                      .filter((m) =>
+                                        m.role.toLowerCase().includes("anggota")
+                                      )
+                                      .map((member, idx) => (
+                                        <MemberListItem
+                                          key={idx}
+                                          member={member}
+                                          hideRole={true}
+                                          onClick={() =>
+                                            setSelectedMember(member)
+                                          }
+                                        />
+                                      ))}
+                                  </ul>
+                                </div>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        </StaggerItem>
 
                         {/* Sinergi */}
-                        <Card variant="glass" className="h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <Users className="w-6 h-6" strokeWidth={1.5} />
-                              </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Sinergi <br /> Komisariat
-                              </h4>
-                            </div>
-
-                            <div className="space-y-4">
-                              {getDivisionMembers("Sinergi")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
+                        <StaggerItem>
+                          <Card variant="glass" className="h-full group">
+                            <CardContent className="p-8 pt-8">
+                              <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                  <Users
+                                    className="w-6 h-6"
+                                    strokeWidth={1.5}
                                   />
-                                ))}
-
-                              {getDivisionMembers("Sinergi")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekretaris")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
-                                  />
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers("Sinergi")
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
-                                    )
-                                    .map((member, idx) => (
-                                      <MemberListItem
-                                        key={idx}
-                                        member={member}
-                                        hideRole={true}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                      />
-                                    ))}
-                                </ul>
+                                </div>
+                                <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                  Sinergi <br /> Komisariat
+                                </h4>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+
+                              <div className="space-y-4">
+                                {getDivisionMembers("Sinergi")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("ketua")
+                                  )
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                {getDivisionMembers("Sinergi")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("sekretaris")
+                                  )
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                <div>
+                                  <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                    Anggota
+                                  </p>
+                                  <ul className="space-y-2 text-sm">
+                                    {getDivisionMembers("Sinergi")
+                                      .filter((m) =>
+                                        m.role.toLowerCase().includes("anggota")
+                                      )
+                                      .map((member, idx) => (
+                                        <MemberListItem
+                                          key={idx}
+                                          member={member}
+                                          hideRole={true}
+                                          onClick={() =>
+                                            setSelectedMember(member)
+                                          }
+                                        />
+                                      ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </StaggerItem>
 
                         {/* PR Medkom */}
-                        <Card variant="glass" className="h-full group">
-                          <CardContent className="p-8 pt-8">
-                            <div className="flex items-center gap-4 mb-8">
-                              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
-                                <Megaphone
-                                  className="w-6 h-6"
-                                  strokeWidth={1.5}
-                                />
-                              </div>
-                              <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
-                                Public Relation <br /> & Medkom
-                              </h4>
-                            </div>
-
-                            <div className="space-y-4">
-                              {getDivisionMembers("PR")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("ketua")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
+                        <StaggerItem>
+                          <Card variant="glass" className="h-full group">
+                            <CardContent className="p-8 pt-8">
+                              <div className="flex items-center gap-4 mb-8">
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-lg text-cyan-300 group-hover:scale-110 transition-transform duration-300 group-hover:bg-cyan-500/20 group-hover:text-cyan-200">
+                                  <Megaphone
+                                    className="w-6 h-6"
+                                    strokeWidth={1.5}
                                   />
-                                ))}
-
-                              {getDivisionMembers("PR")
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekretaris")
-                                )
-                                .map((member, idx) => (
-                                  <MemberListItem
-                                    key={idx}
-                                    member={member}
-                                    onClick={() => setSelectedMember(member)}
-                                  />
-                                ))}
-
-                              <div>
-                                <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
-                                  Anggota
-                                </p>
-                                <ul className="space-y-2 text-sm">
-                                  {getDivisionMembers("PR")
-                                    .filter((m) =>
-                                      m.role.toLowerCase().includes("anggota")
-                                    )
-                                    .map((member, idx) => (
-                                      <MemberListItem
-                                        key={idx}
-                                        member={member}
-                                        hideRole={true}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                      />
-                                    ))}
-                                </ul>
+                                </div>
+                                <h4 className="font-bold text-white text-lg leading-tight group-hover:text-cyan-300 transition-colors">
+                                  Public Relation <br /> & Medkom
+                                </h4>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+
+                              <div className="space-y-4">
+                                {getDivisionMembers("PR")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("ketua")
+                                  )
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                {getDivisionMembers("PR")
+                                  .filter((m) =>
+                                    m.role.toLowerCase().includes("sekretaris")
+                                  )
+                                  .map((member, idx) => (
+                                    <MemberListItem
+                                      key={idx}
+                                      member={member}
+                                      onClick={() => setSelectedMember(member)}
+                                    />
+                                  ))}
+
+                                <div>
+                                  <p className="text-xs text-blue-200/60 font-semibold uppercase tracking-wider mb-3">
+                                    Anggota
+                                  </p>
+                                  <ul className="space-y-2 text-sm">
+                                    {getDivisionMembers("PR")
+                                      .filter((m) =>
+                                        m.role.toLowerCase().includes("anggota")
+                                      )
+                                      .map((member, idx) => (
+                                        <MemberListItem
+                                          key={idx}
+                                          member={member}
+                                          hideRole={true}
+                                          onClick={() =>
+                                            setSelectedMember(member)
+                                          }
+                                        />
+                                      ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </StaggerItem>
+                      </StaggerContainer>
                     </SlideUp>
                   </div>
                 </div>
-              )}
+              
 
-              {/* Tab 2: Program Kerja */}
-              {activeTab === "proker" && (
+                  </motion.div>
+                )}
+
+                {/* Tab 2: Program Kerja */}
+                {activeTab === "proker" && (
+                  <motion.div
+                    key="proker"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
                 <StaggerContainer className="grid gap-6">
                   {KORKOM_STRUCTURE.proker.map((item) => (
                     <StaggerItem key={item.id}>
@@ -1117,10 +1151,20 @@ export default function AboutPage() {
                     </StaggerItem>
                   ))}
                 </StaggerContainer>
-              )}
+              )
 
-              {/* Tab 3: Arsip */}
-              {activeTab === "arsip" && (
+                  </motion.div>
+                )}
+
+                {/* Tab 3: Arsip */}
+                {activeTab === "arsip" && (
+                  <motion.div
+                    key="arsip"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
                 <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {KORKOM_STRUCTURE.documents.length > 0 ? (
                     KORKOM_STRUCTURE.documents.map((doc) => (
@@ -1160,7 +1204,10 @@ export default function AboutPage() {
                     </div>
                   )}
                 </StaggerContainer>
-              )}
+                  )
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </section>
