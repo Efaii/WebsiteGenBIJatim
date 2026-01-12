@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,11 +11,13 @@ import { Button } from "@/components/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import {
   Download,
-  ExternalLink,
   ArrowRight,
   Instagram,
   Mail,
+  Search,
+  ExternalLink,
 } from "lucide-react";
+import { DocumentCard } from "@/components/DocumentCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FadeIn,
@@ -47,8 +49,18 @@ interface Awardee {
 interface Document {
   id: number;
   title: string;
-  type: "SK" | "LPJ" | "SOP" | "Other";
-  fileType: "PDF" | "DOCX";
+  type:
+    | "SK"
+    | "LPJ"
+    | "SOP"
+    | "Other"
+    | "Proposal"
+    | "Data"
+    | "Materi"
+    | "Surat"
+    | "Notulensi"
+    | "Dokumentasi";
+  fileType: "PDF" | "DOCX" | "XLSX" | "PPTX" | "ZIP";
   size: string;
   date: string;
 }
@@ -207,7 +219,72 @@ const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       major: "Jurusan",
       year: "2024",
     })),
-    documents: [],
+    documents: [
+      {
+        id: 1,
+        title: "SK Pengurus Wilayah GenBI Jatim 2025-2026",
+        type: "SK",
+        fileType: "PDF",
+        size: "2.4 MB",
+        date: "10 Jan 2025",
+      },
+      {
+        id: 2,
+        title: "Laporan Pertanggungjawaban (LPJ) Triwulan I",
+        type: "LPJ",
+        fileType: "PDF",
+        size: "15.8 MB",
+        date: "05 Apr 2025",
+      },
+      {
+        id: 3,
+        title: "Proposal Sponsorship GenBI Leadership Camp",
+        type: "Proposal",
+        fileType: "PDF",
+        size: "4.2 MB",
+        date: "12 Feb 2025",
+      },
+      {
+        id: 4,
+        title: "Database Anggota Aktif & Alumni 2025",
+        type: "Data",
+        fileType: "XLSX",
+        size: "850 KB",
+        date: "15 Jan 2025",
+      },
+      {
+        id: 5,
+        title: "Materi Presentasi Sosialisasi Kebanksentralan",
+        type: "Materi",
+        fileType: "PPTX",
+        size: "12.5 MB",
+        date: "20 Feb 2025",
+      },
+      {
+        id: 6,
+        title: "Surat Tugas Delegasi Rakornas 2025",
+        type: "Surat",
+        fileType: "PDF",
+        size: "320 KB",
+        date: "01 Mar 2025",
+      },
+      {
+        id: 7,
+        title: "Notulensi Rapat Koordinasi Wilayah (Rakorwil)",
+        type: "Notulensi",
+        fileType: "DOCX",
+        size: "145 KB",
+        date: "28 Feb 2025",
+      },
+      {
+        id: 8,
+        title: "Dokumentasi Foto Kegiatan Buka Bersama",
+        type: "Dokumentasi",
+        fileType: "ZIP",
+        size: "45.2 MB",
+        date: "15 Apr 2025",
+      },
+    ],
   },
   unesa: {
     slug: "unesa",
@@ -1232,9 +1309,13 @@ export default function CommissariatDetail({
 }) {
   // Unwrap params in Next.js 15+
   const { slug } = use(params);
-  const [selectedMember, setSelectedMember] = useState<BPHMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profil");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const tabsRef = useRef<HTMLElement>(null);
+  const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Data Generator for Fallback
   const generateMockData = (slug: string): CommissariatData => {
@@ -1343,19 +1424,67 @@ export default function CommissariatDetail({
       documents: [
         {
           id: 1,
-          title: "SK Kepengurusan 2025",
+          title: "SK Pengurus Wilayah GenBI Jatim 2025-2026",
           type: "SK",
           fileType: "PDF",
-          size: "1.2 MB",
-          date: "Jan 2025",
+          size: "2.4 MB",
+          date: "10 Jan 2025",
         },
         {
           id: 2,
-          title: "LPJ Kegiatan Q1",
+          title: "Laporan Pertanggungjawaban (LPJ) Triwulan I",
           type: "LPJ",
           fileType: "PDF",
-          size: "3.5 MB",
-          date: "Mar 2025",
+          size: "15.8 MB",
+          date: "05 Apr 2025",
+        },
+        {
+          id: 3,
+          title: "Proposal Sponsorship GenBI Leadership Camp",
+          type: "Proposal",
+          fileType: "PDF",
+          size: "4.2 MB",
+          date: "12 Feb 2025",
+        },
+        {
+          id: 4,
+          title: "Database Anggota Aktif & Alumni 2025",
+          type: "Data",
+          fileType: "XLSX",
+          size: "850 KB",
+          date: "15 Jan 2025",
+        },
+        {
+          id: 5,
+          title: "Materi Presentasi Sosialisasi Kebanksentralan",
+          type: "Materi",
+          fileType: "PPTX",
+          size: "12.5 MB",
+          date: "20 Feb 2025",
+        },
+        {
+          id: 6,
+          title: "Surat Tugas Delegasi Rakornas 2025",
+          type: "Surat",
+          fileType: "PDF",
+          size: "320 KB",
+          date: "01 Mar 2025",
+        },
+        {
+          id: 7,
+          title: "Notulensi Rapat Koordinasi Wilayah (Rakorwil)",
+          type: "Notulensi",
+          fileType: "DOCX",
+          size: "145 KB",
+          date: "28 Feb 2025",
+        },
+        {
+          id: 8,
+          title: "Dokumentasi Foto Kegiatan Buka Bersama",
+          type: "Dokumentasi",
+          fileType: "ZIP",
+          size: "45.2 MB",
+          date: "15 Apr 2025",
         },
       ],
     };
@@ -1363,6 +1492,29 @@ export default function CommissariatDetail({
 
   // Fetch data, fallback to dynamic generator
   const data = COMMISSARIAT_DATA[slug] || generateMockData(slug);
+
+  // Filter awardees
+  const filteredAwardees = data.awardees.filter((a) =>
+    a.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredAwardees.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredAwardees.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const downloadMockFile = (title: string) => {
+    alert(`Memulai unduhan dokumen: ${title}`);
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
@@ -1374,7 +1526,7 @@ export default function CommissariatDetail({
 
       <main className="flex-1 w-full relative z-10 pb-20">
         {/* Hero Section */}
-        <section className="relative pt-40 pb-20 px-6">
+        <section className="relative pt-40 pb-10 px-6">
           <div className="container mx-auto">
             <SlideUp className="w-full">
               <div className="relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden group">
@@ -1455,43 +1607,70 @@ export default function CommissariatDetail({
                 </div>
               </div>
             </SlideUp>
-
-            {/* Tabs Navigation */}
-            <FadeIn delay={0.2} className="flex justify-center mt-12 mb-8">
-              <div className="flex flex-wrap items-center justify-center gap-2 bg-white/5 backdrop-blur-md p-1.5 rounded-3xl md:rounded-full border border-white/10 relative">
-                {[
-                  { id: "profil", label: "Profil & Kepengurusan" },
-                  { id: "proker", label: "Program Kerja" },
-                  { id: "awardee", label: "Data Awardee" },
-                  { id: "arsip", label: "Arsip Internal & LPJ" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as TabType)}
-                    className={cn(
-                      "px-6 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
-                      activeTab === tab.id
-                        ? "text-cyan-200"
-                        : "text-blue-200/60 hover:text-white"
-                    )}
-                  >
-                    {activeTab === tab.id && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </FadeIn>
           </div>
         </section>
 
+        {/* Tabs Navigation - Separated from Hero */}
+        <div ref={scrollAnchorRef} className="absolute mt-[-100px]" />
+        <section
+          ref={tabsRef}
+          className="sticky top-20 z-40 py-4 transition-all duration-300"
+        >
+          {/* Glass Background for Sticky Effect can be added here if needed */}
+          <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 opacity-0 data-[sticky=true]:opacity-100 transition-opacity"></div>
+
+          <FadeIn
+            delay={0.2}
+            className="container mx-auto px-6 flex justify-center relative z-10"
+          >
+            <div className="flex flex-wrap items-center justify-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
+              {[
+                { id: "profil", label: "Profil & Kepengurusan" },
+                { id: "proker", label: "Program Kerja" },
+                { id: "awardee", label: "Data Awardee" },
+                { id: "arsip", label: "Arsip Internal & LPJ" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as TabType);
+                    setTimeout(() => {
+                      if (scrollAnchorRef.current) {
+                        const y =
+                          scrollAnchorRef.current.getBoundingClientRect().top +
+                          window.scrollY -
+                          20; // Slight buffer
+                        window.scrollTo({ top: y, behavior: "smooth" });
+                      }
+                    }, 100);
+                  }}
+                  className={cn(
+                    "px-6 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
+                    activeTab === tab.id
+                      ? "text-cyan-200"
+                      : "text-blue-200/60 hover:text-white"
+                  )}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </FadeIn>
+        </section>
+
         {/* Content Sections */}
-        <div className="container mx-auto px-6 min-h-[400px]">
+        <div className="container mx-auto px-6 min-h-[400px] pt-12 pb-20">
           <AnimatePresence mode="wait">
             {/* Tab 1: Profil */}
             {activeTab === "profil" && (
@@ -1502,377 +1681,479 @@ export default function CommissariatDetail({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-            <StaggerContainer className="space-y-20">
-              {/* Tentang Kami */}
-              <StaggerItem>
-                <Card className="bg-white/5 border-white/10 p-8 backdrop-blur-sm relative overflow-hidden group">
-                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
-                  <h3 className="text-2xl font-bold mb-4 text-white relative z-10 flex items-center gap-3 tracking-tight">
-                    <span className="w-1 h-8 bg-cyan-500 rounded-full"></span>
-                    Tentang Kami
-                  </h3>
-                  <p className="text-blue-100/80 leading-relaxed text-lg relative z-10">
-                    {data.description}
-                  </p>
-                </Card>
-              </StaggerItem>
-
-              {/* Organizational Structure */}
-              <section className="py-20 relative border-t border-white/5">
-                <div className="container mx-auto px-6 relative z-10">
-                  <div className="text-center mb-20">
-                    <SlideUp>
-                      <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-                        Struktur Organisasi
-                      </h2>
-                      <p className="text-blue-200/70 max-w-2xl mx-auto">
-                        Susunan pengurus {data.name} Periode 2025/2026.
-                      </p>
-                    </SlideUp>
-                  </div>
-
-                  <div className="max-w-6xl mx-auto">
-                    <StaggerItem>
-                      {/* Leaders Section */}
-                      <div className="flex flex-col items-center mb-12">
-                        <div className="flex items-center gap-4 mb-8 w-full justify-center">
-                          <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
-                          <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
-                            Leaders
-                          </h3>
-                          <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20 justify-center max-w-2xl">
-                          {data.bph
-                            .filter(
-                              (m) =>
-                                m.role.toLowerCase().includes("ketua") ||
-                                m.role.toLowerCase().includes("wakil")
-                            )
-                            .map((member, idx) => (
-                              <Card
-                                key={idx}
-                                onClick={() => setSelectedMember(member)}
-                                className="bg-white/5 backdrop-blur-md border border-white/10 p-8 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-2 cursor-pointer group hover:border-cyan-500/30"
-                              >
-                                <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors">
-                                  <Image
-                                    src={member.image}
-                                    alt={member.name}
-                                    width={96}
-                                    height={96}
-                                    className="w-full h-full object-cover transition-all duration-500"
-                                  />
-                                </div>
-                                <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
-                                  {member.name}
-                                </h3>
-                                <p className="text-sm font-semibold text-cyan-400 uppercase tracking-wider">
-                                  {member.role}
-                                </p>
-                              </Card>
-                            ))}
-                        </div>
-
-                        {/* Secretaries & Treasurers */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
-                          {/* Secretaries */}
-                          <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors">
-                            <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                              <span className="text-2xl grayscale brightness-200">
-                                📝
-                              </span>
-                              <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                                Sekretaris
-                              </h3>
-                            </div>
-                            <div className="space-y-4">
-                              {data.bph
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("sekretaris")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    onClick={() => setSelectedMember(member)}
-                                    className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover transition-all"
-                                      />
-                                    </div>
-                                    <div className="text-left">
-                                      <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                        {member.name}
-                                      </p>
-                                      <p className="text-xs text-blue-200/60">
-                                        {member.role}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-
-                          {/* Treasurers */}
-                          <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors">
-                            <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                              <span className="text-2xl grayscale brightness-200">
-                                💰
-                              </span>
-                              <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                                Bendahara
-                              </h3>
-                            </div>
-                            <div className="space-y-4">
-                              {data.bph
-                                .filter((m) =>
-                                  m.role.toLowerCase().includes("bendahara")
-                                )
-                                .map((member, idx) => (
-                                  <div
-                                    key={idx}
-                                    onClick={() => setSelectedMember(member)}
-                                    className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                                  >
-                                    <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={48}
-                                        height={48}
-                                        className="w-full h-full object-cover transition-all"
-                                      />
-                                    </div>
-                                    <div className="text-left">
-                                      <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                        {member.name}
-                                      </p>
-                                      <p className="text-xs text-blue-200/60">
-                                        {member.role}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Divisions */}
-                        {data.divisions && data.divisions.length > 0 && (
-                          <div className="w-full">
-                            <div className="flex items-center gap-4 mb-8 w-full justify-center">
-                              <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
-                              <h3 className="text-xl font-bold text-white uppercase tracking-widest">
-                                Koordinator Divisi
-                              </h3>
-                              <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full justify-center">
-                              {data.divisions.map((member, idx) => (
-                                <Card
-                                  key={idx}
-                                  onClick={() => setSelectedMember(member)}
-                                  className="bg-white/5 backdrop-blur-md border border-white/10 p-4 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
-                                >
-                                  <div className="w-16 h-16 bg-blue-950/50 rounded-full border-2 border-white/10 flex items-center justify-center shadow-md overflow-hidden mb-3 group-hover:border-cyan-400 transition-colors">
-                                    <Image
-                                      src={member.image}
-                                      alt={member.name}
-                                      width={64}
-                                      height={64}
-                                      className="w-full h-full object-cover transition-all duration-500"
-                                    />
-                                  </div>
-                                  <h3 className="font-bold text-sm text-white mb-0.5 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
-                                    {member.name}
-                                  </h3>
-                                  <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider truncate w-full">
-                                    {member.role}
-                                  </p>
-                                </Card>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </StaggerItem>
-                  </div>
-                </div>
-              </section>
-              </StaggerContainer>
-            </motion.div>
-          )}
-
-          {/* Tab 2: Proker */}
-          {activeTab === "proker" && (
-            <motion.div
-              key="proker"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <StaggerContainer className="grid gap-6">
-              {data.proker.map((item) => (
-                <StaggerItem key={item.id}>
-                  <div className="flex flex-col md:flex-row gap-6 bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
-                    <div className="w-full md:w-48 flex-none flex flex-col items-center justify-center bg-black/20 rounded-xl p-4 text-center border border-white/5">
-                      <div className="text-2xl font-bold text-white">
-                        {item.date.split(" ")[0]}
-                      </div>
-                      <div className="text-sm text-cyan-200 uppercase tracking-widest">
-                        {item.date.split(" ")[1]} {item.date.split(" ")[2]}
-                      </div>
-                      <div
-                        className={`mt-3 px-3 py-1 rounded-full text-xs font-bold border ${
-                          item.status === "Completed"
-                            ? "bg-green-500/20 text-green-300 border-green-500/30"
-                            : item.status === "On-going"
-                            ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                            : "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                        }`}
-                      >
-                        {item.status}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-2">
-                        {item.title}
+                <div className="space-y-20">
+                  {/* Tentang Kami */}
+                  <FadeIn delay={0.1} once={false}>
+                    <Card className="bg-white/5 border-white/10 p-8 backdrop-blur-sm relative overflow-hidden group">
+                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
+                      <h3 className="text-2xl font-bold mb-4 text-white relative z-10 flex items-center gap-3 tracking-tight">
+                        <span className="w-1 h-8 bg-cyan-500 rounded-full"></span>
+                        Tentang Kami
                       </h3>
-                      <p className="text-blue-200/70 mb-4">
-                        {item.description}
+                      <p className="text-blue-100/80 leading-relaxed text-lg relative z-10">
+                        {data.description}
                       </p>
-                      {item.documentation && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="gap-2 rounded-full group"
-                        >
-                          <ExternalLink className="w-4 h-4" /> Lihat Dokumentasi
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </StaggerItem>
-              ))}
-              </StaggerContainer>
-            </motion.div>
-          )}
+                    </Card>
+                  </FadeIn>
 
-          {/* Tab 3: Awardee */}
-          {activeTab === "awardee" && (
-            <motion.div
-              key="awardee"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-bold">Daftar Awardee</h3>
-                <input
-                  type="text"
-                  placeholder="Cari nama..."
-                  className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500/50"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-white/5 text-blue-200 border-b border-white/10">
-                      <tr>
-                        <th className="p-4">No</th>
-                        <th className="p-4">Nama Lengkap</th>
-                        <th className="p-4">Jurusan</th>
-                        <th className="p-4">Angkatan</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {data.awardees
-                        .filter((a) =>
-                          a.name
-                            .toLowerCase()
-                            .includes(searchTerm.toLowerCase())
-                        )
-                        .map((awardee, i) => (
-                          <tr
-                            key={awardee.id}
-                            className="hover:bg-white/5 transition-colors"
+                  {/* Organizational Structure */}
+                  <section className="py-20 relative border-t border-white/5">
+                    <div className="container mx-auto px-6 relative z-10">
+                      <div className="text-center mb-20">
+                        <SlideUp once={false}>
+                          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+                            Struktur Organisasi
+                          </h2>
+                        </SlideUp>
+                        <SlideUp once={false} delay={0.1}>
+                          <p className="text-blue-200/70 max-w-2xl mx-auto">
+                            Susunan pengurus {data.name} Periode 2025/2026.
+                          </p>
+                        </SlideUp>
+                      </div>
+
+                      <div className="max-w-6xl mx-auto">
+                        {/* Leaders Section */}
+                        <div className="flex flex-col items-center mb-12">
+                          <SlideUp
+                            once={false}
+                            className="flex items-center gap-4 mb-8 w-full justify-center"
                           >
-                            <td className="p-4 text-blue-200/50">{i + 1}</td>
-                            <td className="p-4 font-semibold text-white">
-                              {awardee.name}
-                            </td>
-                            <td className="p-4 text-blue-100">
-                              {awardee.major}
-                            </td>
-                            <td className="p-4">
-                              <span className="px-2 py-1 rounded bg-blue-500/20 text-blue-300 text-xs border border-blue-500/30">
-                                {awardee.year}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              </div>
-            </motion.div>
-          )}
+                            <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
+                            <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
+                              Leaders
+                            </h3>
+                            <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
+                          </SlideUp>
 
-          {/* Tab 4: Arsip */}
-          {activeTab === "arsip" && (
-            <motion.div
-              key="arsip"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.documents.map((doc) => (
-                <StaggerItem key={doc.id}>
-                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 hover:bg-white/10 transition-all group">
-                    <div
-                      className={`w-12 h-12 flex-none rounded flex items-center justify-center text-sm font-bold border ${
-                        doc.fileType === "PDF"
-                          ? "bg-red-500/20 text-red-400 border-red-500/30"
-                          : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                      }`}
-                    >
-                      {doc.fileType}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20 justify-center max-w-2xl">
+                            {data.bph
+                              .filter(
+                                (m) =>
+                                  m.role.toLowerCase().includes("ketua") ||
+                                  m.role.toLowerCase().includes("wakil")
+                              )
+                              .map((member, idx) => (
+                                <FadeIn
+                                  key={idx}
+                                  delay={idx * 0.1}
+                                  className="w-full h-full"
+                                  once={false}
+                                >
+                                  <Card
+                                    onClick={() => setSelectedMember(member)}
+                                    className="bg-white/5 backdrop-blur-md border border-white/10 p-8 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-2 cursor-pointer group hover:border-cyan-500/30 h-full"
+                                  >
+                                    <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors">
+                                      <Image
+                                        src={member.image}
+                                        alt={member.name}
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover transition-all duration-500"
+                                      />
+                                    </div>
+                                    <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                                      {member.name}
+                                    </h3>
+                                    <p className="text-sm font-semibold text-cyan-400 uppercase tracking-wider">
+                                      {member.role}
+                                    </p>
+                                  </Card>
+                                </FadeIn>
+                              ))}
+                          </div>
+
+                          {/* Secretaries & Treasurers */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
+                            {/* Secretaries */}
+                            <FadeIn delay={0.2} className="h-full" once={false}>
+                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
+                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                                  <span className="text-2xl grayscale brightness-200">
+                                    📝
+                                  </span>
+                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                                    Sekretaris
+                                  </h3>
+                                </div>
+                                <div className="space-y-4">
+                                  {data.bph
+                                    .filter((m) =>
+                                      m.role
+                                        .toLowerCase()
+                                        .includes("sekretaris")
+                                    )
+                                    .map((member, idx) => (
+                                      <div
+                                        key={idx}
+                                        onClick={() =>
+                                          setSelectedMember(member)
+                                        }
+                                        className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                      >
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
+                                          <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            width={48}
+                                            height={48}
+                                            className="w-full h-full object-cover transition-all"
+                                          />
+                                        </div>
+                                        <div className="text-left">
+                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
+                                            {member.name}
+                                          </p>
+                                          <p className="text-xs text-blue-200/60">
+                                            {member.role}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            </FadeIn>
+
+                            {/* Treasurers */}
+                            <FadeIn delay={0.2} className="h-full" once={false}>
+                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
+                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
+                                  <span className="text-2xl grayscale brightness-200">
+                                    💰
+                                  </span>
+                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                                    Bendahara
+                                  </h3>
+                                </div>
+                                <div className="space-y-4">
+                                  {data.bph
+                                    .filter((m) =>
+                                      m.role.toLowerCase().includes("bendahara")
+                                    )
+                                    .map((member, idx) => (
+                                      <div
+                                        key={idx}
+                                        onClick={() =>
+                                          setSelectedMember(member)
+                                        }
+                                        className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                      >
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
+                                          <Image
+                                            src={member.image}
+                                            alt={member.name}
+                                            width={48}
+                                            height={48}
+                                            className="w-full h-full object-cover transition-all"
+                                          />
+                                        </div>
+                                        <div className="text-left">
+                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
+                                            {member.name}
+                                          </p>
+                                          <p className="text-xs text-blue-200/60">
+                                            {member.role}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            </FadeIn>
+                          </div>
+
+                          {/* Divisions */}
+                          {data.divisions && data.divisions.length > 0 && (
+                            <div className="w-full">
+                              <SlideUp
+                                once={false}
+                                className="flex items-center gap-4 mb-8 w-full justify-center"
+                              >
+                                <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest">
+                                  Koordinator Divisi
+                                </h3>
+                                <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
+                              </SlideUp>
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full justify-center">
+                                {data.divisions.map((member, idx) => (
+                                  <FadeIn
+                                    key={idx}
+                                    delay={idx * 0.05}
+                                    once={false}
+                                  >
+                                    <Card
+                                      onClick={() => setSelectedMember(member)}
+                                      className="bg-white/5 backdrop-blur-md border border-white/10 p-4 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
+                                    >
+                                      <div className="w-16 h-16 bg-blue-950/50 rounded-full border-2 border-white/10 flex items-center justify-center shadow-md overflow-hidden mb-3 group-hover:border-cyan-400 transition-colors">
+                                        <Image
+                                          src={member.image}
+                                          alt={member.name}
+                                          width={64}
+                                          height={64}
+                                          className="w-full h-full object-cover transition-all duration-500"
+                                        />
+                                      </div>
+                                      <h3 className="font-bold text-sm text-white mb-0.5 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
+                                        {member.name}
+                                      </h3>
+                                      <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider truncate w-full">
+                                        {member.role}
+                                      </p>
+                                    </Card>
+                                  </FadeIn>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-semibold truncate group-hover:text-cyan-300 transition-colors">
-                        {doc.title}
-                      </h4>
-                      <p className="text-xs text-blue-200/60 mt-1">
-                        {doc.type} • {doc.date} • {doc.size}
-                      </p>
+                  </section>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Tab 2: Proker */}
+            {activeTab === "proker" && (
+              <motion.div
+                key="proker"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="grid gap-6">
+                  {data.proker.map((item, idx) => (
+                    <FadeIn key={item.id} delay={idx * 0.1} once={false}>
+                      <div className="flex flex-col md:flex-row gap-6 bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
+                        <div className="w-full md:w-48 flex-none flex flex-col items-center justify-center bg-black/20 rounded-xl p-4 text-center border border-white/5">
+                          <div className="text-2xl font-bold text-white">
+                            {item.date.split(" ")[0]}
+                          </div>
+                          <div className="text-sm text-cyan-200 uppercase tracking-widest">
+                            {item.date.split(" ")[1]} {item.date.split(" ")[2]}
+                          </div>
+                          <div
+                            className={`mt-3 px-3 py-1 rounded-full text-xs font-bold border ${
+                              item.status === "Completed"
+                                ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                : item.status === "On-going"
+                                ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                                : "bg-orange-500/20 text-orange-300 border-orange-500/30"
+                            }`}
+                          >
+                            {item.status}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-white mb-2">
+                            {item.title}
+                          </h3>
+                          <p className="text-blue-200/70 mb-4">
+                            {item.description}
+                          </p>
+                          {item.documentation && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="gap-2 rounded-full group"
+                            >
+                              <ExternalLink className="w-4 h-4" /> Lihat
+                              Dokumentasi
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </FadeIn>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Tab 3: Awardee */}
+            {activeTab === "awardee" && (
+              <motion.div
+                key="awardee"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <FadeIn
+                  delay={0.2}
+                  className="w-full"
+                  once={false}
+                  amount={0.2}
+                >
+                  {/* Visual Filter */}
+                  <div className="relative z-20 mb-10 bg-white/5 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="relative w-full">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50">
+                        <Search className="w-5 h-5" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Cari nama awardee..."
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity rounded-full w-8 h-8 p-0 flex items-center justify-center"
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
+                    <div className="text-sm text-blue-200/60 whitespace-nowrap">
+                      Total: {filteredAwardees.length} Awardee
+                    </div>
                   </div>
-                </StaggerItem>
-              ))}
-              </StaggerContainer>
-            </motion.div>
-          )}
+
+                  {/* Table Data Card */}
+                  <Card className="bg-white/5 backdrop-blur-md border border-white/10 shadow-xl overflow-hidden rounded-3xl">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-white/10 border-b border-white/10">
+                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-left">
+                              Nama Lengkap
+                            </th>
+                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest hidden sm:table-cell">
+                              Jurusan
+                            </th>
+                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-center">
+                              Angkatan
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {currentItems.length > 0 ? (
+                            currentItems.map((awardee, idx) => (
+                              <tr
+                                key={awardee.id}
+                                className="hover:bg-white/5 transition-colors group"
+                              >
+                                <td className="p-6 font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                                  {awardee.name}
+                                </td>
+                                <td className="p-6 text-blue-100/70 hidden sm:table-cell">
+                                  {awardee.major}
+                                </td>
+                                <td className="p-6 text-center">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                                    {awardee.year}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={3}
+                                className="p-12 text-center text-slate-400"
+                              >
+                                Data tidak ditemukan.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5">
+                        <span className="text-sm text-blue-200/60">
+                          Menampilkan {indexOfFirstItem + 1} -{" "}
+                          {Math.min(indexOfLastItem, filteredAwardees.length)}{" "}
+                          dari {filteredAwardees.length} data
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 md:h-9"
+                            onClick={() => {
+                              setCurrentPage((prev) => Math.max(prev - 1, 1));
+                              setTimeout(() => {
+                                if (scrollAnchorRef.current) {
+                                  const y =
+                                    scrollAnchorRef.current.getBoundingClientRect()
+                                      .top +
+                                    window.scrollY -
+                                    20;
+                                  window.scrollTo({
+                                    top: y,
+                                    behavior: "smooth",
+                                  });
+                                }
+                              }, 100);
+                            }}
+                            disabled={currentPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-bold text-cyan-200 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+                              Page {currentPage} of {totalPages}
+                            </span>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="h-8 md:h-9"
+                            onClick={() => {
+                              setCurrentPage((prev) =>
+                                Math.min(prev + 1, totalPages)
+                              );
+                              setTimeout(() => {
+                                if (scrollAnchorRef.current) {
+                                  const y =
+                                    scrollAnchorRef.current.getBoundingClientRect()
+                                      .top +
+                                    window.scrollY -
+                                    20;
+                                  window.scrollTo({
+                                    top: y,
+                                    behavior: "smooth",
+                                  });
+                                }
+                              }, 100);
+                            }}
+                            disabled={currentPage === totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </FadeIn>
+              </motion.div>
+            )}
+
+            {/* Tab 4: Arsip */}
+            {activeTab === "arsip" && (
+              <motion.div
+                key="arsip"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {data.documents.map((doc) => (
+                    <StaggerItem key={doc.id}>
+                      <DocumentCard
+                        title={doc.title}
+                        fileType={doc.type}
+                        date={doc.date}
+                        size={doc.size}
+                        onClick={() => downloadMockFile(doc.title)}
+                      />
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>

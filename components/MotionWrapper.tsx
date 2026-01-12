@@ -7,13 +7,21 @@ type MotionProps = {
   children: ReactNode;
   className?: string;
   delay?: number;
+  once?: boolean;
+  amount?: number | "some" | "all";
 };
 
-export const FadeIn = ({ children, className, delay = 0 }: MotionProps) => (
+export const FadeIn = ({
+  children,
+  className,
+  delay = 0,
+  once = true,
+  amount = 0.5,
+}: MotionProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: false, amount: 0.5 }}
+    viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
     className={className}
   >
@@ -21,11 +29,17 @@ export const FadeIn = ({ children, className, delay = 0 }: MotionProps) => (
   </motion.div>
 );
 
-export const SlideUp = ({ children, className, delay = 0 }: MotionProps) => (
+export const SlideUp = ({
+  children,
+  className,
+  delay = 0,
+  once = true,
+  amount = 0.5,
+}: MotionProps) => (
   <motion.div
     initial={{ opacity: 0, y: 40 }}
     whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: false, amount: 0.5 }}
+    viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
     className={className}
   >
@@ -33,12 +47,18 @@ export const SlideUp = ({ children, className, delay = 0 }: MotionProps) => (
   </motion.div>
 );
 
-export const ScaleIn = ({ children, className, delay = 0 }: MotionProps) => (
+export const ScaleIn = ({
+  children,
+  className,
+  delay = 0,
+  once = true,
+  amount = 0.5,
+}: MotionProps) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
     whileInView={{ opacity: 1, scale: 1 }}
-    viewport={{ once: false, amount: 0.5 }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    viewport={{ once, amount }}
+    transition={{ duration: 0.5, delay, ease: "easeOut" }}
     className={className}
   >
     {children}
@@ -49,11 +69,13 @@ export const StaggerContainer = ({
   children,
   className,
   delay = 0,
+  once = true,
+  amount = 0.5,
 }: MotionProps) => (
   <motion.div
     initial="hidden"
     whileInView="show"
-    viewport={{ once: false, amount: 0.5 }}
+    viewport={{ once, amount }}
     variants={{
       hidden: { opacity: 0 },
       show: {
