@@ -55,18 +55,33 @@ export const ProkerDetailModal = ({
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-4xl max-h-[90vh] bg-[#0f172a] rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden"
+        className="relative w-full max-w-4xl max-h-[90vh] bg-slate-950/90 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="relative h-48 md:h-64 bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 flex items-end p-8 flex-shrink-0">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="relative h-48 md:h-64 flex items-end p-8 flex-shrink-0">
+          {/* Background: Photo or Gradient */}
+          {item.gallery && item.gallery.length > 0 ? (
+            <>
+              <Image
+                src={item.gallery[0]}
+                alt={item.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-slate-950/30" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/50 via-blue-800/50 to-indigo-900/50">
+              <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            </div>
+          )}
 
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 p-2 rounded-full bg-black/20 text-white/70 hover:text-white hover:bg-white/10 transition-colors backdrop-blur-md border border-white/5 z-20"
+            className="absolute top-6 right-6 p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors backdrop-blur-md border border-white/5 z-20"
           >
             <X size={20} />
           </button>
@@ -182,8 +197,8 @@ export const ProkerDetailModal = ({
                           className="flex items-start gap-3 text-sm text-blue-100/70"
                         >
                           <CheckCircle
-                            size={14}
-                            className="text-green-400 mt-0.5 flex-shrink-0"
+                            size={16}
+                            className="text-green-400 flex-shrink-0"
                           />
                           {ben}
                         </li>
@@ -198,17 +213,13 @@ export const ProkerDetailModal = ({
 
         {/* Footer Actions */}
         <div className="p-6 border-t border-white/10 bg-[#0f172a]/50 backdrop-blur-xl flex justify-end gap-3 flex-shrink-0">
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            className="text-blue-200 hover:text-white"
-          >
+          <Button variant="ghost" onClick={onClose}>
             Tutup
           </Button>
           {item.newsUrl && (
             <Button
               variant="outline"
-              className="gap-2 border-white/20 hover:bg-white/10"
+              className="gap-2"
               onClick={() => {
                 window.open(item.newsUrl, "_blank");
               }}
@@ -220,7 +231,6 @@ export const ProkerDetailModal = ({
           {item.documentation && (
             <Button
               variant="primary"
-              className="shadow-[0_0_20px_rgba(6,182,212,0.3)]"
               onClick={() => {
                 window.open(item.documentation, "_blank");
               }}

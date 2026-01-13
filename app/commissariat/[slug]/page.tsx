@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { DocumentCard } from "@/components/DocumentCard";
+import { ProkerCard } from "@/components/ProkerCard";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FadeIn,
@@ -26,18 +27,13 @@ import {
   StaggerItem,
 } from "@/components/MotionWrapper";
 import { MemberDetailModal, BPHMember } from "@/components/MemberDetailModal";
+import { ProkerDetailModal, ProkerData } from "@/components/ProkerDetailModal";
 
 // --- Types ---
 type TabType = "profil" | "proker" | "awardee" | "arsip";
 
-interface Proker {
-  id: number;
-  title: string;
-  status: "Upcoming" | "On-going" | "Completed";
-  date: string;
-  description: string;
-  documentation?: string;
-}
+// Local types
+// interface Proker was replaced by imported ProkerData
 
 interface Awardee {
   id: number;
@@ -79,7 +75,7 @@ interface CommissariatData {
   };
   bph: BPHMember[];
   divisions: BPHMember[];
-  proker: Proker[];
+  proker: ProkerData[];
   awardees: Awardee[]; // Specific to this commissariat
   documents: Document[];
 }
@@ -193,24 +189,45 @@ const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     proker: [
       {
         id: 1,
-        title: "Proker Unggulan 1",
+        title: "Sosialisasi Beasiswa BI",
         status: "Completed",
-        date: "10 Feb 2025",
-        description: "Deskripsi singkat program kerja unggulan pertama.",
+        date: "10 Jan 2025",
+        description:
+          "Kegiatan sosialisasi beasiswa Bank Indonesia kepada mahasiswa baru.",
+        description_long:
+          "Kegiatan ini bertujuan untuk memberikan informasi mendalam mengenai proses seleksi Beasiswa Bank Indonesia. Dihadiri oleh lebih dari 200 mahasiswa, acara ini menjelaskan tahapan administrasi, wawancara, hingga benefit menjadi bagian dari GenBI.",
+        objectives: [
+          "Meningkatkan awareness mahasiswa tentang Beasiswa BI",
+          "Memberikan tips lolos seleksi berkas & wawancara",
+          "Memperkenalkan komunitas GenBI kepada publik",
+        ],
+        benefits: [
+          "Mahasiswa paham alur pendaftaran",
+          "Meningkatnya jumlah pendaftar berkualitas",
+          "Branding GenBI semakin kuat",
+        ],
+        gallery: [
+          "/assets/images/raker.jpg",
+          "/assets/images/bnsp.JPG",
+          "/assets/images/background.jpg",
+        ],
+        documentation: "https://instagram.com",
+        newsUrl: "https://unair.ac.id/news",
       },
       {
         id: 2,
-        title: "Proker Unggulan 2",
+        title: "GenBI Mengajar",
         status: "On-going",
-        date: "25 Mar 2025",
-        description: "Deskripsi singkat program kerja unggulan kedua.",
+        date: "20 Feb 2025",
+        description:
+          "Program pengabdian masyarakat berupa pengajaran di sekolah dasar binaan.",
       },
       {
         id: 3,
-        title: "Proker Rutin",
+        title: "Bersih-Bersih Pantai",
         status: "Upcoming",
-        date: "15 Apr 2025",
-        description: "Deskripsi singkat program kerja rutin.",
+        date: "15 Mar 2025",
+        description: "Aksi kepedulian lingkungan di pantai kenjeran.",
       },
     ],
     awardees: Array.from({ length: 45 }).map((_, i) => ({
@@ -1395,7 +1412,25 @@ export default function CommissariatDetail({
           date: "10 Jan 2025",
           description:
             "Kegiatan sosialisasi beasiswa Bank Indonesia kepada mahasiswa baru.",
+          description_long:
+            "Kegiatan ini bertujuan untuk memberikan informasi mendalam mengenai proses seleksi Beasiswa Bank Indonesia. Dihadiri oleh lebih dari 200 mahasiswa, acara ini menjelaskan tahapan administrasi, wawancara, hingga benefit menjadi bagian dari GenBI.",
+          objectives: [
+            "Meningkatkan awareness mahasiswa tentang Beasiswa BI",
+            "Memberikan tips lolos seleksi berkas & wawancara",
+            "Memperkenalkan komunitas GenBI kepada publik",
+          ],
+          benefits: [
+            "Mahasiswa paham alur pendaftaran",
+            "Meningkatnya jumlah pendaftar berkualitas",
+            "Branding GenBI semakin kuat",
+          ],
+          gallery: [
+            "/assets/images/raker.jpg",
+            "/assets/images/bnsp.JPG",
+            "/assets/images/background.jpg",
+          ],
           documentation: "https://instagram.com",
+          newsUrl: "https://unair.ac.id/news",
         },
         {
           id: 2,
@@ -1506,6 +1541,8 @@ export default function CommissariatDetail({
     indexOfFirstItem,
     indexOfLastItem
   );
+
+  const [selectedProker, setSelectedProker] = useState<ProkerData | null>(null);
 
   // Reset page when search changes
   useEffect(() => {
@@ -1928,45 +1965,13 @@ export default function CommissariatDetail({
                 <div className="grid gap-6">
                   {data.proker.map((item, idx) => (
                     <FadeIn key={item.id} delay={idx * 0.1} once={false}>
-                      <div className="flex flex-col md:flex-row gap-6 bg-white/5 border border-white/10 p-6 rounded-2xl hover:bg-white/10 transition-colors">
-                        <div className="w-full md:w-48 flex-none flex flex-col items-center justify-center bg-black/20 rounded-xl p-4 text-center border border-white/5">
-                          <div className="text-2xl font-bold text-white">
-                            {item.date.split(" ")[0]}
-                          </div>
-                          <div className="text-sm text-cyan-200 uppercase tracking-widest">
-                            {item.date.split(" ")[1]} {item.date.split(" ")[2]}
-                          </div>
-                          <div
-                            className={`mt-3 px-3 py-1 rounded-full text-xs font-bold border ${
-                              item.status === "Completed"
-                                ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                : item.status === "On-going"
-                                ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                                : "bg-orange-500/20 text-orange-300 border-orange-500/30"
-                            }`}
-                          >
-                            {item.status}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-2">
-                            {item.title}
-                          </h3>
-                          <p className="text-blue-200/70 mb-4">
-                            {item.description}
-                          </p>
-                          {item.documentation && (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="gap-2 rounded-full group"
-                            >
-                              <ExternalLink className="w-4 h-4" /> Lihat
-                              Dokumentasi
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <ProkerCard
+                        title={item.title}
+                        status={item.status}
+                        date={item.date}
+                        description={item.description}
+                        onClick={() => setSelectedProker(item)}
+                      />
                     </FadeIn>
                   ))}
                 </div>
@@ -2171,6 +2176,15 @@ export default function CommissariatDetail({
         </AnimatePresence>
         <Footer />
       </div>
+      {/* Proker Modal */}
+      <AnimatePresence>
+        {selectedProker && (
+          <ProkerDetailModal
+            item={selectedProker}
+            onClose={() => setSelectedProker(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

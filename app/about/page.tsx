@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DocumentCard } from "@/components/DocumentCard";
+import { ProkerCard } from "@/components/ProkerCard";
 
 // --- Data ---
 const KORKOM_STRUCTURE: {
@@ -1273,49 +1274,13 @@ export default function AboutPage() {
                     <div className="grid gap-6">
                       {currentProkers.map((item, index) => (
                         <FadeIn key={item.id} delay={index * 0.1}>
-                          <Card
+                          <ProkerCard
+                            title={item.title}
+                            status={item.status}
+                            date={item.date}
+                            description={item.description}
                             onClick={() => setSelectedProker(item)}
-                            variant="glass"
-                            className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center group hover:border-cyan-500/30 transition-all duration-300 cursor-pointer"
-                          >
-                            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-cyan-500/30 transition-colors">
-                              <span className="text-xs font-bold text-cyan-400 uppercase">
-                                {item.date.split(" ")[0]}
-                              </span>
-                              <span className="text-xl font-bold text-white">
-                                {item.date.split(" ")[1]}
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
-                                  {item.title}
-                                </h3>
-                                <span
-                                  className={cn(
-                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider",
-                                    item.status === "Completed"
-                                      ? "bg-green-500/10 text-green-400 border-green-500/20"
-                                      : item.status === "On-going"
-                                      ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 animate-pulse"
-                                      : "bg-blue-500/10 text-blue-300 border-blue-500/20"
-                                  )}
-                                >
-                                  {item.status}
-                                </span>
-                              </div>
-                              <p className="text-blue-100/70 text-sm leading-relaxed mb-4">
-                                {item.description}
-                              </p>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-2 text-xs h-8"
-                              >
-                                Lihat Detail
-                              </Button>
-                            </div>
-                          </Card>
+                          />
                         </FadeIn>
                       ))}
                     </div>
