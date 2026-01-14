@@ -16,7 +16,8 @@ export interface DocumentCardProps {
   date: string;
   size: string;
   url?: string; // Optional download URL
-  onClick?: () => void; // Optional custom click handler
+  onClick?: () => void; // Optional custom click handler (e.g. preview)
+  onDownload?: () => void; // Optional download handler (icon click)
 }
 
 export function DocumentCard({
@@ -26,6 +27,7 @@ export function DocumentCard({
   size,
   url,
   onClick,
+  onDownload,
 }: DocumentCardProps) {
   const getFileIcon = (type: string) => {
     switch (type.toUpperCase()) {
@@ -77,7 +79,7 @@ export function DocumentCard({
       onClick={
         onClick ||
         (() => {
-          if (url) alert(`Memulai unduhan dokumen: ${title}`);
+          if (url) window.open(url, "_blank");
         })
       }
       className="block h-full cursor-pointer"
@@ -112,7 +114,17 @@ export function DocumentCard({
             <span className="w-1 h-1 rounded-full bg-blue-500/50"></span>
             <span>{size}</span>
           </div>
-          <Download className="w-4 h-4 text-cyan-500/50 group-hover:text-cyan-400 transition-colors" />
+          <div
+            className="p-1.5 rounded-full hover:bg-white/10 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+            onClick={(e) => {
+              if (onDownload) {
+                e.stopPropagation();
+                onDownload();
+              }
+            }}
+          >
+            <Download className="w-4 h-4" />
+          </div>
         </div>
       </Card>
     </div>

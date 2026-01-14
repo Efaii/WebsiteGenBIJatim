@@ -1376,7 +1376,14 @@ export default function AboutPage() {
                               fileType={doc.fileType}
                               date={doc.date}
                               size={doc.size}
-                              url={doc.url}
+                              onClick={() =>
+                                alert(
+                                  `Preview Dokumen (Mock)\n\nFitur ini akan membuka window.open('${doc.url}', '_blank')`
+                                )
+                              }
+                              onDownload={() =>
+                                alert(`Memulai unduhan dokumen: ${doc.title}`)
+                              }
                             />
                           </StaggerItem>
                         ))

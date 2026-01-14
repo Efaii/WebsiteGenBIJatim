@@ -16,6 +16,8 @@ import {
   Mail,
   Search,
   ExternalLink,
+  ClipboardList,
+  Wallet,
 } from "lucide-react";
 import { DocumentCard } from "@/components/DocumentCard";
 import { ProkerCard } from "@/components/ProkerCard";
@@ -1738,7 +1740,7 @@ export default function CommissariatDetail({
                     <div className="container mx-auto px-6 relative z-10">
                       <div className="text-center mb-20">
                         <SlideUp once={false}>
-                          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+                          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight">
                             Struktur Organisasi
                           </h2>
                         </SlideUp>
@@ -1807,9 +1809,7 @@ export default function CommissariatDetail({
                             <FadeIn delay={0.2} className="h-full" once={false}>
                               <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <span className="text-2xl grayscale brightness-200">
-                                    📝
-                                  </span>
+                                  <ClipboardList className="w-6 h-6 text-cyan-400" />
                                   <h3 className="font-bold text-lg text-white uppercase tracking-wider">
                                     Sekretaris
                                   </h3>
@@ -1827,7 +1827,7 @@ export default function CommissariatDetail({
                                         onClick={() =>
                                           setSelectedMember(member)
                                         }
-                                        className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
                                       >
                                         <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
                                           <Image
@@ -1856,9 +1856,7 @@ export default function CommissariatDetail({
                             <FadeIn delay={0.2} className="h-full" once={false}>
                               <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
                                 <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <span className="text-2xl grayscale brightness-200">
-                                    💰
-                                  </span>
+                                  <Wallet className="w-6 h-6 text-yellow-400" />
                                   <h3 className="font-bold text-lg text-white uppercase tracking-wider">
                                     Bendahara
                                   </h3>
@@ -1874,7 +1872,7 @@ export default function CommissariatDetail({
                                         onClick={() =>
                                           setSelectedMember(member)
                                         }
-                                        className="flex items-center gap-4 p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
                                       >
                                         <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
                                           <Image
@@ -1922,7 +1920,7 @@ export default function CommissariatDetail({
                                   >
                                     <Card
                                       onClick={() => setSelectedMember(member)}
-                                      className="bg-white/5 backdrop-blur-md border border-white/10 p-4 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
+                                      className="bg-white/5 backdrop-blur-md border border-white/10 p-6 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
                                     >
                                       <div className="w-16 h-16 bg-blue-950/50 rounded-full border-2 border-white/10 flex items-center justify-center shadow-md overflow-hidden mb-3 group-hover:border-cyan-400 transition-colors">
                                         <Image
@@ -1933,7 +1931,7 @@ export default function CommissariatDetail({
                                           className="w-full h-full object-cover transition-all duration-500"
                                         />
                                       </div>
-                                      <h3 className="font-bold text-sm text-white mb-0.5 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
+                                      <h3 className="font-bold text-sm text-white mb-2 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
                                         {member.name}
                                       </h3>
                                       <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider truncate w-full">
@@ -2149,10 +2147,15 @@ export default function CommissariatDetail({
                     <StaggerItem key={doc.id}>
                       <DocumentCard
                         title={doc.title}
-                        fileType={doc.type}
+                        fileType={doc.fileType}
                         date={doc.date}
                         size={doc.size}
-                        onClick={() => downloadMockFile(doc.title)}
+                        onClick={() =>
+                          alert(
+                            `Preview Dokumen (Tab Baru)\n\nDalam implementasi nyata, ini akan membuka: \nwindow.open(url, '_blank')`
+                          )
+                        }
+                        onDownload={() => downloadMockFile(doc.title)}
                       />
                     </StaggerItem>
                   ))}
