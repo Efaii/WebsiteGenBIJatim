@@ -21,6 +21,7 @@ export const FadeIn = ({
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 20, transition: { duration: 0.3 } }}
     viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
     className={className}
@@ -39,6 +40,7 @@ export const SlideUp = ({
   <motion.div
     initial={{ opacity: 0, y: 40 }}
     whileInView={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 40, transition: { duration: 0.3 } }}
     viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
     className={className}
@@ -57,6 +59,7 @@ export const ScaleIn = ({
   <motion.div
     initial={{ opacity: 0, scale: 0.9 }}
     whileInView={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
     viewport={{ once, amount }}
     transition={{ duration: 0.5, delay, ease: "easeOut" }}
     className={className}
@@ -85,7 +88,9 @@ export const StaggerContainer = ({
           delayChildren: delay,
         },
       },
+      exit: { opacity: 0, transition: { duration: 0.3 } },
     }}
+    exit="exit"
     className={className}
   >
     {children}

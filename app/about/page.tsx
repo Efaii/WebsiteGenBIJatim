@@ -29,6 +29,8 @@ import {
   BookOpen,
   FileText,
   Banknote,
+  ClipboardList,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DocumentCard } from "@/components/DocumentCard";
@@ -440,7 +442,7 @@ const MemberListItem = ({
     <div
       onClick={onClick}
       className={cn(
-        "flex items-center gap-4 p-3 rounded-xl border border-transparent hover:bg-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group/item",
+        "flex items-center gap-4 p-4 rounded-xl border border-transparent hover:bg-white/5 hover:border-cyan-500/20 transition-all cursor-pointer group/item",
         hideRole ? "py-4" : ""
       )}
     >
@@ -888,15 +890,15 @@ export default function AboutPage() {
 
             <div className="max-w-6xl mx-auto min-h-[500px]">
               <AnimatePresence mode="wait">
-                {/* Tab 1: Struktur Organisasi */}
-                {activeTab === "struktur" && (
-                  <motion.div
-                    key="struktur"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Tab 1: Struktur Organisasi */}
+                  {activeTab === "struktur" && (
                     <div className="space-y-12">
                       {/* Leaders Section */}
                       <div className="flex flex-col items-center mb-12">
@@ -960,8 +962,8 @@ export default function AboutPage() {
                           {/* Secretaries */}
                           <Card variant="glass" className="p-6 group">
                             <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                              <FileText
-                                className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                              <ClipboardList
+                                className="w-8 h-8 text-cyan-400 group-hover:scale-110 transition-transform duration-300"
                                 strokeWidth={1.5}
                               />
                               <h3 className="font-bold text-lg text-white uppercase tracking-wider">
@@ -986,8 +988,8 @@ export default function AboutPage() {
                           {/* Treasurers */}
                           <Card variant="glass" className="p-6 group">
                             <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                              <Banknote
-                                className="w-8 h-8 text-cyan-300 group-hover:scale-110 transition-transform duration-300"
+                              <Wallet
+                                className="w-8 h-8 text-yellow-400 group-hover:scale-110 transition-transform duration-300"
                                 strokeWidth={1.5}
                               />
                               <h3 className="font-bold text-lg text-white uppercase tracking-wider">
@@ -1259,114 +1261,100 @@ export default function AboutPage() {
                         </SlideUp>
                       </div>
                     </div>
-                  </motion.div>
-                )}
+                  )}
 
-                {/* Tab 2: Program Kerja */}
-                {activeTab === "proker" && (
-                  <motion.div
-                    key="proker"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="grid gap-6">
-                      {currentProkers.map((item, index) => (
-                        <FadeIn key={item.id} delay={index * 0.1}>
-                          <ProkerCard
-                            title={item.title}
-                            status={item.status}
-                            date={item.date}
-                            description={item.description}
-                            onClick={() => setSelectedProker(item)}
-                          />
-                        </FadeIn>
-                      ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalProkerPages > 1 && (
-                      <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
-                        <span className="text-sm text-blue-200/60">
-                          Menampilkan {indexOfFirstProker + 1} -{" "}
-                          {Math.min(
-                            indexOfLastProker,
-                            KORKOM_STRUCTURE.proker.length
-                          )}{" "}
-                          dari {KORKOM_STRUCTURE.proker.length} kegiatan
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8"
-                            onClick={() => {
-                              setProkerPage((prev) => Math.max(prev - 1, 1));
-                              setTimeout(() => {
-                                if (scrollAnchorRef.current) {
-                                  const y =
-                                    scrollAnchorRef.current.getBoundingClientRect()
-                                      .top +
-                                    window.scrollY -
-                                    20;
-                                  window.scrollTo({
-                                    top: y,
-                                    behavior: "smooth",
-                                  });
-                                }
-                              }, 100);
-                            }}
-                            disabled={prokerPage === 1}
-                          >
-                            Previous
-                          </Button>
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-cyan-200 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
-                              Page {prokerPage} of {totalProkerPages}
-                            </span>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8"
-                            onClick={() => {
-                              setProkerPage((prev) =>
-                                Math.min(prev + 1, totalProkerPages)
-                              );
-                              setTimeout(() => {
-                                if (scrollAnchorRef.current) {
-                                  const y =
-                                    scrollAnchorRef.current.getBoundingClientRect()
-                                      .top +
-                                    window.scrollY -
-                                    20;
-                                  window.scrollTo({
-                                    top: y,
-                                    behavior: "smooth",
-                                  });
-                                }
-                              }, 100);
-                            }}
-                            disabled={prokerPage === totalProkerPages}
-                          >
-                            Next
-                          </Button>
-                        </div>
+                  {/* Tab 2: Program Kerja */}
+                  {activeTab === "proker" && (
+                    <>
+                      <div className="grid gap-6">
+                        {currentProkers.map((item, index) => (
+                          <FadeIn key={item.id} delay={index * 0.1}>
+                            <ProkerCard
+                              title={item.title}
+                              status={item.status}
+                              date={item.date}
+                              description={item.description}
+                              onClick={() => setSelectedProker(item)}
+                            />
+                          </FadeIn>
+                        ))}
                       </div>
-                    )}
-                  </motion.div>
-                )}
 
-                {/* Tab 3: Arsip */}
-                {activeTab === "arsip" && (
-                  <motion.div
-                    key="arsip"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                      {/* Pagination Controls */}
+                      {totalProkerPages > 1 && (
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5 p-4 rounded-xl border border-white/10">
+                          <span className="text-sm text-blue-200/60">
+                            Menampilkan {indexOfFirstProker + 1} -{" "}
+                            {Math.min(
+                              indexOfLastProker,
+                              KORKOM_STRUCTURE.proker.length
+                            )}{" "}
+                            dari {KORKOM_STRUCTURE.proker.length} kegiatan
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                setProkerPage((prev) => Math.max(prev - 1, 1));
+                                setTimeout(() => {
+                                  if (scrollAnchorRef.current) {
+                                    const y =
+                                      scrollAnchorRef.current.getBoundingClientRect()
+                                        .top +
+                                      window.scrollY -
+                                      20;
+                                    window.scrollTo({
+                                      top: y,
+                                      behavior: "smooth",
+                                    });
+                                  }
+                                }, 100);
+                              }}
+                              disabled={prokerPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-bold text-cyan-200 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+                                Page {prokerPage} of {totalProkerPages}
+                              </span>
+                            </div>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => {
+                                setProkerPage((prev) =>
+                                  Math.min(prev + 1, totalProkerPages)
+                                );
+                                setTimeout(() => {
+                                  if (scrollAnchorRef.current) {
+                                    const y =
+                                      scrollAnchorRef.current.getBoundingClientRect()
+                                        .top +
+                                      window.scrollY -
+                                      20;
+                                    window.scrollTo({
+                                      top: y,
+                                      behavior: "smooth",
+                                    });
+                                  }
+                                }, 100);
+                              }}
+                              disabled={prokerPage === totalProkerPages}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Tab 3: Arsip */}
+                  {activeTab === "arsip" && (
                     <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {KORKOM_STRUCTURE.documents.length > 0 ? (
                         KORKOM_STRUCTURE.documents.map((doc) => (
@@ -1393,8 +1381,8 @@ export default function AboutPage() {
                         </div>
                       )}
                     </StaggerContainer>
-                  </motion.div>
-                )}
+                  )}
+                </motion.div>
               </AnimatePresence>
             </div>
           </div>
