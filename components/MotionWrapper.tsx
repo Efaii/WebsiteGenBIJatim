@@ -9,6 +9,7 @@ type MotionProps = {
   delay?: number;
   once?: boolean;
   amount?: number | "some" | "all";
+  staggerDelay?: number;
 };
 
 export const FadeIn = ({
@@ -74,6 +75,7 @@ export const StaggerContainer = ({
   delay = 0,
   once = true,
   amount = 0.5,
+  staggerDelay = 0.1,
 }: MotionProps) => (
   <motion.div
     initial="hidden"
@@ -84,7 +86,7 @@ export const StaggerContainer = ({
       show: {
         opacity: 1,
         transition: {
-          staggerChildren: 0.1,
+          staggerChildren: staggerDelay,
           delayChildren: delay,
         },
       },

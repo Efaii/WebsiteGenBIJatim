@@ -1567,7 +1567,7 @@ export default function CommissariatDetail({
         {/* Hero Section */}
         <section className="relative pt-40 pb-10 px-6">
           <div className="container mx-auto">
-            <SlideUp className="w-full">
+            <SlideUp once={false} className="w-full">
               <div className="relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden group">
                 {/* Decorative Shine Effect */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/15 transition-all duration-700"></div>
@@ -2142,7 +2142,10 @@ export default function CommissariatDetail({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <StaggerContainer
+                  once={false}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
                   {data.documents.map((doc) => (
                     <StaggerItem key={doc.id}>
                       <DocumentCard

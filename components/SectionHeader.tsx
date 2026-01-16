@@ -34,7 +34,7 @@ export function SectionHeader({
         className
       )}
     >
-      <FadeIn>
+      <FadeIn once={false}>
         {eyebrow && (
           <span className="text-cyan-400 font-bold tracking-widest text-sm uppercase mb-3 block">
             {/* Global Rule: mb-3 for Eyebrow-to-Heading gap */}
@@ -48,7 +48,7 @@ export function SectionHeader({
       </FadeIn>
 
       {(description || children) && (
-        <SlideUp delay={0.2} className="w-full">
+        <SlideUp once={false} delay={0.2} className="w-full">
           <div className="mt-6">
             {/* Global Rule: mt-6 for Heading-to-Description gap */}
             {description && (

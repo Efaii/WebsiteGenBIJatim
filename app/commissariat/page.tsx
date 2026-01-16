@@ -168,7 +168,7 @@ export default function CommissariatPage() {
             description="Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9 Komisariat GenBI di Jawa Timur."
           />
 
-          <FadeIn delay={0.2}>
+          <FadeIn once={false} delay={0.2}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Stat 1 */}
               <Card
@@ -236,7 +236,7 @@ export default function CommissariatPage() {
                 Let's put it on the Right as a "Sidebar".
             */}
           <aside className="lg:col-span-1 lg:order-last space-y-8">
-            <FadeIn delay={0.4}>
+            <FadeIn once={false} delay={0.4}>
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 tracking-tight">
                   <span className="relative flex h-3 w-3">
@@ -282,6 +282,7 @@ export default function CommissariatPage() {
           <div className="lg:col-span-3 space-y-8">
             {/* Modern Filters */}
             <FadeIn
+              once={false}
               delay={0.3}
               className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between relative z-30"
             >
@@ -346,7 +347,11 @@ export default function CommissariatPage() {
             </FadeIn>
 
             {/* Grid List */}
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <StaggerContainer
+              once={false}
+              staggerDelay={0.2}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+            >
               {filteredCommissariats.length > 0 ? (
                 filteredCommissariats.map((comm) => (
                   <StaggerItem key={comm.id}>

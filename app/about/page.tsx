@@ -509,7 +509,7 @@ export default function AboutPage() {
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[100px] -z-10"></div>
 
           <div className="container relative mx-auto px-6 text-center z-10">
-            <SlideUp delay={0.2}>
+            <SlideUp once={false} delay={0.2}>
               <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                 Siapa Kami? <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-200 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
@@ -517,7 +517,7 @@ export default function AboutPage() {
                 </span>
               </h1>
             </SlideUp>
-            <FadeIn delay={0.4}>
+            <FadeIn once={false} delay={0.4}>
               <p className="text-xl text-blue-100/90 max-w-2xl mx-auto leading-relaxed font-light mb-12">
                 Wadah kolaborasi penerima beasiswa Bank Indonesia di Jawa Timur,
                 bergerak serentak menjadi energi baru untuk kemajuan negeri.
@@ -529,7 +529,7 @@ export default function AboutPage() {
         {/* About GenBI Definition Section */}
         <section className="py-20 relative z-10 bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 max-w-4xl text-center">
-            <FadeIn>
+            <FadeIn once={false}>
               <SectionHeader
                 title="Tentang GenBI Jatim"
                 align="center"
@@ -583,12 +583,12 @@ export default function AboutPage() {
               {/* Text Content (Right) */}
               <div className="space-y-8 order-1 md:order-2">
                 <div>
-                  <FadeIn>
+                  <FadeIn once={false}>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                       Visi Kami
                     </h2>
                   </FadeIn>
-                  <FadeIn delay={0.2}>
+                  <FadeIn once={false} delay={0.2}>
                     <p className="text-lg text-blue-100/80 leading-relaxed">
                       Mewujudkan{" "}
                       <span className="text-cyan-400 font-semibold">
@@ -614,7 +614,7 @@ export default function AboutPage() {
                   </FadeIn>
                 </div>
                 <div>
-                  <FadeIn>
+                  <FadeIn once={false}>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                       Misi Kami
                     </h2>
@@ -626,7 +626,11 @@ export default function AboutPage() {
                       "Mempererat hubungan serta membangun jejaring strategis antara anggota aktif dan alumni",
                       "Mewujudkan sistem dokumentasi dan pelaporan kinerja yang terukur, transparan, dan berkelanjutan",
                     ].map((item, index) => (
-                      <SlideUp key={index} className="flex items-start gap-4">
+                      <SlideUp
+                        once={false}
+                        key={index}
+                        className="flex items-start gap-4"
+                      >
                         <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-sm font-bold mt-1 flex-shrink-0">
                           {index + 1}
                         </div>
@@ -643,12 +647,17 @@ export default function AboutPage() {
         {/* Strategic Roles / 3 Pillars */}
         <section className="py-20 relative bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 text-center">
-            <SectionHeader
-              title="3 Pilar Peran Utama"
-              align="center"
-              description="Tiga fungsi strategis yang dijalankan setiap anggota GenBI sebagai mitra Bank Indonesia."
-            />
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FadeIn once={false}>
+              <SectionHeader
+                title="3 Pilar Peran Utama"
+                align="center"
+                description="Tiga fungsi strategis yang dijalankan setiap anggota GenBI sebagai mitra Bank Indonesia."
+              />
+            </FadeIn>
+            <StaggerContainer
+              once={false}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
               {[
                 {
                   title: "Front-liners",
@@ -695,12 +704,17 @@ export default function AboutPage() {
         {/* Core Values */}
         <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
-            <SectionHeader
-              title="Nilai & Budaya Kerja"
-              description="Prinsip dasar yang menjadi DNA setiap langkah dan keputusan kami."
-            />
+            <FadeIn once={false}>
+              <SectionHeader
+                title="Nilai & Budaya Kerja"
+                description="Prinsip dasar yang menjadi DNA setiap langkah dan keputusan kami."
+              />
+            </FadeIn>
 
-            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <StaggerContainer
+              once={false}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+            >
               {[
                 {
                   title: "Dedikasi",
@@ -756,10 +770,12 @@ export default function AboutPage() {
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent -translate-x-1/2 hidden md:block"></div>
 
           <div className="container mx-auto px-6 relative z-10">
-            <SectionHeader
-              title="Sejarah Perjalanan"
-              description="Rekam jejak dedikasi GenBI Jawa Timur dari masa ke masa."
-            />
+            <FadeIn once={false}>
+              <SectionHeader
+                title="Sejarah Perjalanan"
+                description="Rekam jejak dedikasi GenBI Jawa Timur dari masa ke masa."
+              />
+            </FadeIn>
 
             <div className="space-y-12 md:space-y-0 relative">
               {[
@@ -788,6 +804,7 @@ export default function AboutPage() {
                 const isLast = i === arr.length - 1;
                 return (
                   <SlideUp
+                    once={false}
                     key={i}
                     className={`flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-0 ${
                       !isEven ? "md:flex-row-reverse" : ""
@@ -833,10 +850,12 @@ export default function AboutPage() {
         {/* Organizational Structure */}
         <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
-            <SectionHeader
-              title="Kepengurusan Wilayah"
-              description="Tim solid yang berdedikasi penuh menggerakkan visi menjadi aksi nyata, Periode 2025/2026."
-            />
+            <FadeIn once={false}>
+              <SectionHeader
+                title="Kepengurusan Wilayah"
+                description="Tim solid yang berdedikasi penuh menggerakkan visi menjadi aksi nyata, Periode 2025/2026."
+              />
+            </FadeIn>
 
             {/* Tabs Navigation */}
             <div ref={scrollAnchorRef} className="absolute mt-[-100px]" />
@@ -902,7 +921,7 @@ export default function AboutPage() {
                     <div className="space-y-12">
                       {/* Leaders Section */}
                       <div className="flex flex-col items-center mb-12">
-                        <FadeIn delay={0.1}>
+                        <FadeIn once={false} delay={0.1}>
                           <div className="mb-6 filter drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                             <Crown
                               className="w-16 h-16 text-cyan-300"
@@ -911,7 +930,7 @@ export default function AboutPage() {
                           </div>
                         </FadeIn>
 
-                        <FadeIn delay={0.2}>
+                        <FadeIn once={false} delay={0.2}>
                           <div className="flex items-center gap-4 mb-8 w-full justify-center">
                             <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
                             <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
@@ -921,7 +940,10 @@ export default function AboutPage() {
                           </div>
                         </FadeIn>
 
-                        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl">
+                        <StaggerContainer
+                          once={false}
+                          className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-8 justify-center max-w-2xl"
+                        >
                           {KORKOM_STRUCTURE.bph
                             .filter(
                               (m) =>
@@ -956,7 +978,7 @@ export default function AboutPage() {
                         </StaggerContainer>
                       </div>
 
-                      <SlideUp delay={0.2}>
+                      <SlideUp once={false} delay={0.2}>
                         {/* Secretaries & Treasurers */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-12">
                           {/* Secretaries */}
@@ -1015,7 +1037,7 @@ export default function AboutPage() {
 
                       {/* Divisions */}
                       <div className="w-full">
-                        <SlideUp delay={0.3}>
+                        <SlideUp once={false} delay={0.3}>
                           <div className="flex items-center gap-4 mb-8 w-full justify-center">
                             <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
                             <h3 className="text-xl font-bold text-white uppercase tracking-widest">
@@ -1025,8 +1047,11 @@ export default function AboutPage() {
                           </div>
                         </SlideUp>
 
-                        <SlideUp delay={0.5}>
-                          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start">
+                        <SlideUp once={false} delay={0.5}>
+                          <StaggerContainer
+                            once={false}
+                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 align-start"
+                          >
                             {/* Development */}
                             <StaggerItem>
                               <Card variant="glass" className="h-full group">
@@ -1268,7 +1293,11 @@ export default function AboutPage() {
                     <>
                       <div className="grid gap-6">
                         {currentProkers.map((item, index) => (
-                          <FadeIn key={item.id} delay={index * 0.1}>
+                          <FadeIn
+                            once={false}
+                            key={item.id}
+                            delay={index * 0.1}
+                          >
                             <ProkerCard
                               title={item.title}
                               status={item.status}
@@ -1355,7 +1384,10 @@ export default function AboutPage() {
 
                   {/* Tab 3: Arsip */}
                   {activeTab === "arsip" && (
-                    <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <StaggerContainer
+                      once={false}
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
                       {KORKOM_STRUCTURE.documents.length > 0 ? (
                         KORKOM_STRUCTURE.documents.map((doc) => (
                           <StaggerItem key={doc.id}>
@@ -1391,18 +1423,18 @@ export default function AboutPage() {
         {/* CTA */}
         <section className="py-20 bg-white/5 border-y border-white/5">
           <div className="container mx-auto px-6 text-center">
-            <FadeIn>
+            <FadeIn once={false}>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                 Tertarik Berkolaborasi?
               </h2>
             </FadeIn>
-            <FadeIn delay={0.2}>
+            <FadeIn once={false} delay={0.2}>
               <p className="text-blue-200/80 mb-8 max-w-xl mx-auto">
                 Kami selalu terbuka untuk membangun sinergi positif dengan
                 berbagai pihak demi dampak yang lebih luas.
               </p>
             </FadeIn>
-            <FadeIn delay={0.4}>
+            <FadeIn once={false} delay={0.4}>
               <Link href="/contact" className="inline-block">
                 <Button size="lg" variant="secondary">
                   Hubungi Kami
