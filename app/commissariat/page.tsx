@@ -146,7 +146,7 @@ export default function CommissariatPage() {
   // Calculate Stats
   const totalMembers = COMMISSARIATS.reduce(
     (acc, curr) => acc + curr.members,
-    0
+    0,
   );
   const totalCommissariats = COMMISSARIATS.length;
   // Mock total programs
@@ -314,25 +314,23 @@ export default function CommissariatPage() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar">
-                    <div className="p-1 space-y-1">
-                      {YEARS.map((year) => (
-                        <button
-                          key={year}
-                          onClick={() => {
-                            setFilterYear(year);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-                            filterYear === year
-                              ? "bg-cyan-500/20 text-cyan-200"
-                              : "text-blue-100/80 hover:bg-white/10 hover:text-white hover:pl-6"
-                          }`}
-                        >
-                          {year}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar p-2 flex flex-col gap-1">
+                    {YEARS.map((year) => (
+                      <button
+                        key={year}
+                        onClick={() => {
+                          setFilterYear(year);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-full text-base font-medium transition-colors cursor-pointer ${
+                          filterYear === year
+                            ? "bg-cyan-500/20 text-cyan-200 font-bold"
+                            : "text-blue-100/80 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
                   </div>
                 )}
 

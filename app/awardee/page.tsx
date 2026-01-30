@@ -76,7 +76,7 @@ export default function AwardeePage() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredAwardees.slice(
     indexOfFirstItem,
-    indexOfLastItem
+    indexOfLastItem,
   );
 
   const handlePageChange = (pageNumber: number) => {
@@ -149,26 +149,24 @@ export default function AwardeePage() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-full bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar">
-                    <div className="p-1 space-y-1">
-                      {UNIVERSITIES.map((uni) => (
-                        <button
-                          key={uni}
-                          onClick={() => {
-                            setSelectedUniversity(uni);
-                            setCurrentPage(1);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                            selectedUniversity === uni
-                              ? "bg-cyan-500/20 text-cyan-200"
-                              : "text-blue-100/80 hover:bg-white/10 hover:text-white"
-                          }`}
-                        >
-                          {uni}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="absolute top-full left-0 mt-2 w-full bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar p-2 flex flex-col gap-1">
+                    {UNIVERSITIES.map((uni) => (
+                      <button
+                        key={uni}
+                        onClick={() => {
+                          setSelectedUniversity(uni);
+                          setCurrentPage(1);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-full text-base font-medium transition-colors cursor-pointer ${
+                          selectedUniversity === uni
+                            ? "bg-cyan-500/20 text-cyan-200 font-bold"
+                            : "text-blue-100/80 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {uni}
+                      </button>
+                    ))}
                   </div>
                 )}
 

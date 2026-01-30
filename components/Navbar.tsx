@@ -102,7 +102,7 @@ export function Navbar() {
                             <Link
                               key={link.slug}
                               href={`/commissariat/${link.slug}`}
-                              className="block px-4 py-2.5 text-sm text-blue-100/80 hover:bg-white/10 hover:text-white rounded-xl transition-all hover:pl-6"
+                              className="block px-4 py-3 text-base text-blue-100/80 hover:bg-white/10 hover:text-white rounded-full transition-colors"
                             >
                               {link.name}
                             </Link>
@@ -131,18 +131,18 @@ export function Navbar() {
                 item === "Beranda"
                   ? "/"
                   : item === "Tentang Kami"
-                  ? "/about"
-                  : item === "Awardee"
-                  ? "/awardee"
-                  : item === "Kalender"
-                  ? "/calendar"
-                  : item === "Berita"
-                  ? "/news"
-                  : item === "Dokumen"
-                  ? "/docs"
-                  : item === "Hubungi Kami"
-                  ? "/contact"
-                  : "#";
+                    ? "/about"
+                    : item === "Awardee"
+                      ? "/awardee"
+                      : item === "Kalender"
+                        ? "/calendar"
+                        : item === "Berita"
+                          ? "/news"
+                          : item === "Dokumen"
+                            ? "/docs"
+                            : item === "Hubungi Kami"
+                              ? "/contact"
+                              : "#";
               const isActive = pathname === href;
 
               return (
@@ -221,18 +221,18 @@ export function Navbar() {
                   item === "Beranda"
                     ? "/"
                     : item === "Tentang Kami"
-                    ? "/about"
-                    : item === "Komisariat"
-                    ? "/commissariat"
-                    : item === "Awardee"
-                    ? "/awardee"
-                    : item === "Kalender"
-                    ? "/calendar"
-                    : item === "Berita"
-                    ? "/news"
-                    : item === "Hubungi Kami"
-                    ? "/contact"
-                    : "/docs";
+                      ? "/about"
+                      : item === "Komisariat"
+                        ? "/commissariat"
+                        : item === "Awardee"
+                          ? "/awardee"
+                          : item === "Kalender"
+                            ? "/calendar"
+                            : item === "Berita"
+                              ? "/news"
+                              : item === "Hubungi Kami"
+                                ? "/contact"
+                                : "/docs";
 
                 return (
                   <Link
