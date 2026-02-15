@@ -155,8 +155,8 @@ Pastikan tools berikut sudah terinstal di mesin Anda:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/<your-org>/genbi-jatim.git
-cd genbi-jatim
+git clone git clone https://github.com/Efaii/WebsiteGenBIJatim.git
+cd WebsiteGenBIJatim
 ```
 
 ### 2. Install Dependencies
