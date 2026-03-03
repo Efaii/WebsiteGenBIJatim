@@ -13,8 +13,8 @@ import {
   Share2,
 } from "lucide-react";
 
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/Badge";
 import { cn } from "@/lib/utils";

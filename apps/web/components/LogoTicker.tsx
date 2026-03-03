@@ -14,23 +14,25 @@ const COMMISSARIATS = [
 
 export const LogoTicker = () => {
   return (
-    <div className="w-full py-10 overflow-hidden">
+    <div className="w-full py-12 bg-white border-b border-slate-50">
+      <div className="container mx-auto text-center mb-8">
+        <p className="text-slate-500 text-sm font-semibold tracking-widest uppercase">
+          Menaungi Mahasiswa Terbaik dari 9 Perguruan Tinggi Mitra
+        </p>
+      </div>
       <div className="container mx-auto">
-        <div className="flex relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_20%,black_80%,transparent)] py-8">
-          <div className="flex flex-none gap-24 pr-24 items-center animate-ticker will-change-transform transform-gpu">
+        <div className="flex relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_20%,black_80%,transparent)] group">
+          <div className="flex flex-none gap-16 md:gap-24 pr-16 md:pr-24 items-center animate-ticker will-change-transform transform-gpu group-hover:[animation-play-state:paused]">
             {[...COMMISSARIATS, ...COMMISSARIATS].map((comm, index) => (
-              <div
-                key={index}
-                className="flex-none group relative transition-all duration-500"
-              >
-                <div className="h-24 w-auto flex items-center justify-center">
+              <div key={index} className="flex-none relative">
+                <div className="h-16 md:h-20 w-auto flex items-center justify-center">
                   <Image
                     src={comm.logo}
                     alt={`Logo ${comm.name}`}
-                    width={200}
-                    height={96}
+                    width={180}
+                    height={80}
                     loading="eager"
-                    className="h-full w-auto object-contain max-w-[200px] brightness-0 invert grayscale opacity-80 transition-all duration-300 group-hover:brightness-100 group-hover:invert-0 group-hover:grayscale-0 group-hover:opacity-100"
+                    className="h-full w-auto object-contain max-w-[150px] md:max-w-[180px] opacity-100"
                   />
                 </div>
               </div>
