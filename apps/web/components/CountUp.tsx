@@ -11,6 +11,7 @@ interface CountUpProps {
   duration?: number;
   className?: string;
   separator?: string;
+  suffix?: string;
 }
 
 export default function CountUp({
@@ -20,6 +21,7 @@ export default function CountUp({
   duration = 2,
   className = "",
   separator = ",",
+  suffix = "",
 }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const motionValue = useMotionValue(from);
@@ -42,9 +44,9 @@ export default function CountUp({
     // Subscribe to changes
     const unsubscribe = springValue.on("change", (latest) => {
       if (ref.current) {
-        ref.current.textContent = Math.floor(latest)
-          .toLocaleString("en-US")
-          .replace(/,/g, separator);
+        ref.current.textContent =
+          Math.floor(latest).toLocaleString("en-US").replace(/,/g, separator) +
+          suffix;
       }
     });
     return () => unsubscribe();

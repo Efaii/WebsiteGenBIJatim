@@ -42,4 +42,3 @@ router.get('/:id', (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=events.js.map

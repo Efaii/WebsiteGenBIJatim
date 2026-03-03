@@ -7,7 +7,7 @@
 
 export const homeContent = {
   hero: {
-    badge: "GenBI Jatim 2025/2026",
+    badge: "GenBI Jawa Timur",
     heading: {
       line1: "Energi Baru",
       line2: "Untuk Indonesia",
@@ -26,42 +26,36 @@ export const homeContent = {
     { label: "Proker", number: 50, suffix: "+" },
     { label: "Dampak", value: "∞" },
   ],
-  scopeSection: {
-    titlePrefix: "Sinergi di Bawah Naungan",
-    titleHighlight: "KPw BI Provinsi Jawa Timur",
-    description:
-      "GenBI Koordinator Komisariat Jawa Timur menaungi mahasiswa penerima beasiswa Bank Indonesia dari 9 Perguruan Tinggi Negeri dan Swasta di wilayah Surabaya, Madura, dan Bojonegoro. Kami bersinergi untuk mengembangkan potensi kepemimpinan dan berkontribusi bagi masyarakat.",
-  },
   portalGrid: {
-    title: "Jelajahi Platform GenBI Jatim",
+    title: "Akses Platform Digital",
     description: "Semua fitur dan informasi yang Anda butuhkan, ada di sini.",
     items: [
       {
-        title: "Profil Kampus Mitra",
+        title: "Profil Komisariat",
         desc: "Pantau profil dan kinerja 9 Komisariat.",
         link: "/commissariat",
-        color: "from-blue-500 to-indigo-600",
+        color: "from-blue-600 to-indigo-700",
         iconName: "LayoutDashboard" as const,
       },
       {
         title: "Pusat Dokumen",
         desc: "Unduh SOP, Panduan, dan Template surat.",
         link: "/docs",
-        color: "from-emerald-500 to-teal-600",
+        color: "from-slate-600 to-slate-800",
         iconName: "FileText" as const,
       },
       {
         title: "Database Awardee",
         desc: "Cari data penerima beasiswa se-Jatim.",
         link: "/awardee",
-        color: "from-orange-500 to-red-600",
+        color: "from-sky-500 to-blue-600",
         iconName: "GraduationCap" as const,
       },
       {
         title: "Kabar & Berita",
         desc: "Informasi kegiatan terbaru GenBI Jatim.",
         link: "/news",
-        color: "from-purple-500 to-pink-600",
+        color: "from-blue-800 to-indigo-900",
         iconName: "Newspaper" as const,
       },
     ],
@@ -70,43 +64,15 @@ export const homeContent = {
     title: "Berita & Kegiatan",
     description:
       "Ikuti jejak langkah dan kegiatan inspiratif dari GenBI Jawa Timur dalam membangun negeri.",
-    items: [
-      {
-        title: "Partisipasi GenBI Jatim dalam Sosialisasi QRIS Nasional",
-        excerpt:
-          "GenBI Jatim turut serta dalam upaya Bank Indonesia memperluas akseptasi digital di kalangan UMKM melalui program sosialisasi masif di 5 kota besar.",
-        tag: "KEGIATAN",
-        date: "20 Okt 2025",
-        image: "/assets/images/raker.jpg",
-        slug: "partisipasi-genbi-jatim-sosialisasi-qris-nasional",
-      },
-      {
-        title: "Beasiswa Bank Indonesia 2026 Segera Dibuka",
-        excerpt:
-          "Siapkan dirimu! Pendaftaran beasiswa paling bergengsi akan segera dibuka. Simak syarat dan ketentuan lengkapnya di sini.",
-        tag: "PENGUMUMAN",
-        date: "15 Okt 2025",
-        image: "/assets/images/background.jpg",
-        slug: "beasiswa-bank-indonesia-2026-segera-dibuka",
-      },
-      {
-        title: "GenBI Jatim Raih Penghargaan Komunitas Terbaik",
-        excerpt:
-          "Sebuah pencapaian membanggakan, GenBI Jatim dinobatkan sebagai komunitas paling aktif dan berdampak dalam ajang GenBI Award Nasional tahun ini.",
-        tag: "PRESTASI",
-        date: "01 Okt 2025",
-        image: "/assets/images/bnsp.JPG",
-        slug: "genbi-jatim-raih-penghargaan-komunitas-terbaik",
-      },
-    ],
   },
   cta: {
-    title: "Jadilah Energi Baru untuk Indonesia Maju",
+    badge: "Nantikan Informasi Resmi Pendaftaran 2026",
+    title: "Mari Bergerak \n Tebarkan Makna",
     description:
-      "Bergabunglah dengan ekosistem kepemimpinan terbesar di Jawa Timur. Persiapkan dirimu untuk seleksi penerima beasiswa tahun 2026.",
-    primary: { label: "Panduan & Syarat Beasiswa", href: "/docs" },
+      "Bergabunglah dengan keluarga besar GenBI Jawa Timur. Temukan ruang untuk tumbuh, memimpin, dan memberikan dampak nyata bagi masyarakat bersama Bank Indonesia.",
+    primary: { label: "Gabung Bersama", href: "/docs" },
     secondary: {
-      label: "Ikuti Instagram",
+      label: "Intip Keseruan",
       href: "https://instagram.com/genbi_jatim",
     },
   },

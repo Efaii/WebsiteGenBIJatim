@@ -47,4 +47,3 @@ router.get('/', (req, res) => {
     });
 });
 exports.default = router;
-//# sourceMappingURL=profile.js.map
