@@ -46,4 +46,3 @@ router.get('/:slug', (req, res) => {
     }
 });
 exports.default = router;
-//# sourceMappingURL=news.js.map

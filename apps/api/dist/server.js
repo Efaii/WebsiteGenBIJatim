@@ -32,4 +32,3 @@ app.get('/api/health', (req, res) => {
 app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
 });
-//# sourceMappingURL=server.js.map

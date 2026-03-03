@@ -10,6 +10,7 @@ type MotionProps = {
   once?: boolean;
   amount?: number | "some" | "all";
   staggerDelay?: number;
+  onViewportEnter?: () => void;
 };
 
 export const FadeIn = ({
@@ -17,7 +18,8 @@ export const FadeIn = ({
   className,
   delay = 0,
   once = true,
-  amount = 0.1,
+  amount = 0.3,
+  onViewportEnter,
 }: MotionProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -25,6 +27,7 @@ export const FadeIn = ({
     exit={{ opacity: 0, y: 20, transition: { duration: 0.3 } }}
     viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    onViewportEnter={onViewportEnter}
     className={className}
   >
     {children}
@@ -36,7 +39,7 @@ export const SlideUp = ({
   className,
   delay = 0,
   once = true,
-  amount = 0.1,
+  amount = 0.3,
 }: MotionProps) => (
   <motion.div
     initial={{ opacity: 0, y: 40 }}
@@ -44,6 +47,25 @@ export const SlideUp = ({
     exit={{ opacity: 0, y: 40, transition: { duration: 0.3 } }}
     viewport={{ once, amount }}
     transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
+
+export const SlideInLeft = ({
+  children,
+  className,
+  delay = 0,
+  once = true,
+  amount = 0.3,
+}: MotionProps) => (
+  <motion.div
+    initial={{ opacity: 0, x: -40 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -40, transition: { duration: 0.3 } }}
+    viewport={{ once, amount }}
+    transition={{ duration: 0.7, delay, ease: "easeOut" }}
     className={className}
   >
     {children}
@@ -74,7 +96,7 @@ export const StaggerContainer = ({
   className,
   delay = 0,
   once = true,
-  amount = 0.1,
+  amount = 0.3,
   staggerDelay = 0.1,
 }: MotionProps) => (
   <motion.div

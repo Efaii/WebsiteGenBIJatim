@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Card, CardContent } from "@/components/Card";
 import {
