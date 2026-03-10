@@ -2,13 +2,15 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
+import { Features } from "@/components/home/Features";
+import { LogoTicker } from "@/components/home/LogoTicker";
 import { Portal } from "@/components/home/Portal";
 import { Testimonials } from "@/components/home/Testimonials";
 import { News } from "@/components/home/News";
 import { FAQ } from "@/components/home/FAQ";
 import { CTA } from "@/components/home/CTA";
-import { getHomeData } from "@/services/home.service";
-import { getLatestNews } from "@/services/news.service";
+import { getHomeData } from "@/lib/services/home.service";
+import { getLatestNews } from "@/lib/services/news.service";
 
 /**
  * Landing Page Root Component
@@ -34,8 +36,14 @@ export default async function Home() {
         {/* Entrance & Identity */}
         <Hero />
 
-        {/* Organizational Context & Metrics */}
-        <About commissariats={homeData.commissariats} />
+        {/* Organizational Context & Narrative */}
+        <About />
+
+        {/* Core Pillars & Benefits */}
+        <Features />
+
+        {/* Partnership & Trust (Social Proof) */}
+        <LogoTicker commissariats={homeData.commissariats} />
 
         {/* Strategic Program Access */}
         <Portal />

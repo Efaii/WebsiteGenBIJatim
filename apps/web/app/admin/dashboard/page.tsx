@@ -42,7 +42,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
       try {
         const response = await fetch(
-          "http://localhost:5000/api/dashboard/stats",
+          `${process.env.NEXT_PUBLIC_API_URL}/dashboard/stats`,
           {
             headers: {
               "Content-Type": "application/json",

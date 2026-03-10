@@ -7,10 +7,10 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 5000;
 
-import newsRoutes from './routes/news';
-import docsRoutes from './routes/docs';
-import profileRoutes from './routes/profile';
-import eventsRoutes from './routes/events';
+import newsRoutes from './routes/news-public.route';
+import docsRoutes from './routes/docs.route';
+import profileRoutes from './routes/profile.route';
+import eventsRoutes from './routes/events.route';
 
 app.use(cors());
 app.use(express.json());

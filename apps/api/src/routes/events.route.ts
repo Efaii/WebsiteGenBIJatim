@@ -1,9 +1,12 @@
 import { Router, Request, Response } from 'express';
-// import { Event, ProkerData } from '@repo/types';
+
+/**
+ * @route events.route
+ * @description Public read-only routes for calendar events.
+ */
 
 const router = Router();
 
-// Mock Data
 const EVENTS_DATA = [
   {
     id: "2025-02-15-unair-workshop",
@@ -34,13 +37,13 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.get('/:id', (req: Request, res: Response) => {
-    const { id } = req.params;
-    const event = EVENTS_DATA.find(e => e.id === id);
-    if (event) {
-        res.json(event);
-    } else {
-        res.status(404).json({ message: 'Event not found' });
-    }
+  const { id } = req.params;
+  const event = EVENTS_DATA.find(e => e.id === id);
+  if (event) {
+    res.json(event);
+  } else {
+    res.status(404).json({ message: 'Event not found' });
+  }
 });
 
 export default router;

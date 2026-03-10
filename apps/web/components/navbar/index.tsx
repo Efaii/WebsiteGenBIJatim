@@ -1,101 +1,109 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
-import { Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
 import { COMMISSARIAT_DATA } from "@/content/commissariatData";
 
 import { NavbarLogo } from "./navbarLogo";
 import { NavbarLinks } from "./navbarLinks";
 import { MobileMenu } from "./mobileMenu";
+import { Button } from "@/components/Button";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 /**
- * Navbar Component
- * * Purpose: Acts as the root orchestrator for the global navigation system.
- * Architecture:
- * - State Management: Synchronizes the mobile menu visibility and global scroll positions.
- * - Logic: Implements body-scroll locking and dynamic data formatting for organizational sub-menus.
- * - Composition: Integrates logo assets, desktop link systems, and mobile navigation overlays.
+ * @component Navbar
+ * @description The primary navigation system featuring adaptive styling based on scroll position.
  */
 export function Navbar() {
   const pathname = usePathname();
   const scrolled = useScrollPosition();
   const [isOpen, setIsOpen] = useState(false);
 
-  {/* --- INTERACTION LOGIC: SCROLL LOCK --- */}
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  /* --- SIDE_EFFECTS --- */
+  useScrollLock(isOpen);
 
-  {/* --- DATA ARCHITECTURE: COMMISSARIAT RESOLVER --- */}
-  const COMMISSARIAT_LINKS = Object.values(COMMISSARIAT_DATA)
-    .map((c) => ({
-      name: c.name.replace("GenBI Komisariat ", ""),
-      slug: c.slug,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  /* --- DATA_TRANSFORMATION --- */
+  const COMMISSARIAT_LINKS = Object.values(COMMISSARIAT_DATA).map((c) => ({
+    name: c.name,
+    slug: c.slug,
+    logo_univ: c.logo_univ,
+  }));
 
   return (
     <>
-      {/* --- PRIMARY NAVIGATION BAR ARCHITECTURE --- */}
+      {/* --- NAVIGATION_CONTAINER --- */}
       <nav
         className={cn(
-          "fixed top-0 left-0 w-full z-[100] transition-all duration-300 border-b transform-gpu",
+          "fixed left-0 right-0 z-[100] transition-[top,width,height,background-color,border-color,border-radius,box-shadow] duration-400 ease-out transform-gpu mx-auto",
           scrolled
-            ? "bg-white/80 backdrop-blur-md border-slate-100 h-16 shadow-sm"
-            : "bg-transparent border-transparent h-20",
+            ? "top-4 max-w-6xl w-[95%] rounded-full bg-white border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] h-16"
+            : "top-0 w-full bg-transparent border-transparent h-24"
         )}
       >
-        <div className="container px-6 lg:px-8 xl:px-12 mx-auto h-full max-w-7xl">
-          <div className="w-full h-full flex items-center justify-between lg:px-6 xl:px-10">
+        <div className={cn(
+          "mx-auto h-full transition-[padding,width] duration-400 ease-out",
+          scrolled ? "px-6 w-full" : "container px-6 lg:px-8 xl:px-12 max-w-7xl"
+        )}>
+          <div className={cn(
+            "flex items-center justify-between h-full transition-opacity duration-300",
+            !scrolled && "lg:px-6 xl:px-10"
+          )}>
             
-            {/* --- BRANDING ASSET INTERFACE --- */}
+            {/* BRANDING_LOGO */}
             <NavbarLogo scrolled={scrolled} />
 
-            {/* --- DESKTOP NAVIGATION ENGINE --- */}
-            <NavbarLinks
-              scrolled={scrolled}
-              pathname={pathname}
-              navItems={siteConfig.navItems}
-              commissariatLinks={COMMISSARIAT_LINKS}
-            />
+            {/* DESKTOP_NAVIGATION_LINKS */}
+            <div className="hidden lg:block">
+              <NavbarLinks
+                pathname={pathname}
+                navItems={siteConfig.navItems}
+                commissariatLinks={COMMISSARIAT_LINKS}
+                scrolled={scrolled}
+              />
+            </div>
 
-            {/* --- MOBILE INTERACTION TRIGGER --- */}
-            <div className="md:hidden relative z-[110]">
+            {/* ACTION_CONTROLS */}
+            <div className="flex items-center gap-3">
+              {/* INTERNAL_PORTAL_CTA */}
+              <Link href="/docs" className="hidden sm:block">
+                <Button 
+                  variant="primary" 
+                  className={cn(
+                    "rounded-full transition-[background-color,transform,box-shadow,color,padding,font-size] duration-300 font-semibold",
+                    scrolled ? "px-6 py-2 text-sm" : "px-8 py-3 text-base"
+                  )}
+                >
+                  Portal
+                </Button>
+              </Link>
+
+              {/* MOBILE_MENU_TRIGGER */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                  "w-10 h-10 flex items-center justify-center transition-all duration-300 rounded-xl border active:scale-95",
-                  isOpen
-                    ? "bg-slate-900 border-slate-800 text-white"
-                    : scrolled
-                      ? "bg-white border-slate-200 text-slate-900 shadow-sm"
-                      : "bg-white/50 border-white/40 text-slate-900 backdrop-blur-md",
+                  "lg:hidden w-11 h-11 flex items-center justify-center rounded-full transition-all duration-100",
+                  scrolled ? "bg-slate-100 text-slate-900" : "bg-slate-100 text-slate-900 backdrop-blur-md"
                 )}
               >
-                {isOpen ? <X size={20} /> : <Menu size={20} />}
+                {isOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* --- MOBILE NAVIGATION OVERLAY SYSTEM --- */}
+      {/* --- MOBILE_NAVIGATION_OVERLAY --- */}
       <MobileMenu
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         pathname={pathname}
         commissariatLinks={COMMISSARIAT_LINKS}
+        navItems={siteConfig.navItems}
       />
     </>
   );

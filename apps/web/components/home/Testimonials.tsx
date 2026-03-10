@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { cn, getAssetUrl } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { FadeIn } from "../MotionWrapper";
@@ -66,20 +67,18 @@ export function Testimonials({
 
   return (
     <section className="py-16 md:py-24 relative bg-slate-50 overflow-hidden">
-      
       {/* --- CONTENT LAYOUT WRAPPER --- */}
       <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative max-w-7xl">
         <div className="w-full lg:px-6 xl:px-10">
-          
           {/* --- SECTION HEADER --- */}
           <div className="mb-6 text-center relative z-10">
             <FadeIn delay={0.2}>
-              <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight mb-6">
+              <h2 className="h2 mb-6">
                 Kata <span className="text-blue-600">Alumni</span>
               </h2>
             </FadeIn>
             <FadeIn delay={0.3}>
-              <p className="text-sm md:text-base text-slate-900 max-w-xl mx-auto leading-relaxed">
+              <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
                 Mereka yang kini memimpin dan berkarya di berbagai sektor
                 strategis, memberikan energi baru untuk negeri.
               </p>
@@ -89,7 +88,6 @@ export function Testimonials({
           {/* --- INTERACTIVE CAROUSEL AREA --- */}
           <FadeIn delay={0.4}>
             <div className="max-w-2xl mx-auto relative">
-              
               {/* SLIDE TRANSITION WINDOW */}
               <div className="relative overflow-hidden">
                 <AnimatePresence initial={false} custom={direction} mode="wait">
@@ -118,27 +116,24 @@ export function Testimonials({
                     className="w-full cursor-grab active:cursor-grabbing"
                   >
                     {/* TESTIMONIAL CARD COMPONENT */}
-                    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 md:p-7 flex flex-col items-center text-center transition-all duration-200 hover:border-blue-200 mb-6 w-full">
-                      
+                    <div className="bg-white rounded-[2rem] overflow-hidden border border-slate-200/80 shadow-sm p-6 md:p-7 flex flex-col items-center text-center transition-[border-color,box-shadow,transform] duration-200 hover:border-blue-200 mb-6 w-full transform-gpu">
                       {/* Quote Decorative Element */}
                       <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5 shrink-0">
                         <Quote className="w-4 h-4" fill="currentColor" />
                       </div>
 
                       {/* Main Quote Text */}
-                      <p className="text-[15px] md:text-lg text-slate-900 font-medium mb-6 leading-relaxed max-w-lg">
-                        "{testimonials[currentIndex].quote}"
-                      </p>
+                      <div className="flex items-center gap-2 text-slate-600 text-[11px] font-medium mb-1.5">
+                        <p className="text-[15px] md:text-lg text-slate-600 font-medium mb-6 leading-relaxed max-w-lg">
+                          "{testimonials[currentIndex].quote}"
+                        </p>
+                      </div>
 
                       {/* Author Attribution Meta */}
                       <div className="flex flex-col items-center gap-2.5">
-                        <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 relative shrink-0 shadow-sm">
+                        <div className="w-14 h-14 rounded-[2rem] overflow-hidden border border-slate-200 relative shrink-0 shadow-sm">
                           <Image
-                            src={
-                              testimonials[currentIndex].image.startsWith("/uploads")
-                                ? `http://localhost:5000${testimonials[currentIndex].image}`
-                                : testimonials[currentIndex].image
-                            }
+                            src={getAssetUrl(testimonials[currentIndex].image) || "/assets/images/placeholder.jpg"}
                             alt={testimonials[currentIndex].name}
                             fill
                             unoptimized
@@ -164,10 +159,9 @@ export function Testimonials({
               {/* --- NAVIGATION & PAGINATION CONTROLS --- */}
               <FadeIn delay={0.5}>
                 <div className="flex items-center justify-center gap-4">
-                  
                   {/* Previous Button */}
                   <button
-                    className="w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm text-slate-900 hover:text-white hover:bg-blue-600 hover:border-blue-600 flex items-center justify-center transition-all focus:outline-none"
+                    className="w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm text-slate-900 hover:text-white hover:bg-blue-600 hover:border-blue-600 flex items-center justify-center transition-all focus:outline-none cursor-pointer"
                     onClick={() => paginate(-1)}
                     aria-label="Previous Testimonial"
                   >
@@ -179,18 +173,17 @@ export function Testimonials({
                     {testimonials.map((_: any, idx: number) => (
                       <div
                         key={idx}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${
-                          idx === currentIndex
-                            ? "w-5 bg-blue-600"
-                            : "w-1.5 bg-slate-200"
-                        }`}
+                        className={cn(
+                          "h-1.5 rounded-full transition-all duration-300",
+                          idx === currentIndex ? "w-5 bg-blue-600" : "w-1.5 bg-slate-200"
+                        )}
                       />
                     ))}
                   </div>
 
                   {/* Next Button */}
                   <button
-                    className="w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm text-slate-900 hover:text-white hover:bg-blue-600 hover:border-blue-600 flex items-center justify-center transition-all focus:outline-none"
+                    className="w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm text-slate-900 hover:text-white hover:bg-blue-600 hover:border-blue-600 flex items-center justify-center transition-all focus:outline-none cursor-pointer"
                     onClick={() => paginate(1)}
                     aria-label="Next Testimonial"
                   >

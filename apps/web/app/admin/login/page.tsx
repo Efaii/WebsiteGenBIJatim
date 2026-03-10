@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/services/auth.service";
+import { loginUser } from "@/lib/services/auth.service";
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState("");

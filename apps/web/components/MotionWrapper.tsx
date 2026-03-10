@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 type MotionProps = {
   children: ReactNode;
@@ -10,7 +11,10 @@ type MotionProps = {
   once?: boolean;
   amount?: number | "some" | "all";
   staggerDelay?: number;
+  initial?: import("framer-motion").Target | import("framer-motion").VariantLabels | boolean;
   onViewportEnter?: () => void;
+  margin?: string;
+  transition?: any; // Added for flexible overrides
 };
 
 export const FadeIn = ({
@@ -19,16 +23,20 @@ export const FadeIn = ({
   delay = 0,
   once = true,
   amount = 0.3,
+  initial,
   onViewportEnter,
 }: MotionProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 20, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
+    initial={initial !== undefined ? initial : { opacity: 0, y: 20, scale: 0.98 }}
+    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+    viewport={{ once, amount, margin: "0px 0px -50px 0px" }}
+    transition={{ 
+      duration: 0.4,
+      ease: [0.33, 1, 0.68, 1], 
+      delay,
+    }}
     onViewportEnter={onViewportEnter}
-    className={className}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>
@@ -40,14 +48,18 @@ export const SlideUp = ({
   delay = 0,
   once = true,
   amount = 0.3,
+  initial,
 }: MotionProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
+    initial={initial !== undefined ? initial : { opacity: 0, y: 30 }}
     whileInView={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 40, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    className={className}
+    viewport={{ once, amount, margin: "0px 0px -50px 0px" }}
+    transition={{ 
+      duration: 0.4,
+      ease: [0.33, 1, 0.68, 1],
+      delay,
+    }}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>
@@ -59,14 +71,18 @@ export const SlideInLeft = ({
   delay = 0,
   once = true,
   amount = 0.3,
+  initial,
 }: MotionProps) => (
   <motion.div
-    initial={{ opacity: 0, x: -40 }}
+    initial={initial !== undefined ? initial : { opacity: 0, x: -30 }}
     whileInView={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -40, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.7, delay, ease: "easeOut" }}
-    className={className}
+    viewport={{ once, amount, margin: "0px 0px -50px 0px" }}
+    transition={{ 
+      duration: 0.4,
+      ease: [0.33, 1, 0.68, 1],
+      delay,
+    }}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>
@@ -78,14 +94,14 @@ export const ScaleIn = ({
   delay = 0,
   once = true,
   amount = 0.5,
+  initial,
 }: MotionProps) => (
   <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
+    initial={initial !== undefined ? initial : { opacity: 0, scale: 0.98 }}
     whileInView={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.5, delay, ease: "easeOut" }}
-    className={className}
+    viewport={{ once, amount, margin: "0px 0px -50px 0px" }}
+    transition={{ duration: 0.4, delay, ease: [0.33, 1, 0.68, 1] }}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>
@@ -98,11 +114,12 @@ export const StaggerContainer = ({
   once = true,
   amount = 0.3,
   staggerDelay = 0.1,
+  margin = "0px 0px -50px 0px",
 }: MotionProps) => (
   <motion.div
     initial="hidden"
     whileInView="show"
-    viewport={{ once, amount }}
+    viewport={{ once, amount, margin }}
     variants={{
       hidden: { opacity: 0 },
       show: {
@@ -112,10 +129,8 @@ export const StaggerContainer = ({
           delayChildren: delay,
         },
       },
-      exit: { opacity: 0, transition: { duration: 0.3 } },
     }}
-    exit="exit"
-    className={className}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>
@@ -130,11 +145,34 @@ export const StaggerItem = ({
 }) => (
   <motion.div
     variants={{
-      hidden: { opacity: 0, y: 20 },
+      hidden: { opacity: 0, y: 15 },
       show: { opacity: 1, y: 0 },
     }}
-    transition={{ duration: 0.5, ease: "easeOut" }}
-    className={className}
+    transition={{ duration: 0.4, ease: [0.33, 1, 0.68, 1] }}
+    className={cn(className, "transform-gpu")}
+  >
+    {children}
+  </motion.div>
+);
+
+export const BlurIn = ({
+  children,
+  className,
+  delay = 0,
+  once = true,
+  amount = 0.3,
+  initial,
+}: MotionProps) => (
+  <motion.div
+    initial={initial !== undefined ? initial : { opacity: 0, scale: 0.98, y: 15 }}
+    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+    viewport={{ once, amount, margin: "0px 0px -50px 0px" }}
+    transition={{ 
+      duration: 0.4,
+      ease: [0.33, 1, 0.68, 1], 
+      delay,
+    }}
+    className={cn(className, "transform-gpu")}
   >
     {children}
   </motion.div>

@@ -1,145 +1,107 @@
 import { Request, Response } from 'express';
-// We use any type for prisma here to bypass the strict EPERM error types missing if the user hasn't run db push yet.
-import { PrismaClient } from '@prisma/client';
+import { NewsService } from '../services/news.service';
+import { createNewsSchema, updateNewsSchema, idParamSchema } from '../lib/validations';
+import { catchAsync } from '../utils/catchAsync';
+import { AppError } from '../utils/AppError';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
 
-const prisma = new PrismaClient();
+/**
+ * @controller NewsController
+ * @description News CRUD with Zod validation. Image processing stays here (HTTP concern),
+ * DB operations are delegated to NewsService.
+ */
+
 const UPLOAD_DIR = path.join(__dirname, '../../public/uploads/news');
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+export const getLatestNews = catchAsync(async (req: Request, res: Response) => {
+  const news = await NewsService.getLatest();
+  res.status(200).json(news);
+});
 
-function generateSlug(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-}
+export const getAllNewsCountAndData = catchAsync(async (req: Request, res: Response) => {
+  const news = await NewsService.getAll();
+  res.status(200).json(news);
+});
 
-export const getLatestNews = async (req: Request, res: Response) => {
-  try {
-    const news = await (prisma as any).news.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-    });
-    res.status(200).json(news);
-  } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+export const createNews = catchAsync(async (req: Request, res: Response) => {
+  const parsed = createNewsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Validation failed', errors: parsed.error.flatten().fieldErrors });
   }
-};
 
-export const getAllNewsCountAndData = async (req: Request, res: Response) => {
-  try {
-    const news = await (prisma as any).news.findMany({ orderBy: { createdAt: 'desc' } });
-    res.status(200).json(news);
-  } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error' });
+  if (!req.file) {
+    throw new AppError('Cover image is required', 400);
   }
-};
 
-export const createNews = async (req: Request, res: Response) => {
-  try {
-    const { title, content, author } = req.body;
-    
-    if (!req.file) {
-      return res.status(400).json({ message: 'Cover image is required' });
-    }
+  const slug = await NewsService.createSlug(parsed.data.title);
+  const filename = `${Date.now()}-${slug}-cover.webp`;
+  const savePath = path.join(UPLOAD_DIR, filename);
 
-    let slug = generateSlug(title);
-    
-    // Check if slug exists
-    const existingSlug = await (prisma as any).news.findUnique({ where: { slug } });
-    if (existingSlug) {
-       slug = `${slug}-${Date.now().toString().slice(-4)}`;
-    }
+  await sharp(req.file.buffer)
+    .resize({ width: 1200, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toFile(savePath);
 
+  const imagePath = `/uploads/news/${filename}`;
+  const newArticle = await NewsService.create({ ...parsed.data, slug, image: imagePath });
+  res.status(201).json(newArticle);
+});
+
+export const updateNews = catchAsync(async (req: Request, res: Response) => {
+  const paramsParsed = idParamSchema.safeParse(req.params);
+  if (!paramsParsed.success) throw new AppError('Invalid ID', 400);
+
+  const bodyParsed = updateNewsSchema.safeParse(req.body);
+  if (!bodyParsed.success) {
+    return res.status(400).json({ message: 'Validation failed', errors: bodyParsed.error.flatten().fieldErrors });
+  }
+
+  const existing = await NewsService.findById(paramsParsed.data.id);
+  if (!existing) throw new AppError('Not found', 404);
+
+  let imagePath = existing.image;
+  let slug = existing.slug;
+
+  if (bodyParsed.data.title && bodyParsed.data.title !== existing.title) {
+    slug = await NewsService.updateSlug(bodyParsed.data.title, paramsParsed.data.id);
+  }
+
+  if (req.file) {
     const filename = `${Date.now()}-${slug}-cover.webp`;
     const savePath = path.join(UPLOAD_DIR, filename);
 
-    // Compress Cover Image
     await sharp(req.file.buffer)
       .resize({ width: 1200, withoutEnlargement: true })
       .webp({ quality: 80 })
       .toFile(savePath);
 
-    const imagePath = `/uploads/news/${filename}`;
-
-    const newArticle = await (prisma as any).news.create({
-      data: { title, slug, content, author, image: imagePath },
-    });
-    
-    res.status(201).json(newArticle);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-
-export const updateNews = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { title, content, author } = req.body;
-    
-    const existing = await (prisma as any).news.findUnique({ where: { id } });
-    if (!existing) return res.status(404).json({ message: 'Not found' });
-
-    let imagePath = existing.image;
-    let slug = existing.slug;
-
-    if (title && title !== existing.title) {
-       slug = generateSlug(title);
-       const existingSlug = await (prisma as any).news.findUnique({ where: { slug } });
-       if (existingSlug && existingSlug.id !== id) {
-          slug = `${slug}-${Date.now().toString().slice(-4)}`;
-       }
-    }
-
-    if (req.file) {
-      const filename = `${Date.now()}-${slug}-cover.webp`;
-      const savePath = path.join(UPLOAD_DIR, filename);
-
-      await sharp(req.file.buffer)
-        .resize({ width: 1200, withoutEnlargement: true })
-        .webp({ quality: 80 })
-        .toFile(savePath);
-
-      imagePath = `/uploads/news/${filename}`;
-
-      // Delete old cover
-      if (existing.image && existing.image.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '../../public', existing.image);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-    }
-
-    const updated = await (prisma as any).news.update({
-      where: { id },
-      data: { title, slug, content, author, image: imagePath },
-    });
-    
-    res.status(200).json(updated);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-
-export const deleteNews = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    
-    const existing = await (prisma as any).news.findUnique({ where: { id } });
-    if (!existing) return res.status(404).json({ message: 'Not found' });
+    imagePath = `/uploads/news/${filename}`;
 
     if (existing.image && existing.image.startsWith('/uploads/')) {
       const oldPath = path.join(__dirname, '../../public', existing.image);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
-
-    await (prisma as any).news.delete({ where: { id } });
-    res.status(200).json({ message: 'Deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server Error' });
   }
-};
+
+  const updated = await NewsService.update(paramsParsed.data.id, { ...bodyParsed.data, slug, image: imagePath });
+  res.status(200).json(updated);
+});
+
+export const deleteNews = catchAsync(async (req: Request, res: Response) => {
+  const paramsParsed = idParamSchema.safeParse(req.params);
+  if (!paramsParsed.success) throw new AppError('Invalid ID', 400);
+
+  const existing = await NewsService.findById(paramsParsed.data.id);
+  if (!existing) throw new AppError('Not found', 404);
+
+  if (existing.image && existing.image.startsWith('/uploads/')) {
+    const oldPath = path.join(__dirname, '../../public', existing.image);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+
+  await NewsService.delete(paramsParsed.data.id);
+  res.status(200).json({ message: 'Deleted successfully' });
+});

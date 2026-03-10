@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
-// We will replace this with DB call later
 import { NewsItem } from '@repo/types';
+
+/**
+ * @route news-public.route
+ * @description Public read-only routes for news (mock data, will be replaced by DB).
+ */
 
 const router = Router();
 
-// Mock Data (temporarily duplicated from frontend until DB is up)
 const NEWS_DATA: NewsItem[] = [
   {
     id: 1,
@@ -12,8 +15,7 @@ const NEWS_DATA: NewsItem[] = [
     category: "Kegiatan",
     date: "24 Desember 2024",
     image_color: "bg-blue-100",
-    snippet:
-      "GenBI Jatim turut serta dalam upaya Bank Indonesia memperluas akseptasi digital di kalangan UMKM...",
+    snippet: "GenBI Jatim turut serta dalam upaya Bank Indonesia memperluas akseptasi digital di kalangan UMKM...",
   },
   {
     id: 2,
@@ -21,8 +23,7 @@ const NEWS_DATA: NewsItem[] = [
     category: "Webinar",
     date: "20 Desember 2024",
     image_color: "bg-purple-100",
-    snippet:
-      "Membahas peluang dan tantangan yang dihadapi generasi muda dalam era transformasi digital...",
+    snippet: "Membahas peluang dan tantangan yang dihadapi generasi muda dalam era transformasi digital...",
   },
   {
     id: 3,
@@ -30,8 +31,7 @@ const NEWS_DATA: NewsItem[] = [
     category: "Sosial",
     date: "15 Desember 2024",
     image_color: "bg-green-100",
-    snippet:
-      "Aksi nyata kepedulian lingkungan yang dilakukan oleh anggota GenBI dari berbagai komisariat...",
+    snippet: "Aksi nyata kepedulian lingkungan yang dilakukan oleh anggota GenBI dari berbagai komisariat...",
   },
 ];
 
@@ -42,10 +42,9 @@ router.get('/', (req: Request, res: Response) => {
 router.get('/:slug', (req: Request, res: Response) => {
   const { slug } = req.params;
   const news = NEWS_DATA.find((item) => {
-      const itemSlug = item.title.toLowerCase().replace(/ /g, "-");
-      return itemSlug === slug;
+    const itemSlug = item.title.toLowerCase().replace(/ /g, "-");
+    return itemSlug === slug;
   });
-  
   if (news) {
     res.json(news);
   } else {

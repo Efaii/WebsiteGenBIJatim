@@ -95,7 +95,7 @@ export default function CalendarClient({ initialEvents }: CalendarClientProps) {
 
           <div className="container relative mx-auto px-6 text-center z-10 pt-20">
             <SlideUp once={false}>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+              <h1 className="h1 mb-6 text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                 Kalender <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-200 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.3)]">
                   Kegiatan GenBI
@@ -113,7 +113,7 @@ export default function CalendarClient({ initialEvents }: CalendarClientProps) {
 
         {/* Unified Sticky Control Bar (Floating Style) */}
         <div className="sticky top-24 z-40 px-6 mb-8">
-          <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-2 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2rem] p-2 flex flex-col md:flex-row items-center justify-between gap-4">
             {/* LEFT: View Tabs */}
             <div className="flex bg-white/5 backdrop-blur-md p-1.5 rounded-full border border-white/10 relative shadow-2xl gap-1">
               {[
@@ -292,7 +292,7 @@ export default function CalendarClient({ initialEvents }: CalendarClientProps) {
                       {monthGroup.items.map((event: any, eventIdx: number) => (
                         <Card
                           key={`${idx}-${eventIdx}`}
-                          className="group bg-white/5 backdrop-blur-md border border-white/10 hover:border-cyan-500/30 hover:bg-white/10 transition-all duration-300 overflow-hidden rounded-3xl"
+                          className="group bg-white/5 backdrop-blur-md border border-white/10 hover:border-cyan-500/30 hover:bg-white/10 transition-all duration-300 overflow-hidden rounded-[2rem]"
                         >
                           <div className="flex flex-col md:flex-row">
                             {/* Date Column */}

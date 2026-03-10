@@ -1,6 +1,12 @@
 import { Instagram, Youtube, Mail } from "lucide-react";
 
+/**
+ * @file footerConfig.ts
+ * @description Centralized configuration for the global footer, including identity, navigation links, and social assets.
+ */
+
 export const footerConfig = {
+  /* --- BRAND_IDENTITY_ARCHITECTURE --- */
   identity: {
     name: "GenBI Jawa Timur",
     description: "Komunitas penerima Beasiswa Bank Indonesia yang berdedikasi sebagai Energi Untuk Negeri.",
@@ -15,7 +21,10 @@ export const footerConfig = {
       logo: "/assets/logos/bankIndonesiaBlue.svg",
     },
   },
+
+  /* --- NAVIGATION_SECTIONS_ENGINE --- */
   sections: [
+    /* EXPLORATION_LINKS */
     {
       id: "jelajahi",
       title: "Jelajahi",
@@ -26,8 +35,10 @@ export const footerConfig = {
         { label: "Panduan & Dokumen", href: "/docs" },
         { label: "Database Awardee", href: "/awardee" },
         { label: "Berita Terkini", href: "/news" },
+        { label: "Hubungi Kami", href: "/contact" },
       ],
     },
+    /* PARTNER_CAMPUS_LIST */
     {
       id: "komisariat",
       title: "Mitra Komisariat",
@@ -40,6 +51,8 @@ export const footerConfig = {
       ],
     },
   ],
+
+  /* --- SOCIAL_CONNECTIVITY_ASSETS --- */
   socials: [
     {
       name: "Instagram",
@@ -57,11 +70,15 @@ export const footerConfig = {
       icon: Mail,
     },
   ],
+
+  /* --- CONVERSION_CALL_TO_ACTION --- */
   contact: {
     label: "Butuh info beasiswa/kemitraan?",
     cta: "Hubungi Pengurus →",
     href: "/contact",
   },
+
+  /* --- LEGAL_AND_COPYRIGHT_FOOTER --- */
   bottom: {
     copyright: `© ${new Date().getFullYear()} Generasi Baru Indonesia Korkom Jawa Timur. All rights reserved.`,
     links: [

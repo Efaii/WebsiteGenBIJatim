@@ -1,7 +1,13 @@
-import { HomeDataResponse } from "../types/home.types";
+import { HomeDataResponse } from "@/types/home.types";
 
-// Logo Komisariat adalah aset statis yang jarang berubah.
-// Best practice: ambil dari folder /assets, bukan dari database.
+/**
+ * @service HomeService (Frontend)
+ * @description Fetches aggregated homepage data (testimonials, FAQs, commissariats).
+ * Uses native fetch for Next.js ISR revalidation support.
+ */
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL as string;
+
 const STATIC_COMMISSARIATS = [
   { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.svg" },
   { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.svg" },
@@ -16,14 +22,12 @@ const STATIC_COMMISSARIATS = [
 
 export const getHomeData = async (): Promise<HomeDataResponse> => {
   try {
-    // Menarik data seluruh konten homepage via endpoint publik tunggal
-    // Ini menghindari isu 'Access Denied' pada endpoint admin /faqs dan /testimonials
-    const response = await fetch('http://localhost:5000/api/home', { 
-      next: { revalidate: 60 } 
+    const response = await fetch(`${API_URL}/home`, {
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
-      throw new Error(`API respond with status: ${response.status}`);
+      throw new Error(`API responded with status: ${response.status}`);
     }
 
     const data = await response.json();
@@ -31,10 +35,10 @@ export const getHomeData = async (): Promise<HomeDataResponse> => {
     return {
       faqs: data.faqs || [],
       testimonials: data.testimonials || [],
-      commissariats: STATIC_COMMISSARIATS, // Tetap menggunakan aset statis untuk logo
+      commissariats: STATIC_COMMISSARIATS,
     };
   } catch (error) {
-    console.error('API Fetch Error:', error);
+    console.error("API Fetch Error:", error);
     return {
       testimonials: [],
       faqs: [],

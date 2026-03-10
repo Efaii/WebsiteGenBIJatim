@@ -57,9 +57,7 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
 
       <main className="flex-1 container mx-auto px-4 py-12 relative z-10">
         <SlideUp className="flex flex-col items-center space-y-4 mb-12 text-center">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">
-            Berita & Kegiatan Jatim
-          </h1>
+          <h1 className="h1">Berita & Kegiatan Jatim</h1>
           <p className="text-lg text-blue-100/70 max-w-2xl">
             Informasi terkini, artikel, dan highlight kegiatan GenBI tingkat
             provinsi Jawa Timur.

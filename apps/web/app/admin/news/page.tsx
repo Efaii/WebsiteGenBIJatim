@@ -16,9 +16,10 @@ import {
   updateNews,
   deleteNews,
   AdminNewsItem,
-} from "@/services/news.service";
+} from "@/lib/services/news.service";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getAssetUrl } from "@/lib/utils";
 
 export default function AdminNewsPage() {
   const [items, setItems] = useState<AdminNewsItem[]>([]);
@@ -82,7 +83,7 @@ export default function AdminNewsPage() {
     setAuthor(item.author);
     setContent(item.content);
     setImageFile(null);
-    setPreviewUrl(`http://localhost:5000${item.image}`);
+    setPreviewUrl(getAssetUrl(item.image));
     setIsModalOpen(true);
   };
 
@@ -213,7 +214,7 @@ export default function AdminNewsPage() {
                     <td className="px-6 py-4">
                       <div className="w-24 h-16 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 relative">
                         <Image
-                          src={`http://localhost:5000${item.image}`}
+                          src={getAssetUrl(item.image)}
                           alt={item.title}
                           fill
                           sizes="96px"

@@ -2,42 +2,56 @@
 
 import React from "react";
 import { motion, HTMLMotionProps } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+/**
+ * Button Component
+ * * Purpose: Atomic interaction primitive for all navigation and conversion surfaces.
+ * Architecture:
+ * - Variants: `primary` (Solid Blue), `white` (White/Dark Text for CTA), `outline` (Bordered), `ghost` (Minimal).
+ * - Sizes: `sm`, `md`, `lg`, `xl` (Landing page hero/CTA scale).
+ * - Integration: Uses `cn()` for deterministic class merging with consumer overrides.
+ */
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "secondary" | "white" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg" | "xl";
   children: React.ReactNode;
 }
 
 export function Button({
-  className = "",
+  className,
   variant = "primary",
   size = "md",
   children,
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center rounded-full font-semibold transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
+    "inline-flex items-center justify-center rounded-full font-semibold transition-[background-color,color,border-color,box-shadow,transform] duration-300 focus-ring disabled:pointer-events-none disabled:opacity-50 cursor-pointer";
 
-    const variants = {
-      primary:
-        "relative overflow-hidden bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 text-white backdrop-blur-md shadow-[0_8px_20px_-5px_rgba(6,182,212,0.2)] hover:shadow-[0_8px_25px_-5px_rgba(6,182,212,0.4)] hover:border-cyan-400/50 hover:from-cyan-500/30 hover:to-blue-600/30 transition-all duration-300",
-      secondary:
-        "bg-white/5 border border-white/10 text-blue-100 backdrop-blur-sm hover:bg-white/10 hover:border-cyan-200/30 hover:text-white hover:shadow-lg transition-all duration-300",
-      outline:
-        "border border-white/20 text-blue-100 bg-transparent hover:bg-white/5 hover:border-white/40",
-      ghost: "hover:bg-white/5 text-blue-200 hover:text-white",
-    }
+  const variants = {
+    primary:
+      "bg-blue-600 text-white shadow-md shadow-blue-900/20 hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]",
+    secondary:
+      "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 hover:text-slate-900",
+    white:
+      "bg-white text-slate-900 shadow-lg hover:bg-slate-50 hover:-translate-y-0.5 active:scale-[0.98]",
+    outline:
+      "bg-transparent border border-slate-300 text-slate-900 hover:bg-slate-50 hover:text-blue-700 hover:border-slate-400",
+    ghost:
+      "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+  };
 
   const sizes = {
     sm: "h-8 px-3 text-xs tracking-wide",
     md: "h-10 px-5 py-2 text-sm tracking-wide",
     lg: "h-12 px-6 text-base tracking-wide",
+    xl: "h-auto px-4 lg:px-8 py-3.5 text-[13px] lg:text-base font-bold tracking-wide",
   };
 
   return (
     <motion.button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
       {...props}
     >
       {children}

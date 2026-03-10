@@ -1,6 +1,12 @@
 import { CommissariatData } from "@/app/types";
 
+/**
+ * @file commissariatData.ts
+ * @description Centralized repository for all GenBI Commissariat profiles, including programs, BPH members, and historical documents.
+ */
+
 export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
+  /* --- UNAIR_COMMISSARIAT_PROFILE --- */
   unair: {
     slug: "unair",
     name: "GenBI Komisariat UNAIR",
@@ -11,6 +17,8 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     description:
       "GenBI Komisariat UNAIR merupakan wadah bagi penerima beasiswa Bank Indonesia di Universitas Airlangga untuk berkarya, mengabdi, dan berkontribusi bagi pengembangan ekonomi dan sosial masyarakat, khususnya di lingkungan kampus dan Surabaya.",
     socials: { instagram: "@genbi_unair", email: "genbiunair@gmail.com" },
+    
+    /* BPH_MEMBERSHIP_LIST */
     bph: [
       {
         role: "Ketua Umum",
@@ -21,9 +29,10 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         instagram: "@user",
         linkedin: "user",
       },
-      // ... (other BPH members would go here, kept truncated for brevity/mock)
     ],
     divisions: [],
+    
+    /* WORK_PROGRAMS_AND_EVENTS */
     proker: [
       {
         id: "unair-1",
@@ -56,7 +65,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
           "/assets/images/bnsp.JPG",
           "/assets/images/background.jpg",
         ],
-        documentation: "https://instagram.com/genbi_unair", // Link Added
+        documentation: "https://instagram.com/genbi_unair",
         newsUrl: "https://unair.ac.id/news",
       },
       {
@@ -88,7 +97,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Offline",
         description: "Aksi kepedulian lingkungan di pantai kenjeran.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_2024 */
       {
         id: "unair-4",
         title: "GenBI Leadership Camp 2024",
@@ -130,8 +139,10 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       },
     ],
     awardees: [],
+    
+    /* DOCUMENT_ARCHIVE_BY_YEAR */
     documents: [
-      // 2025 Documents
+      /* RECENT_DOCUMENTS_2025 */
       {
         id: 1,
         title: "SK Pengurus GenBI UNAIR 2025",
@@ -148,7 +159,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         size: "5.4 MB",
         date: "10 Feb 2025",
       },
-      // 2024 Documents
+      /* ARCHIVE_2024 */
       {
         id: 11,
         title: "Laporan Pertanggungjawaban (LPJ) 2024",
@@ -173,7 +184,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         size: "1.8 MB",
         date: "10 Jan 2024",
       },
-      // 2023 Documents
+      /* ARCHIVE_2023 */
       {
         id: 21,
         title: "LPJ GenBI UNAIR Periode 2023",
@@ -198,7 +209,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         size: "500 KB",
         date: "05 Feb 2023",
       },
-      // 2022 Documents
+      /* ARCHIVE_2022 */
       {
         id: 31,
         title: "Arsip Foto Kegiatan 2022",
@@ -215,7 +226,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         size: "2.0 MB",
         date: "12 Jan 2022",
       },
-      // 2021 Documents
+      /* ARCHIVE_2021 */
       {
         id: 41,
         title: "Laporan Akhir Tahun 2021",
@@ -234,11 +245,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       },
     ],
   },
+
+  /* --- UNESA_COMMISSARIAT_PROFILE --- */
   unesa: {
     slug: "unesa",
     name: "GenBI Komisariat UNESA",
     university: "Universitas Negeri Surabaya",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/unesa.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -273,7 +286,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Offline",
         description: "Edukasi kebanksentralan ke SMA di Surabaya.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_UNESA */
       {
         id: "unesa-3",
         title: "Webinar Investasi Cerdas",
@@ -321,11 +334,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       },
     ],
   },
+
+  /* --- UPN_VETERAN_JATIM_PROFILE --- */
   "upn-veteran-jatim": {
     slug: "upn-veteran-jatim",
     name: "GenBI Komisariat UPN Veteran Jatim",
     university: "UPN Veteran Jawa Timur",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/upnvjt.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -343,7 +358,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         audience: "External",
         status: "On-going",
         date: "Every Weekend",
-        dateIso: "2025-01-01", // Placeholder
+        dateIso: "2025-01-01",
         format: "Offline",
         description: "Mendampingi UMKM dalam pencatatan keuangan digital.",
       },
@@ -386,11 +401,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       },
     ],
   },
+
+  /* --- ITS_COMMISSARIAT_PROFILE --- */
   its: {
     slug: "its",
     name: "GenBI Komisariat ITS",
     university: "Institut Teknologi Sepuluh Nopember",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/its.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -426,7 +443,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         link: "https://zoom.us",
         description: "Pelatihan pengolahan data ekonomi.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_ITS */
       {
         id: "its-3",
         title: "Workshop Fintech 101",
@@ -474,11 +491,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
       },
     ],
   },
+
+  /* --- UINSA_COMMISSARIAT_PROFILE --- */
   uinsa: {
     slug: "uinsa",
     name: "GenBI Komisariat UINSA",
     university: "UIN Sunan Ampel Surabaya",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/uinsa.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -513,7 +532,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Hybrid",
         description: "Diskusi rutin isu ekonomi terkini perspektif Islam.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_UINSA */
       {
         id: "uinsa-3",
         title: "Seminar Wakaf Produktif",
@@ -544,11 +563,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     awardees: [],
     documents: [],
   },
+
+  /* --- UNUGIRI_COMMISSARIAT_PROFILE --- */
   unugiri: {
     slug: "unugiri",
     name: "GenBI Komisariat UNUGIRI",
     university: "UNU Sunan Giri Bojonegoro",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/unugiri.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -570,7 +591,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Offline",
         description: "Edukasi pembayaran digital di koperasi pesantren.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_UNUGIRI */
       {
         id: "unugiri-2",
         title: "Sosialisasi Qris di Pasar Tradisional",
@@ -588,11 +609,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     awardees: [],
     documents: [],
   },
+
+  /* --- UTM_COMMISSARIAT_PROFILE --- */
   utm: {
     slug: "utm",
     name: "GenBI Komisariat UTM",
     university: "Universitas Trunojoyo Madura",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/utm.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -614,7 +637,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Offline",
         description: "Konten kreatif promosi wisata lokal.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_UTM */
       {
         id: "utm-2",
         title: "Festival Garam Madura",
@@ -632,11 +655,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     awardees: [],
     documents: [],
   },
+
+  /* --- PENS_COMMISSARIAT_PROFILE --- */
   pens: {
     slug: "pens",
     name: "GenBI Komisariat PENS",
     university: "Politeknik Elektronika Negeri Surabaya",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/pens.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -658,7 +683,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Hybrid",
         description: "Riset alat bantu pertanian berbasis IoT.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_PENS */
       {
         id: "pens-2",
         title: "Pelatihan IoT untuk UMKM",
@@ -676,11 +701,13 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
     awardees: [],
     documents: [],
   },
+
+  /* --- UIN_MADURA_COMMISSARIAT_PROFILE --- */
   "uin-madura": {
     slug: "uin-madura",
     name: "GenBI Komisariat UIN Madura",
     university: "UIN Madura",
-    logo_univ: "/assets/logos/genbi.svg",
+    logo_univ: "/assets/logos/uinmadura.svg",
     logo_genbi: "/assets/logos/genbi.svg",
     cover_image: "/assets/images/raker.jpg",
     description:
@@ -705,7 +732,7 @@ export const COMMISSARIAT_DATA: Record<string, CommissariatData> = {
         format: "Offline",
         description: "Sosialisasi CBP Rupiah di Ponpes Pamekasan.",
       },
-      // Past Events (Simulated)
+      /* HISTORICAL_EVENTS_UIN_MADURA */
       {
         id: "uinmadura-2",
         title: "GenBI Mengabdi Desa",

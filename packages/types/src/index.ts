@@ -132,7 +132,10 @@ export interface CommissariatData {
 export interface KorkomData {
   name: string;
   university: string;
+  description?: string;
+  vision?: string;
   bph: BPHMember[];
   divisions: BPHMember[];
   documents: Document[];
 }
+

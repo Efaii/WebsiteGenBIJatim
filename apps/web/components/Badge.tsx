@@ -1,8 +1,22 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 
+/**
+ * Badge Component
+ * * Purpose: Atomic label primitive for status indicators, tags, and contextual markers.
+ * Architecture:
+ * - Variants: `default` (Cyan), `secondary` (White), `glass-light` (Frosted Glass), `destructive` (Red), `outline`, `ghost`.
+ * - Integration: Uses `cn()` for deterministic class merging with consumer overrides.
+ */
+
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "secondary" | "destructive" | "outline" | "ghost";
+  variant?:
+    | "default"
+    | "secondary"
+    | "glass-light"
+    | "destructive"
+    | "outline"
+    | "ghost";
 }
 
 export const Badge = ({
@@ -14,6 +28,8 @@ export const Badge = ({
     default:
       "border-transparent bg-cyan-500/10 text-cyan-400 border-cyan-500/20 hover:bg-cyan-500/20",
     secondary: "border-transparent bg-white/10 text-white hover:bg-white/20",
+    "glass-light":
+      "bg-white/10 border-white/20 text-white backdrop-blur-sm shadow-sm",
     destructive:
       "border-transparent bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20",
     outline: "text-white border-white/20 hover:bg-white/10",

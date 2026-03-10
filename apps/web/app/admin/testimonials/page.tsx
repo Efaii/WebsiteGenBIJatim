@@ -16,9 +16,10 @@ import {
   updateTestimonial,
   deleteTestimonial,
   AdminTestimonialItem,
-} from "@/services/testimonial.service";
+} from "@/lib/services/testimonial.service";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getAssetUrl } from "@/lib/utils";
 
 export default function AdminTestimonialPage() {
   const [items, setItems] = useState<AdminTestimonialItem[]>([]);
@@ -80,11 +81,7 @@ export default function AdminTestimonialPage() {
     setRole(item.role);
     setQuote(item.quote);
     setImageFile(null);
-    setPreviewUrl(
-      item.image.startsWith("/uploads")
-        ? `http://localhost:5000${item.image}`
-        : item.image
-    );
+    setPreviewUrl(getAssetUrl(item.image));
     setIsModalOpen(true);
   };
 
@@ -214,9 +211,9 @@ export default function AdminTestimonialPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 relative">
-                        {item.image.startsWith("/uploads/") ? (
+                        {item.image ? (
                           <Image
-                            src={`http://localhost:5000${item.image}`}
+                            src={getAssetUrl(item.image)}
                             alt={item.name}
                             fill
                             sizes="48px"

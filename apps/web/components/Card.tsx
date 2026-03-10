@@ -17,7 +17,7 @@ export function Card({
 
   return (
     <div
-      className={`rounded-2xl transition duration-300 ease-out will-change-transform ${variants[variant]} ${className}`}
+      className={`rounded-[2rem] transition duration-300 ease-out will-change-transform ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

@@ -5,12 +5,8 @@ import Image from "next/image";
 import { footerConfig } from "@/config/footer";
 
 /**
- * FooterSocials Component
- * * Purpose: Renders social media integration anchors and primary contact conversion links.
- * Architecture:
- * - Layout: Horizontal flex row for social icons followed by a CTA narrative.
- * - Interaction: Supports external URL redirects for social platforms and internal routing for contacts.
- * - Iconography: Leverages standardized Lucide-react components for visual consistency.
+ * @component FooterSocials
+ * @description Renders social media icons and primary contact conversion links.
  */
 export function FooterSocials() {
   const { identity, socials, contact } = footerConfig;
@@ -27,7 +23,7 @@ export function FooterSocials() {
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300 text-blue-600 hover:-translate-y-1 hover:shadow-md"
+              className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-[background-color,border-color,color,transform,box-shadow] duration-500 text-blue-600 hover:shadow-md"
               title={social.name}
             >
               <Icon size={20} />
@@ -56,6 +52,7 @@ export function FooterSocials() {
             src={identity.support.logo}
             alt="Supporting Organization Logo"
             fill
+            sizes="128px"
             className="object-contain object-left"
           />
         </div>

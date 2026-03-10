@@ -1,221 +1,38 @@
 @import "tailwindcss";
 
+/* ─── Design Tokens ─── */
 :root {
-  /* 
-    Monochrome Professional Theme (Blue + Silver)
-    Base: #FFFFFF (White)
-  */
+  /* GenBI Blue Professional Theme */
   --background: #ffffff;
   --foreground: #0f172a; /* Slate-900 */
 
-  /* Primary: Corporate Blue */
+  /* Primary: Corporate Blue (GenBI Identity) */
   --primary: #1e40af; /* Blue-800 */
   --primary-foreground: #ffffff;
 
-  /* Accents */
-  --navy: #0f172a;
-  --silver: #94a3b8; /* Slate-400 */
-  --ice: #e0f2fe; /* Sky-100 */
-
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-
-  --border: #e2e8f0;
-  --radius: 1rem;
-}
-
-@theme inline {
-  --color-silver: var(--silver);
-  --color-ice: var(--ice);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans); /* Reverted to Geist Sans */
-
-  /* ─── Animations ─── */
-
-  /* Float: Hovering effect for 3D elements */
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
-  }
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-float-slow: float 8s ease-in-out infinite;
-  --animate-float-fast: float 4s ease-in-out infinite;
-
-  /* Shine: For buttons and cards */
-  @keyframes shine {
-    from {
-      background-position: 0 0;
-    }
-    to {
-      background-position: -200% 0;
-    }
-  }
-  --animate-shine: shine 2s linear infinite;
-
-  /* Marquee: For tickers */
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-100%);
-    }
-  }
-  --animate-marquee: marquee 30s linear infinite;
-
-  /* Blob: Ambient background movement */
-  @keyframes blob {
-    0% {
-      transform: translate(0px, 0px) scale(1);
-    }
-    33% {
-      transform: translate(30px, -50px) scale(1.1);
-    }
-    66% {
-      transform: translate(-20px, 20px) scale(0.9);
-    }
-    100% {
-      transform: translate(0px, 0px) scale(1);
-    }
-  }
-  --animate-blob: blob 10s infinite;
-
-  /* Pulse Glow */
-  @keyframes pulse-glow {
-    0%,
-    100% {
-      opacity: 0.5;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-  }
-  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
-}
-
-/* ─── Global Styles ─── */
-
-body {
-  background-color: #ffffff;
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ─── Utilities ─── */
-
-/* Mesh Gradient Background - GenBI Light */
-.bg-mesh-light {
-  background-color: #ffffff;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(30, 64, 175, 0.05) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(255, 255, 255, 1) 0px, transparent 50%);
-  background-attachment: fixed;
-}
-
-/* Glassmorphism Classes */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Text Gradients */
-.text-gradient-silver {
-  background: linear-gradient(to right, #475569, #64748b, #94a3b8);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-.text-gradient-blue {
-  background: linear-gradient(to right, #1e3a8a, #2563eb, #60a5fa);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
-
-/* Clean SaaS Scrollbar for main window */
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-::-webkit-scrollbar-track {
-  background: #f8fafc; /* slate-50 */
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
-  border-radius: 10px;
-  border: 3px solid #f8fafc; /* creates padding effect */
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8; /* slate-400 */
-}
-
-/* Custom Thin Scrollbar for Dropdowns and Cards */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-}
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-  border: none;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-:root {
-  /* GenBI Blue Theme - Defaulting to Dark/Premium Look */
-  --background: #020617;
-  --foreground: #f8fafc;
-
-  /* Primary Brand Color - Bank Indonesia Blue */
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-
-  /* Secondary - Glass/Darker Blue for backgrounds */
+  /* Secondary */
   --secondary: #1e3a8a;
   --secondary-foreground: #dbeafe;
 
   /* Accents */
   --accent: #1e293b;
   --accent-foreground: #f8fafc;
+  --navy: #0f172a;
+  --silver: #94a3b8; /* Slate-400 */
+  --ice: #e0f2fe; /* Sky-100 */
 
-  /* Muted - Cool Blue-Greys */
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
+  /* Muted */
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
 
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #3b82f6;
+  /* Borders & Input */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #1e40af;
 
   --radius: 1rem;
 
-  /* ── GenBI 2.0 Light Mode Tokens ── */
+  /* GenBI 2.0 Semantic Tokens */
   --genbi-canvas: #ffffff;
   --genbi-canvas-alt: #f8fafc;
   --genbi-navy: #172554;
@@ -224,6 +41,7 @@ body {
   --genbi-red: #ef4444;
 }
 
+/* ─── Tailwind Theme Bridge ─── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -244,6 +62,9 @@ body {
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  --color-silver: var(--silver);
+  --color-ice: var(--ice);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -251,44 +72,213 @@ body {
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
 
-  /* Animasi Blob */
+  /* ─── Keyframe Animations ─── */
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 8s ease-in-out infinite;
+  --animate-float-fast: float 4s ease-in-out infinite;
+
+  @keyframes shine {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  --animate-shine: shine 2s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  --animate-marquee: marquee 30s linear infinite;
+
   @keyframes blob {
     0% {
       transform: translate(0px, 0px) scale(1);
     }
-
     33% {
       transform: translate(30px, -50px) scale(1.1);
     }
-
     66% {
       transform: translate(-20px, 20px) scale(0.9);
     }
-
     100% {
       transform: translate(0px, 0px) scale(1);
     }
   }
+  --animate-blob: blob 10s infinite;
 
-  --animate-blob: blob 7s infinite;
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      opacity: 0.5;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+  --animate-pulse-glow: pulse-glow 3s ease-in-out infinite;
 }
 
-/* Custom Utilities for Ticker */
+/* ─── Global Styles ─── */
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ─── Utility Classes ─── */
+
+/* Mesh Gradient Background */
+.bg-mesh-light {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(30, 64, 175, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 255, 255, 1) 0px, transparent 50%);
+  background-attachment: fixed;
+}
+
+/* ─── Typography & Interaction Tokens ─── */
+
+@layer components {
+  /* Headings Hierarchy */
+  .h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-slate-900 leading-tight tracking-tight;
+  }
+  .h2 {
+    @apply text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-tight;
+  }
+  .h3 {
+    @apply text-xl md:text-2xl font-bold text-slate-900 leading-tight;
+  }
+  .h4 {
+    @apply text-lg font-bold text-slate-900;
+  }
+
+  /* Standardized Interactive States */
+  .interactive-hover {
+    @apply transition-[transform,box-shadow,background-color] duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98];
+  }
+
+  .interactive-scale {
+    @apply transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2;
+  }
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Text Gradients */
+.text-gradient-silver {
+  background: linear-gradient(to right, #475569, #64748b, #94a3b8);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.text-gradient-blue {
+  background: linear-gradient(to right, #1e3a8a, #2563eb, #60a5fa);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ─── Scrollbar ─── */
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 3px solid #f8fafc;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Ticker Animation ─── */
+
 @keyframes ticker {
   0% {
     transform: translateX(-50%);
   }
-
   100% {
     transform: translateX(0);
   }
 }
-
 .animate-ticker {
   animation: ticker 60s linear infinite;
   will-change: transform;
   transform: translateZ(0);
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
 }
 
 @utility optimize-gpu {
@@ -297,55 +287,18 @@ body {
   backface-visibility: hidden;
 }
 
-.animate-ticker:hover {
-  animation-play-state: paused;
-}
+/* ─── Background Patterns ─── */
 
-body {
-  background-color: #0a1628;
-  /* GenBI/BI Blue Mesh Gradient - Elegant & Modern */
-  background-image:
-    radial-gradient(
-      ellipse 80% 50% at 50% -20%,
-      rgba(59, 130, 246, 0.3),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 0% 50%,
-      rgba(29, 78, 216, 0.25),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 100% 50%,
-      rgba(37, 99, 235, 0.2),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 100% 100% at 50% 100%,
-      rgba(30, 58, 138, 0.3),
-      transparent
-    ),
-    linear-gradient(135deg, #0c1e3a 0%, #0a1628 50%, #1e3a8a 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Custom Background Patterns */
 .bg-grid-slate-50 {
   background-size: 40px 40px;
   background-image:
     linear-gradient(to right, #f8fafc 1px, transparent 1px),
     linear-gradient(to bottom, #f8fafc 1px, transparent 1px);
 }
-
 .bg-dot-slate-100 {
   background-size: 20px 20px;
   background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
 }
-
 .mask-fade-b {
   mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
 }

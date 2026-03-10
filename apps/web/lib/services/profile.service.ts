@@ -3,11 +3,10 @@ import { BPHMember, Document, EventItem, KorkomData } from "@/app/types";
 
 export const getKorkomData = async (): Promise<KorkomData> => {
     try {
-        const response = await api.get<KorkomData>("/profile");
+        const response = await api.get<KorkomData>("/public/profile");
         return response.data;
     } catch (error) {
-        console.error("Error fetching profile data:", error);
-        // Return default/fallback data if needed, or rethrow
+        // Silently fallback without polluting SSR compilation logs.
         return {
             name: "GenBI Koordinator Komisariat Jawa Timur",
             university: "Jawa Timur",
@@ -20,10 +19,10 @@ export const getKorkomData = async (): Promise<KorkomData> => {
 
 export const getSharedEvents = async (): Promise<EventItem[]> => {
     try {
-        const response = await api.get<EventItem[]>("/events");
+        const response = await api.get<EventItem[]>("/public/events");
         return response.data;
     } catch (error) {
-        console.error("Error fetching shared events:", error);
+        // Silently fallback without polluting SSR compilation logs.
         return [];
     }
 }

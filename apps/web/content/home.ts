@@ -70,9 +70,9 @@ export const homeContent = {
     title: "Mari Bergerak \n Tebarkan Makna",
     description:
       "Bergabunglah dengan keluarga besar GenBI Jawa Timur. Temukan ruang untuk tumbuh, memimpin, dan memberikan dampak nyata bagi masyarakat bersama Bank Indonesia.",
-    primary: { label: "Gabung Bersama", href: "/docs" },
+    primary: { label: "Cek Persyaratan", href: "/docs" },
     secondary: {
-      label: "Intip Keseruan",
+      label: "Lihat Keseruan",
       href: "https://instagram.com/genbi_jatim",
     },
   },

@@ -5,12 +5,8 @@ import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * FooterLinks Component
- * * Purpose: Renders a column of navigation links with mobile-responsive accordion behavior.
- * Architecture:
- * - Componentry: Utilizes a composite button-list structure.
- * - Interaction: Delegates toggle state to the parent orchestrator.
- * - Logic: Conditionally renders grid-based visibility for mobile viewports.
+ * @component FooterLinks
+ * @description Renders a column of navigation links with mobile-responsive accordion behavior.
  */
 
 type LinkItem = {
@@ -33,7 +29,10 @@ export function FooterLinks({
   onToggle,
 }: FooterLinksProps) {
   return (
+    /* --- COMPONENT_WRAPPER --- */
     <div className="border-t border-slate-100 md:border-none pt-4 md:pt-0">
+      
+      {/* ACCORDION_TRIGGER */}
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full md:cursor-auto md:pointer-events-none md:mb-2 group h-11 md:h-auto"
@@ -46,19 +45,22 @@ export function FooterLinks({
           )}
         />
       </button>
+
+      {/* COLLAPSIBLE_CONTENT_AREA */}
       <div
         className={cn(
           "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out md:grid-rows-[1fr] md:opacity-100",
           isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
         )}
       >
+        {/* LINK_LIST_ENGINE */}
         <ul className="overflow-hidden md:!overflow-visible flex flex-col gap-1 text-[14px] font-medium">
           {links.map((link) => (
             <li key={link.href + link.label}>
               <Link
                 href={link.href}
                 className={cn(
-                  "flex items-center min-h-[44px] md:min-h-0 md:py-1.5 hover:text-blue-600 transition-colors",
+                  "flex items-center min-h-[44px] md:min-h-0 md:py-1.5 text-slate-600 hover:text-blue-600 transition-colors",
                   link.isBold &&
                     "text-blue-600 hover:text-blue-700 font-bold text-[12px] uppercase tracking-wider mt-1",
                 )}

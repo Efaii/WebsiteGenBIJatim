@@ -1,6 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { Document } from '@repo/types';
 
+/**
+ * @route docs.route
+ * @description Public read-only routes for documents/guides.
+ */
+
 const router = Router();
 
 const DOCUMENTS_DATA: Document[] = [
@@ -16,7 +21,7 @@ const DOCUMENTS_DATA: Document[] = [
   {
     id: 2,
     title: "Template Laporan Kegiatan Komisariat",
-    type: "Dokumentasi", // Or 'Data'
+    type: "Dokumentasi",
     fileType: "DOCX",
     size: "1.2 MB",
     date: "15 Jan 2024",

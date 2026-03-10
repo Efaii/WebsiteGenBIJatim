@@ -1,8 +1,22 @@
 import api from "@/lib/api";
 import { EventItem, Event } from "@/app/types";
 
+export interface RawApiEvent {
+  id: string | number;
+  date?: string;
+  day?: string;
+  month?: string;
+  commissariat?: string;
+  type?: string;
+  time?: string;
+  location?: string;
+  audience?: string;
+  dateIso?: string;
+  [key: string]: unknown;
+}
+
 // Helper to convert ProkerData/API Event to EventItem
-const mapToEventItem = (data: any): EventItem => {
+const mapToEventItem = (data: RawApiEvent): EventItem => {
   // Check if data is already EventItem-like or needs strict mapping
   // Assuming Backend returns mostly matching structure
   return {
@@ -62,7 +76,7 @@ const groupEventsByMonth = (events: EventItem[]): Event[] => {
 export const getCalendarEvents = async (): Promise<Event[]> => {
     try {
         // Fetch flat list of events from API
-        const response = await api.get<any[]>("/events");
+        const response = await api.get<RawApiEvent[]>("/events");
         const rawEvents = response.data;
         
         // Map to EventItem
@@ -78,7 +92,7 @@ export const getCalendarEvents = async (): Promise<Event[]> => {
 
 export const getCalendarEventById = async (id: string): Promise<EventItem | null> => {
     try {
-        const response = await api.get<any>(`/events/${id}`);
+        const response = await api.get<RawApiEvent>(`/events/${id}`);
         return mapToEventItem(response.data);
     } catch (error) {
          console.error(`Error fetching event with id ${id}:`, error);
@@ -88,7 +102,7 @@ export const getCalendarEventById = async (id: string): Promise<EventItem | null
 
 export const getAllCalendarEventIds = async () => {
    try {
-        const response = await api.get<any[]>("/events");
+        const response = await api.get<RawApiEvent[]>("/events");
         return response.data.map((e) => ({ id: e.id }));
    } catch (error) {
        console.error("Error fetching event ids:", error);

@@ -8,7 +8,7 @@ import {
   updateFaq,
   deleteFaq,
   AdminFAQItem,
-} from "@/services/faq.service";
+} from "@/lib/services/faq.service";
 import { useRouter } from "next/navigation";
 
 export default function AdminFaqPage() {
