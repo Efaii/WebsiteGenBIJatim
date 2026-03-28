@@ -7,6 +7,7 @@ import faqRoutes from './routes/faq.route';
 import testimonialRoutes from './routes/testimonial.route';
 import dashboardRoutes from './routes/dashboard.route';
 import newsRoutes from './routes/news.route';
+import commissariatRoutes from './routes/commissariat.route';
 import path from 'path';
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/commissariats', commissariatRoutes);
 
 // Server Init
 app.listen(PORT, () => {
