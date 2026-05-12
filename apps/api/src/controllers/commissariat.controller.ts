@@ -21,7 +21,7 @@ export const getAllCommissariats = async (req: Request, res: Response) => {
       slug: c.slug,
       name: c.name,
       university: c.university,
-      logo: c.logo,
+      logo_univ: c.logo,
       logoGenbi: c.logoGenbi,
       coverImage: c.coverImage,
       description: c.description,
@@ -87,9 +87,6 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
         kpiTukTarget: p.kpiTukTarget,
         dampak: p.dampak,
         evaluasi: p.evaluasi,
-        linkProposalPdf: p.linkProposalPdf,
-        linkLpjPdf: p.linkLpjPdf,
-        dokumentasiDrive: p.dokumentasiDrive,
         gallery: [p.foto1, p.foto2, p.foto3, p.foto4, p.foto5, p.foto6].filter(Boolean),
       })),
       // BPH, awardees, documents → tetap dari mock untuk sekarang
@@ -143,15 +140,35 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
       kpiTukTarget: proker.kpiTukTarget,
       dampak: proker.dampak,
       evaluasi: proker.evaluasi,
-      linkProposalPdf: proker.linkProposalPdf,
-      linkLpjPdf: proker.linkLpjPdf,
-      dokumentasiDrive: proker.dokumentasiDrive,
       gallery: [proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6].filter(Boolean),
     };
 
     res.json(result);
   } catch (error) {
     console.error('Error fetching program kerja:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// GET /api/commissariats/stats — Statistik agregat semua komisariat
+export const getCommissariatStats = async (req: Request, res: Response) => {
+  try {
+    const [prokerCount, commissariatCount, totalMembers] = await Promise.all([
+      prisma.programKerja.count(),
+      prisma.commissariat.count({ where: { isActive: true } }),
+      prisma.commissariat.aggregate({
+        where: { isActive: true },
+        _sum: { memberCount: true },
+      }),
+    ]);
+
+    res.json({
+      totalProker: prokerCount,
+      totalCommissariats: commissariatCount,
+      totalMembers: totalMembers._sum.memberCount || 0,
+    });
+  } catch (error) {
+    console.error('Error fetching commissariat stats:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

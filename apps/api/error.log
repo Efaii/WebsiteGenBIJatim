@@ -1,0 +1,20 @@
+src/scripts/process_images.ts(1,8): error TS1192: Module '"fs"' has no default export.
+src/scripts/process_images.ts(2,8): error TS1259: Module '"path"' can only be default-imported using the 'esModuleInterop' flag
+src/scripts/process_images.ts(4,8): error TS1192: Module '"C:/Users/Administrator/Desktop/Genbi Jatim/WebsiteKorkom/WebsiteGenBIJatim/node_modules/@types/string-similarity/index"' has no default export.
+src/scripts/process_images.ts(5,8): error TS1259: Module '"C:/Users/Administrator/Desktop/Genbi Jatim/WebsiteKorkom/WebsiteGenBIJatim/node_modules/sharp/lib/index"' can only be default-imported using the 'esModuleInterop' flag
+src/scripts/process_images.ts(53,16): error TS2561: Object literal may only specify known properties, but 'ProgramKerja' does not exist in type 'CommissariatInclude<DefaultArgs>'. Did you mean to write 'programKerja'?
+../../node_modules/batch-cluster/dist/BatchCluster.d.ts(44,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/batch-cluster/dist/BatchProcess.d.ts(1,8): error TS1192: Module '"node:child_process"' has no default export.
+../../node_modules/batch-cluster/dist/BatchProcess.d.ts(10,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/batch-cluster/dist/ChildProcessFactory.d.ts(1,8): error TS1192: Module '"node:child_process"' has no default export.
+../../node_modules/batch-cluster/dist/Deferred.d.ts(7,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/batch-cluster/dist/FindFlushThresholds.d.ts(18,13): error TS1192: Module '"node:child_process"' has no default export.
+../../node_modules/batch-cluster/dist/ProcessHealthMonitor.d.ts(30,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/batch-cluster/dist/Task.d.ts(10,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/ExifDateTime.d.ts(22,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/ExifTime.d.ts(7,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/ExifTool.d.ts(79,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/ExifToolTask.d.ts(5,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/ReadTask.d.ts(28,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/Settings.d.ts(14,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
+../../node_modules/exiftool-vendored/dist/TagDescriptions.d.ts(74,5): error TS18028: Private identifiers are only available when targeting ECMAScript 2015 and higher.
