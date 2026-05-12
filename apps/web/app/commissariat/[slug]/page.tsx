@@ -5,6 +5,7 @@ import {
 } from "@/lib/services/commissariat.service";
 import CommissariatClient from "./CommissariatClient";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export async function generateMetadata({
   params,
@@ -39,5 +40,9 @@ export default async function Page({
     notFound();
   }
 
-  return <CommissariatClient initialData={commissariat} />;
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <CommissariatClient initialData={commissariat} />
+    </Suspense>
+  );
 }

@@ -65,9 +65,9 @@ export function DocumentCard({
       default:
         return {
           icon: <FileText className="w-6 h-6" />,
-          color: "text-blue-400",
-          bg: "bg-blue-500/10",
-          border: "border-blue-500/20",
+          color: "text-blue-600",
+          bg: "bg-blue-50",
+          border: "border-blue-200",
         };
     }
   };
@@ -85,13 +85,12 @@ export function DocumentCard({
       className="block h-full cursor-pointer"
     >
       <Card
-        variant="glass"
-        className="p-6 h-full hover:bg-white/10 transition-all duration-300 group hover:-translate-y-1 hover:border-cyan-500/30 relative overflow-hidden"
+        className="p-6 h-full bg-white border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-300 group hover:-translate-y-1 hover:border-blue-300 relative overflow-hidden"
       >
         <div className="flex items-start justify-between mb-6">
           <div
             className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center border shadow-lg group-hover:scale-110 transition-transform duration-300",
+              "w-14 h-14 rounded-2xl flex items-center justify-center border shadow-inner group-hover:scale-110 transition-transform duration-300 bg-white",
               style.bg,
               style.border,
               style.color
@@ -99,23 +98,23 @@ export function DocumentCard({
           >
             {style.icon}
           </div>
-          <div className="px-3 py-1 rounded-lg text-[10px] font-bold bg-white/5 border border-white/10 text-blue-200 backdrop-blur-sm">
+          <div className="px-3 py-1 rounded-lg text-[10px] font-bold bg-slate-100 border border-slate-200 text-slate-500">
             {fileType}
           </div>
         </div>
 
-        <h3 className="font-bold text-white text-lg mb-3 line-clamp-2 group-hover:text-cyan-300 transition-colors leading-snug">
+        <h3 className="font-bold text-slate-900 text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors leading-snug">
           {title}
         </h3>
 
-        <div className="flex items-center justify-between text-xs text-blue-200/50 pt-4 border-t border-white/5">
+        <div className="flex items-center justify-between text-xs text-slate-500 pt-4 border-t border-slate-100">
           <div className="flex items-center gap-3">
             <span>{date}</span>
-            <span className="w-1 h-1 rounded-full bg-blue-500/50"></span>
+            <span className="w-1 h-1 rounded-full bg-slate-300"></span>
             <span>{size}</span>
           </div>
           <div
-            className="p-1.5 rounded-full hover:bg-white/10 text-cyan-500/50 hover:text-cyan-400 transition-colors"
+            className="p-1.5 rounded-full hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
             onClick={(e) => {
               if (onDownload) {
                 e.stopPropagation();

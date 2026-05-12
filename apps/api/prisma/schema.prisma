@@ -70,9 +70,6 @@ model ProgramKerja {
   kpiTukTarget      String?  @db.Text
   dampak            String?  @db.Text
   evaluasi          String?  @db.Text
-  linkProposalPdf   String?
-  linkLpjPdf        String?
-  dokumentasiDrive  String?
   foto1             String?
   foto2             String?
   foto3             String?

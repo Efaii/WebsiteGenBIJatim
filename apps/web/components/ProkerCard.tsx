@@ -38,36 +38,35 @@ export function ProkerCard({
   const getStatusStyles = (status: string) => {
     switch (status) {
       case "Completed":
-        return "bg-green-500/10 text-green-400 border-green-500/20";
+        return "bg-green-50 text-green-700 border-green-200";
       case "On-going":
-        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20 animate-pulse";
+        return "bg-blue-50 text-blue-700 border-blue-200 animate-pulse";
       case "Upcoming":
       default:
-        return "bg-blue-500/10 text-blue-300 border-blue-500/20";
+        return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
 
   const CardContent = (
     <Card
       onClick={!href ? onClick : undefined}
-      variant="glass"
       className={cn(
-        "p-6 flex flex-col md:flex-row gap-6 items-start md:items-center group hover:border-cyan-500/30 transition-all duration-300 h-full",
-        (onClick || href) && "cursor-pointer",
+        "bg-white border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-6 items-start md:items-center group hover:border-blue-300 transition-all duration-300 h-full",
+        (onClick || href) && "cursor-pointer hover:shadow-md",
         className,
       )}
     >
-      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-cyan-500/30 transition-colors">
-        <span className="text-xs font-bold text-cyan-400 uppercase">
+      <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-blue-300 transition-colors">
+        <span className="text-xs font-bold text-blue-600 uppercase">
           {isFullDate ? subDate.split(" ")[0] : mainDate}
         </span>
-        <span className="text-xl font-bold text-white">
+        <span className="text-xl font-bold text-slate-900">
           {isFullDate ? mainDate : subDate}
         </span>
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
-          <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition-colors">
+          <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
             {title}
           </h3>
           <span
@@ -79,14 +78,14 @@ export function ProkerCard({
             {status}
           </span>
         </div>
-        <p className="text-blue-100/70 text-sm leading-relaxed mb-4">
+        <p className="text-slate-600 text-sm leading-relaxed mb-4">
           {description}
         </p>
         {!hideAction && (
           <Button
             size="sm"
-            variant={onAction ? "secondary" : "outline"}
-            className="gap-2 text-xs h-8"
+            variant="outline"
+            className="gap-2 text-xs h-8 bg-white border-slate-200 hover:bg-slate-50 hover:text-blue-600 text-slate-700"
             onClick={(e) => {
               if (onAction) {
                 e.preventDefault();
