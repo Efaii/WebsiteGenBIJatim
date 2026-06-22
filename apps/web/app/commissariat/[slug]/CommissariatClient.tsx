@@ -56,10 +56,10 @@ interface Division {
 }
 
 interface CommissariatData extends OrganizationProfile {
-  bph: BPHMember[];
-  divisions: Division[]; // Changed to match About page dynamic structure
-  proker: Proker[];
-  awardees: Awardee[];
+  bph?: BPHMember[];
+  divisions?: Division[]; // Changed to match About page dynamic structure
+  proker?: Proker[];
+  awardees?: Awardee[];
 }
 
 export default function CommissariatClient({
