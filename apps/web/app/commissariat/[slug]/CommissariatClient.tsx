@@ -426,7 +426,6 @@ export default function CommissariatClient({
                                   <FadeIn
                                     key={`${section.title}-${i}`}
                                     delay={0.2 + i * 0.08}
-                                    duration={1.5}
                                     once
                                     amount={0.1}
                                   >
