@@ -4,24 +4,14 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Instagram, Linkedin, Mail } from "lucide-react";
 
-export interface BPHMember {
-  role: string;
-  name: string;
-  image: string;
-  university: string; // Renamed from major (as it held uni names)
-  major?: string; // New field for Academic Major (e.g. S1 Akuntansi)
-  instagram?: string;
-  linkedin?: string;
-  email?: string;
-  division?: string;
-}
+import { Member } from "@repo/types";
 
 export const MemberDetailModal = ({
   member,
   onClose,
   contextTitle = "Pengurus GenBI Jawa Timur", // Default value
 }: {
-  member: BPHMember;
+  member: Member;
   onClose: () => void;
   contextTitle?: string;
 }) => {
@@ -70,7 +60,7 @@ export const MemberDetailModal = ({
           <div className="w-32 h-32 rounded-full p-1 bg-gradient-to-br from-cyan-400 to-blue-600 mb-6 shadow-lg shadow-blue-500/20">
             <div className="w-full h-full rounded-full overflow-hidden border-4 border-blue-950/50 relative bg-blue-950/30">
               <Image
-                src={member.image}
+                src={member.image || "/assets/images/placeholder.jpg"}
                 alt={member.name}
                 fill
                 className="object-cover"
