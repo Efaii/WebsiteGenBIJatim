@@ -118,7 +118,7 @@ export default function EventDetailClient({
                       <h3 className="text-lg font-bold text-white mb-3 text-cyan-400">
                         KPI / Target
                       </h3>
-                      {renderList(eventData.kpi)}
+                      {renderList(eventData.target)}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white mb-3 text-cyan-400">
