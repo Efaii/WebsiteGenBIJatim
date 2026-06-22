@@ -6,11 +6,17 @@ import prisma from '../lib/prisma';
  */
 export const DashboardService = {
   async getStats() {
-    const [faqCount, testimonialCount, commissariatCount, newsCount] = await Promise.all([
+    const [faqCount, testimonialCount, commissariatCount, newsCount, prokerCount, totalMembers] = await Promise.all([
       prisma.faq.count(),
       prisma.testimonial.count(),
       prisma.commissariat.count(),
       (prisma as any).news.count(),
+      prisma.programKerja.count(),
+      prisma.commissariat.aggregate({
+        _sum: {
+          memberCount: true
+        }
+      })
     ]);
 
     return {
@@ -18,6 +24,8 @@ export const DashboardService = {
       testimonials: testimonialCount,
       commissariats: commissariatCount,
       news: newsCount,
+      proker: prokerCount,
+      members: totalMembers._sum.memberCount || 0,
       systemStatus: 'Online',
     };
   },

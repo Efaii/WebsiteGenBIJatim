@@ -25,12 +25,14 @@ export default function EventDetailClient({
   const isOnline = eventData.format === "Online";
 
   // Helper to render lists
-  const renderList = (items?: string[]) => {
-    if (!items || items.length === 0)
-      return <p className="text-blue-200/60">-</p>;
+  const renderList = (items?: string | string[]) => {
+    if (!items) return <p className="text-blue-200/60">-</p>;
+    const itemsArray = Array.isArray(items) ? items : [items];
+    if (itemsArray.length === 0) return <p className="text-blue-200/60">-</p>;
+    
     return (
       <ul className="list-disc list-inside text-blue-200/80 space-y-1">
-        {items.map((item, idx) => (
+        {itemsArray.map((item, idx) => (
           <li key={idx}>{item}</li>
         ))}
       </ul>

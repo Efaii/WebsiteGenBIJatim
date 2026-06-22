@@ -4,22 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Card, CardHeader } from "@/components/Card";
-import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Button } from "@/components/ui/button";
 import {
   FadeIn,
   StaggerContainer,
   StaggerItem,
 } from "@/components/MotionWrapper";
-import { SectionHeader } from "@/components/SectionHeader";
 import Image from "next/image";
-import { Search, Calendar, ChevronDown, ArrowRight } from "lucide-react";
-
-/**
- * @component CommissariatListClient
- * @description Interactive client component for the commissariat listing page
- * with search, filter, and activity feed.
- */
+import { Search, ChevronDown, ArrowRight, SlidersHorizontal, Users, ShieldCheck, Activity } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const YEARS = ["Semua Tahun", "2025-2026"];
 
@@ -147,94 +141,103 @@ export default function CommissariatListClient() {
     return matchYear && matchName;
   });
 
-  const totalMembers = COMMISSARIATS.reduce(
-    (acc, curr) => acc + curr.members,
-    0,
-  );
+  const totalMembers = COMMISSARIATS.reduce((acc, curr) => acc + curr.members, 0);
   const totalCommissariats = COMMISSARIATS.length;
   const totalPrograms = 45;
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 selection:bg-blue-200 selection:text-blue-900 relative overflow-clip">
       <Navbar />
 
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
+      <main className="flex-1 container mx-auto px-6 py-32 relative z-10">
+        <section className="mb-16 text-center max-w-3xl mx-auto">
+          <FadeIn once={false}>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-slate-900">
+              Pusat Data{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+                Komisariat
+              </span>
+            </h1>
+            <p className="text-lg text-slate-600">
+              Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9 Komisariat GenBI di Jawa Timur.
+            </p>
+          </FadeIn>
+        </section>
 
-      <main className="flex-1 container mx-auto px-4 py-20 relative z-10">
-        <section className="mb-20">
-          <SectionHeader
-            title="Pusat Data Komisariat"
-            description="Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9 Komisariat GenBI di Jawa Timur."
-          />
-
+        <section className="mb-16">
           <FadeIn once={false} delay={0.2}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-colors"
-              >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-colors"></div>
-                <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
-                    Total Anggota
-                  </p>
-                  <p className="text-4xl font-bold text-white">
-                    {totalMembers}+
-                  </p>
-                  <div className="mt-4 text-xs font-medium text-cyan-200 bg-cyan-500/10 inline-block px-3 py-1 rounded-full border border-cyan-500/20">
-                    Se-Jawa Timur
+              <Card className="p-6 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group rounded-2xl">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                    <Users className="w-6 h-6" />
                   </div>
+                  <div>
+                    <p className="text-slate-500 font-semibold text-sm tracking-wide">
+                      Total Anggota
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {totalMembers}+
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-blue-700 bg-blue-50 inline-block px-3 py-1 rounded-full border border-blue-100">
+                  Se-Jawa Timur
                 </div>
               </Card>
 
-              <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors"
-              >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-colors"></div>
-                <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
-                    Komisariat Aktif
-                  </p>
-                  <p className="text-4xl font-bold text-white">
-                    {totalCommissariats}
-                  </p>
-                  <div className="mt-4 text-xs font-medium text-blue-200 bg-blue-500/10 inline-block px-3 py-1 rounded-full border border-blue-500/20">
-                    Perguruan Tinggi Negeri
+              <Card className="p-6 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group rounded-2xl">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-50 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-xl flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
+                  <div>
+                    <p className="text-slate-500 font-semibold text-sm tracking-wide">
+                      Komisariat Aktif
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {totalCommissariats}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-cyan-700 bg-cyan-50 inline-block px-3 py-1 rounded-full border border-cyan-100">
+                  Perguruan Tinggi Negeri
                 </div>
               </Card>
 
-              <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-colors"
-              >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-colors"></div>
-                <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
-                    Total Program Kerja
-                  </p>
-                  <p className="text-4xl font-bold text-white">
-                    {totalPrograms}+
-                  </p>
-                  <div className="mt-4 text-xs font-medium text-indigo-200 bg-indigo-500/10 inline-block px-3 py-1 rounded-full border border-indigo-500/20">
-                    Terealisasi Tahun Ini
+              <Card className="p-6 bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group rounded-2xl">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-500 -z-10"></div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <Activity className="w-6 h-6" />
                   </div>
+                  <div>
+                    <p className="text-slate-500 font-semibold text-sm tracking-wide">
+                      Program Kerja
+                    </p>
+                    <p className="text-3xl font-black text-slate-900">
+                      {totalPrograms}+
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-indigo-700 bg-indigo-50 inline-block px-3 py-1 rounded-full border border-indigo-100">
+                  Terealisasi Tahun Ini
                 </div>
               </Card>
             </div>
           </FadeIn>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          <aside className="lg:col-span-1 lg:order-last space-y-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 items-start">
+          <aside className="xl:col-span-1 xl:order-last space-y-6">
             <FadeIn once={false} delay={0.4}>
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[2rem] p-6">
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 tracking-tight">
+              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                   </span>
                   Baru Saja Terjadi
                 </h3>
@@ -242,135 +245,144 @@ export default function CommissariatListClient() {
                   {RECENT_ACTIVITIES.map((activity) => (
                     <div
                       key={activity.id}
-                      className="relative pl-6 border-l border-white/10 pb-2 last:pb-0"
+                      className="relative pl-6 border-l-2 border-slate-100 pb-2 last:pb-0"
                     >
-                      <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-blue-950 border border-white/20"></div>
-                      <p className="text-xs text-blue-200/50 mb-1">
+                      <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-blue-500"></div>
+                      <p className="text-xs text-slate-400 font-medium mb-1">
                         {activity.date}
                       </p>
-                      <p className="text-sm text-white font-medium leading-snug">
-                        <span className="text-cyan-300">
+                      <p className="text-sm text-slate-700 font-medium leading-snug">
+                        <span className="text-blue-600 font-bold">
                           {activity.commissariat}
                         </span>{" "}
                         {activity.action}{" "}
-                        <span className="text-white/90">{activity.item}</span>
+                        <span className="text-slate-900">{activity.item}</span>
                       </p>
                     </div>
                   ))}
                 </div>
-                <Link href="/news" className="w-full">
+                <Link href="/news" className="block w-full mt-6">
                   <Button
-                    variant="secondary"
-                    className="w-full mt-6 text-sm h-10 rounded-full flex items-center justify-center gap-2 group hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-colors font-medium"
+                    variant="outline"
+                    className="w-full text-sm rounded-xl font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors"
                   >
                     Lihat Semua Aktivitas
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               </div>
             </FadeIn>
           </aside>
 
-          <div className="lg:col-span-3 space-y-8">
+          <div className="xl:col-span-3 space-y-6">
             <FadeIn
               once={false}
               delay={0.3}
-              className="bg-white/5 backdrop-blur-md p-4 rounded-[2rem] border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between relative z-30"
+              className="bg-white p-2 rounded-2xl border border-slate-200 shadow-sm flex flex-row gap-2 items-center justify-between w-full relative z-30"
             >
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
+              <div className="relative w-full flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Cari komisariat..."
-                  className="w-full pl-12 pr-4 py-3 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-colors"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 font-medium transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
 
-              <div className="relative w-full md:w-auto">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full md:w-64 pl-12 py-3 pr-6 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white font-bold text-left hover:bg-white/10 transition-colors flex items-center justify-between cursor-pointer"
+                  className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 py-3 px-4 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <span className="truncate">{filterYear}</span>
-                  <span
-                    className={`transition-transform duration-200 text-blue-200/60 ${isDropdownOpen ? "rotate-180" : ""}`}
-                  >
-                    <ChevronDown className="w-4 h-4" />
+                  <SlidersHorizontal className="w-4 h-4 text-slate-700" />
+                  <span className="text-sm font-medium text-slate-700 hidden sm:block">
+                    {filterYear === "Semua Tahun" ? "Filter" : filterYear}
                   </span>
+                  {filterYear !== "Semua Tahun" && (
+                    <span className="sm:hidden w-2 h-2 rounded-full bg-blue-600 ml-1"></span>
+                  )}
                 </button>
-                {isDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar p-2 flex flex-col gap-1">
-                    {YEARS.map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => {
-                          setFilterYear(year);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-full text-base font-medium transition-colors cursor-pointer ${filterYear === year ? "bg-cyan-500/20 text-cyan-200 font-bold" : "text-blue-100/80 hover:bg-white/10 hover:text-white"}`}
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 flex flex-col gap-1"
                       >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {isDropdownOpen && (
-                  <div
-                    className="fixed inset-0 z-40 bg-transparent"
-                    onClick={() => setIsDropdownOpen(false)}
-                  />
-                )}
+                        {YEARS.map((year) => (
+                          <button
+                            key={year}
+                            onClick={() => {
+                              setFilterYear(year);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                              filterYear === year
+                                ? "bg-blue-50 text-blue-700 font-bold"
+                                : "text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {year}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </FadeIn>
 
             <StaggerContainer
               once={false}
-              staggerDelay={0.2}
+              staggerDelay={0.1}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
             >
               {filteredCommissariats.length > 0 ? (
                 filteredCommissariats.map((comm) => (
                   <StaggerItem key={comm.id}>
-                    <Card
-                      variant="glass"
-                      className="group h-full flex flex-col justify-between"
-                    >
-                      <CardHeader className="pb-2">
+                    <Card className="group h-full flex flex-col justify-between bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 rounded-2xl overflow-hidden">
+                      <div className="p-6 pb-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                          <div className="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden shadow-sm">
                             <Image
                               src={comm.logo}
                               alt={`${comm.name} Logo`}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-contain p-3 brightness-0 invert opacity-80 group-hover:opacity-100 group-hover:brightness-100 group-hover:invert-0 transition-opacity duration-300"
+                              width={48}
+                              height={48}
+                              className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-500"
                             />
                           </div>
                           <div>
-                            <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors tracking-tight">
+                            <h3 className="font-bold text-lg text-slate-900 mb-1 group-hover:text-blue-600 transition-colors tracking-tight line-clamp-1">
                               {comm.name}
                             </h3>
-                            <p className="text-xs text-blue-200/60 line-clamp-1">
+                            <p className="text-xs font-medium text-slate-500 line-clamp-1">
                               {comm.university}
                             </p>
                           </div>
                         </div>
-                      </CardHeader>
+                      </div>
 
-                      <div className="px-6 py-2">
-                        <div className="flex gap-4 text-xs text-blue-100/70 border-t border-white/5 pt-3">
+                      <div className="px-6 py-3 bg-slate-50/50 border-t border-b border-slate-100">
+                        <div className="flex gap-4 text-xs font-medium text-slate-600">
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-base">
+                            <span className="font-black text-slate-900 text-lg">
                               {comm.members}
                             </span>
                             <span>Anggota</span>
                           </div>
-                          <div className="w-px bg-white/10"></div>
+                          <div className="w-px bg-slate-200"></div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-base">
+                            <span className="font-black text-slate-900 text-lg">
                               24
                             </span>
                             <span>Proker</span>
@@ -378,13 +390,13 @@ export default function CommissariatListClient() {
                         </div>
                       </div>
 
-                      <div className="p-6 pt-2">
+                      <div className="p-4 bg-white">
                         <Link
                           href={`/commissariat/${comm.name.toLowerCase().replace("komisariat ", "").replace(/\s+/g, "-")}`}
                         >
                           <Button
-                            variant="secondary"
-                            className="w-full text-sm h-10 rounded-full group-hover:bg-cyan-500/10 group-hover:text-cyan-300 group-hover:border-cyan-500/30 transition-colors flex items-center justify-center gap-2"
+                            variant="outline"
+                            className="w-full text-sm h-10 rounded-xl border-slate-200 text-slate-700 group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200 transition-colors flex items-center justify-center gap-2 font-bold shadow-sm"
                           >
                             Kunjungi Profil
                             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -396,13 +408,13 @@ export default function CommissariatListClient() {
                 ))
               ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 bg-blue-100/10 rounded-full flex items-center justify-center text-blue-400 mb-4 text-2xl">
-                    ?
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4 text-2xl">
+                    <Search className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">
                     Tidak ada data ditemukan
                   </h3>
-                  <p className="text-blue-200/60">
+                  <p className="text-slate-500 text-sm">
                     Coba ubah kata kunci pencarian atau filter tahun.
                   </p>
                 </div>
@@ -412,10 +424,7 @@ export default function CommissariatListClient() {
         </div>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 bg-blue-950/50 backdrop-blur-3xl -z-10"></div>
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

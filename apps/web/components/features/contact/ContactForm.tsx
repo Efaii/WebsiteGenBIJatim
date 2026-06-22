@@ -2,8 +2,9 @@
 
 import { useActionState } from "react";
 import { submitContactForm } from "@/actions/contact";
-import { Button } from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
+import { Send } from "lucide-react";
 
 const initialState = {
   status: "idle" as const,
@@ -18,21 +19,20 @@ export function ContactForm() {
 
   if (state.status === "success") {
     return (
-      <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
-        <div className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in zoom-in duration-500">
-          <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center text-3xl mb-4">
+      <Card className="bg-white border border-slate-200 shadow-sm p-8 h-full rounded-2xl flex flex-col justify-center">
+        <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500 py-12">
+          <div className="w-20 h-20 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-4xl mb-6 shadow-sm border border-green-100">
             ✅
           </div>
-          <h4 className="text-xl font-bold text-white mb-2">Pesan Terkirim!</h4>
-          <p className="text-blue-200/70">
+          <h4 className="text-2xl font-bold text-slate-900 mb-3">Pesan Terkirim!</h4>
+          <p className="text-slate-600 max-w-sm mb-8 leading-relaxed">
             {state.message ||
               "Terima kasih, tim Humas kami akan segera membalas email Anda."}
           </p>
           <Button
             onClick={() => window.location.reload()}
-            variant="secondary"
-            size="sm"
-            className="mt-6"
+            variant="outline"
+            className="rounded-xl font-bold border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 h-12 px-6"
           >
             Kirim Pesan Lain
           </Button>
@@ -42,19 +42,23 @@ export function ContactForm() {
   }
 
   return (
-    <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
-      <h3 className="text-2xl font-bold text-white mb-2">Kirim Pesan</h3>
-      <p className="text-blue-200/60 mb-8 text-sm">
-        Silakan isi formulir di bawah ini untuk mengajukan pertanyaan, tawaran
-        kerjasama media partner, atau sponsorship.
-      </p>
+    <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow p-8 h-full rounded-2xl flex flex-col">
+      <div className="mb-8">
+        <h3 className="text-2xl font-bold text-slate-900 mb-3 flex items-center gap-2">
+          Kirim Pesan
+        </h3>
+        <p className="text-slate-500 text-sm leading-relaxed font-medium">
+          Silakan isi formulir di bawah ini untuk mengajukan pertanyaan, tawaran
+          kerjasama media partner, atau sponsorship.
+        </p>
+      </div>
 
-      <form action={formAction} className="space-y-6">
+      <form action={formAction} className="space-y-6 flex-1 flex flex-col">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label
               htmlFor="name"
-              className="text-xs font-bold text-blue-300 uppercase tracking-wider"
+              className="text-xs font-bold text-slate-500 uppercase tracking-wider"
             >
               Nama Lengkap
             </label>
@@ -63,17 +67,17 @@ export function ContactForm() {
               name="name"
               type="text"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all"
+              className="w-full bg-slate-50 border-transparent focus:bg-white border focus:border-blue-500 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
               placeholder="Jhon Doe"
             />
             {state.errors?.name && (
-              <p className="text-red-400 text-xs">{state.errors.name[0]}</p>
+              <p className="text-red-500 text-xs font-medium">{state.errors.name[0]}</p>
             )}
           </div>
           <div className="space-y-2">
             <label
               htmlFor="email"
-              className="text-xs font-bold text-blue-300 uppercase tracking-wider"
+              className="text-xs font-bold text-slate-500 uppercase tracking-wider"
             >
               Email / Kontak
             </label>
@@ -82,11 +86,11 @@ export function ContactForm() {
               name="email"
               type="email"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all"
+              className="w-full bg-slate-50 border-transparent focus:bg-white border focus:border-blue-500 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
               placeholder="email@example.com"
             />
             {state.errors?.email && (
-              <p className="text-red-400 text-xs">{state.errors.email[0]}</p>
+              <p className="text-red-500 text-xs font-medium">{state.errors.email[0]}</p>
             )}
           </div>
         </div>
@@ -94,77 +98,58 @@ export function ContactForm() {
         <div className="space-y-2">
           <label
             htmlFor="subject"
-            className="text-xs font-bold text-blue-300 uppercase tracking-wider"
+            className="text-xs font-bold text-slate-500 uppercase tracking-wider"
           >
             Perihal
           </label>
           <select
             id="subject"
             name="subject"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer"
+            className="w-full bg-slate-50 border-transparent focus:bg-white border focus:border-blue-500 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none cursor-pointer shadow-sm font-medium"
           >
-            <option value="Pertanyaan Umum" className="bg-blue-950 text-white">
-              Pertanyaan Umum
-            </option>
-            <option value="Media Partner" className="bg-blue-950 text-white">
-              Media Partner
-            </option>
-            <option
-              value="Sponsorship Event"
-              className="bg-blue-950 text-white"
-            >
-              Sponsorship Event
-            </option>
-            <option
-              value="Audiensi / Kunjungan"
-              className="bg-blue-950 text-white"
-            >
-              Audiensi / Kunjungan
-            </option>
+            <option value="Pertanyaan Umum">Pertanyaan Umum</option>
+            <option value="Media Partner">Media Partner</option>
+            <option value="Sponsorship Event">Sponsorship Event</option>
+            <option value="Audiensi / Kunjungan">Audiensi / Kunjungan</option>
           </select>
           {state.errors?.subject && (
-            <p className="text-red-400 text-xs">{state.errors.subject[0]}</p>
+            <p className="text-red-500 text-xs font-medium">{state.errors.subject[0]}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1 flex flex-col">
           <label
             htmlFor="message"
-            className="text-xs font-bold text-blue-300 uppercase tracking-wider"
+            className="text-xs font-bold text-slate-500 uppercase tracking-wider"
           >
             Pesan Anda
           </label>
           <textarea
             id="message"
             name="message"
-            rows={5}
             required
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all resize-none"
+            className="w-full flex-1 min-h-[160px] bg-slate-50 border-transparent focus:bg-white border focus:border-blue-500 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none shadow-sm"
             placeholder="Tuliskan detail keperluan Anda di sini..."
           ></textarea>
           {state.errors?.message && (
-            <p className="text-red-400 text-xs">{state.errors.message[0]}</p>
+            <p className="text-red-500 text-xs font-medium">{state.errors.message[0]}</p>
           )}
         </div>
 
         <Button
           type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full group"
+          className="w-full group bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-14 text-base font-bold shadow-md shadow-blue-500/20 transition-all mt-auto"
           disabled={isPending}
         >
           {isPending ? (
             <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               Mengirim...
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              Kirim Pesan{" "}
-              <span className="group-hover:translate-x-1 transition-transform">
-                →
-              </span>
+              Kirim Pesan
+              <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </span>
           )}
         </Button>

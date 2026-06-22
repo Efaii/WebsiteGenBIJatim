@@ -13,6 +13,8 @@ import newsPublicRoutes from './routes/news-public.route';
 import docsRoutes from './routes/docs.route';
 import eventsRoutes from './routes/events.route';
 import profileRoutes from './routes/profile.route';
+import commissariatRoutes from './routes/commissariat.route';
+import prokerRoutes from './routes/proker.route';
 import { globalErrorHandler } from './middlewares/error.middleware';
 
 /**
@@ -27,7 +29,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || true,
   credentials: true,
 }));
 app.use(express.json());
@@ -49,6 +51,8 @@ app.use('/api/public/news', newsPublicRoutes);
 app.use('/api/public/docs', docsRoutes);
 app.use('/api/public/events', eventsRoutes);
 app.use('/api/public/profile', profileRoutes);
+app.use('/api/commissariats', commissariatRoutes);
+app.use('/api/proker', prokerRoutes);
 
 // Global Error Handler (must be last)
 app.use(globalErrorHandler);

@@ -6,6 +6,8 @@ import { Footer } from "@/components/footer";
 import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
+import { Search, SlidersHorizontal } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 /**
  * @component AwardeeClient
@@ -100,56 +102,67 @@ export default function AwardeeClient() {
 
           {/* --- FILTERS --- */}
           <FadeIn delay={0.1}>
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-              <input
-                type="text"
-                placeholder="Cari nama atau jurusan..."
-                className="flex-1 px-5 py-3 rounded-full bg-slate-50 border border-slate-200 focus:outline-none focus:border-blue-400 text-slate-900 placeholder:text-slate-400 font-medium transition-colors"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-              <div className="relative">
+            <div className="flex flex-row gap-2 mb-8 items-center justify-between w-full">
+              <div className="relative w-full flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Cari nama atau jurusan..."
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 placeholder:text-slate-400 font-medium transition-all shadow-sm"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full md:w-56 px-5 py-3 rounded-full bg-slate-50 border border-slate-200 text-slate-900 font-bold text-left hover:bg-slate-100 transition-colors flex items-center justify-between cursor-pointer"
+                  className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 py-3 px-4 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-blue-500/20"
                 >
-                  <span className="truncate">{selectedUniversity}</span>
-                  <span
-                    className={`transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
-                  >
-                    ▾
+                  <SlidersHorizontal className="w-4 h-4 text-slate-700" />
+                  <span className="text-sm font-medium text-slate-700 hidden sm:block">
+                    {selectedUniversity === "Semua" ? "Filter" : selectedUniversity}
                   </span>
+                  {selectedUniversity !== "Semua" && (
+                    <span className="sm:hidden w-2 h-2 rounded-full bg-blue-600 ml-1"></span>
+                  )}
                 </button>
-                {isDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsDropdownOpen(false)}
-                    />
-                    <div className="absolute top-full right-0 mt-2 w-full md:w-56 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2">
-                      {UNIVERSITIES.map((uni) => (
-                        <button
-                          key={uni}
-                          onClick={() => {
-                            setSelectedUniversity(uni);
-                            setIsDropdownOpen(false);
-                            setCurrentPage(1);
-                          }}
-                          className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
-                            selectedUniversity === uni
-                              ? "bg-blue-50 text-blue-700 font-bold"
-                              : "text-slate-700 hover:bg-slate-50"
-                          }`}
-                        >
-                          {uni}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 flex flex-col gap-1"
+                      >
+                        {UNIVERSITIES.map((uni) => (
+                          <button
+                            key={uni}
+                            onClick={() => {
+                              setSelectedUniversity(uni);
+                              setIsDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                              selectedUniversity === uni
+                                ? "bg-blue-50 text-blue-700 font-bold"
+                                : "text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            {uni}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </FadeIn>

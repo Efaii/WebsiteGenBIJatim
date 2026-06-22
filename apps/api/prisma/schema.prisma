@@ -39,14 +39,6 @@ model Faq {
   @@map("faq")
 }
 
-model Commissariat {
-  id        String   @id @default(uuid())
-  name      String
-  logo      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model News {
   id        String   @id @default(uuid())
   title     String
@@ -54,8 +46,132 @@ model News {
   content   String   @db.Text
   image     String
   author    String
+  category  String?
+  snippet   String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("news")
+}
+
+model OrganizationProfile {
+  id           String        @id @default(uuid())
+  type         IdentityType  @default(KOMISARIAT)
+  slug         String?       @unique
+  name         String
+  university   String
+  activePeriod String?       @default("2025/2026")
+  description  String        @db.Text
+  vision       String        @db.Text
+  missions     Json?         // Array of { title, desc, icon }
+  socials      Json?         // { instagram, email, linkedin, website, etc }
+  logo         String?
+  univLogo     String?
+  coverImage   String?
+  divisions    Division[]
+  prokers      Proker[]
+  awardees     Awardee[]
+  documents    Document[]
+  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime      @default(now())
+
+  @@map("organization_profiles")
+}
+
+enum IdentityType {
+  KOORDINATOR
+  KOMISARIAT
+}
+
+model Division {
+  id                    String              @id @default(uuid())
+  title                 String
+  subtitle              String?             @db.Text
+  accent                String              @default("blue")
+  order                 Int                 @default(0)
+  members               Member[]
+  organizationProfileId String?
+  organization          OrganizationProfile? @relation(fields: [organizationProfileId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+model Member {
+  id         String   @id @default(uuid())
+  name       String
+  role       String
+  university String
+  image      String?
+  instagram  String?
+  linkedin   String?
+  order      Int      @default(0)
+  divisionId String?
+  division   Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Proker {
+  id                    String              @id @default(uuid())
+  name                  String
+  date                  String
+  executionFormat       String
+  description           String              @db.Text
+  target                String              @db.Text
+  impact                String              @db.Text
+  evaluation            String?             @db.Text
+  documentation         String?
+  lpjLink               String?
+  audience              String              @default("Internal") // Public or Internal
+  period                String              @default("2025/2026")
+  category              String?
+  status                ProkerStatus        @default(PLANNED)
+  gallery               Json?               // Array of image asset paths
+  organizationProfileId String?
+  organization          OrganizationProfile? @relation(fields: [organizationProfileId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("proker")
+}
+
+model Awardee {
+  id                    String              @id @default(uuid())
+  name                  String
+  university            String              @default("")
+  major                 String
+  batch                 String
+  period                String              @default("2025/2026")
+  organizationProfileId String
+  organization          OrganizationProfile @relation(fields: [organizationProfileId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("awardees")
+}
+
+model Document {
+  id                    String              @id @default(uuid())
+  title                 String
+  type                  String              // SK, LPJ, PROPOSAL, etc.
+  fileType              String              // PDF, DOCX, etc.
+  size                  String
+  date                  String
+  url                   String?
+  category              String?
+  period                String              @default("2025/2026")
+  isPublic              Boolean             @default(true)
+  organizationProfileId String
+  organization          OrganizationProfile @relation(fields: [organizationProfileId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@map("documents")
+}
+
+enum ProkerStatus {
+  PLANNED
+  ON_PROGRESS
+  DONE
+  CANCELLED
 }

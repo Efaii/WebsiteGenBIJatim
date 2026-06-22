@@ -461,8 +461,8 @@ export default async function AboutPage() {
           <div className="max-w-4xl mx-auto mt-12">
             {korkomData.documents && korkomData.documents.length > 0 ? (
               <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
-                {korkomData.documents.map((doc, i) => (
-                  <div key={doc.id || i} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 hover:bg-slate-50 transition-colors ${i !== korkomData.documents.length - 1 ? 'border-b border-slate-100' : ''}`}>
+                {(korkomData.documents || []).map((doc, i) => (
+                  <div key={doc.id || i} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 hover:bg-slate-50 transition-colors ${i !== (korkomData.documents?.length || 0) - 1 ? 'border-b border-slate-100' : ''}`}>
                     <div className="flex gap-4 items-center mb-4 sm:mb-0">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${doc.type === 'SK' ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'}`}>
                         {doc.type === 'SK' ? <Presentation className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}

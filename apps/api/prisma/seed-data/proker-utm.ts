@@ -1,0 +1,211 @@
+export const prokerUtmData = [
+  {
+    "div": "BPH",
+    "name": "GenBI Vision",
+    "date": "2025-02-28",
+    "status": "DONE",
+    "description": "Kegiatan ini dilaksanakan dalam bentuk rapat kerja internal (GenBI Vision) yang difokuskan untuk mendiskusikan, menyelaraskan, dan memfinalkan seluruh program kerja yang akan dilaksanakan selama satu periode kepengurusan. Agenda utama meliputi pemaparan garis besar program tiap divisi, pembahasan target capaian dan timeline, penyusunan indikator keberhasilan, serta penentuan penanggung jawab utama dan tim pendukung untuk setiap program.",
+    "description_long": "KPI: seluruh pengurus Generasi Baru Indonesia Universitas Trunojoyo Madura 2025/2026.\nDAMPAK: Rapat kerja GenBI Vision meningkatkan pemahaman anggota terhadap arah gerak organisasi selama satu periode, memperkuat kolaborasi antardivisi melalui diskusi terbuka, serta menghasilkan rumusan program kerja yang lebih terstruktur dan terukur. Kegiatan ini juga menumbuhkan rasa memiliki terhadap program yang disepakati bersama, sehingga setiap pengurus memiliki komitmen yang lebih kuat dalam menjalankan peran dan tanggung jawabnya.\nEVALUASI: Perubahan jadwal dari rencana awal terjadi karena penyesuaian dengan ketersediaan waktu sebagian pengurus, sehingga rapat kerja sempat mengalami pengunduran waktu. Selain itu, masih terdapat anggota yang kurang aktif dalam proses diskusi dan penyusunan program, sementara pembagian tugas moderator, notulen, dan penanggung jawab sesi belum sepenuhnya jelas, sehingga beberapa sesi berjalan kurang efektif dan memicu miskomunikasi antardivisi.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/10L4rCuu54KwMC-fdCb7fEChBEMOIdtG3?usp=sharing"
+  },
+  {
+    "div": "BPH",
+    "name": "GenBI Funion",
+    "date": "2025-10-12",
+    "status": "DONE",
+    "description": "Kegiatan ini dilaksanakan dalam bentuk agenda capacity building dan keakraban pengurus GenBI UTM yang dikemas melalui sesi materi, permainan kelompok, and aktivitas refleksi bersama. Rangkaian acara meliputi ice breaking, simulasi kerja tim, diskusi nilai nilai GenBI, hingga sesi sharing pengalaman antaranggota. Melalui kombinasi aktivitas fisik dan nonfisik, peserta diajak untuk melatih komunikasi, kepemimpinan, kerja sama, dan empati, sekaligus membangun suasana yang hangat dan suportif di antara seluruh pengurus.",
+    "description_long": "KPI: Seluruh pengurus Generasi Baru Indonesia Universitas Trunojoyo Madura 2025/2026.\nDAMPAK: elaksanaan GenBI Funion berkontribusi dalam meningkatkan capacity building pengurus GenBI UTM, memperkuat keharmonisan hubungan antaranggota, serta menumbuhkan solidaritas dalam menjalankan amanah organisasi. Melalui berbagai simulasi dan permainan kolaboratif, peserta menjadi lebih mengenal karakter satu sama lain, belajar mengelola konflik secara sehat, dan memahami pentingnya saling mendukung dalam mencapai tujuan bersama. Kegiatan ini juga membantu membangun rasa saling percaya, sehingga koordinasi program kerja ke depan dapat berjalan lebih efektif dan penuh kekompakan.\nEVALUASI: Masih terdapat penyesuaian waktu kegiatan karena benturan dengan jadwal pribadi sebagian pengurus, sehingga beberapa peserta datang terlambat dan sesi awal tidak diikuti secara penuh oleh semua anggota. Ke depannya, diperlukan perencanaan jadwal yang lebih matang, koordinasi panitia yang lebih terstruktur, serta penyebaran informasi yang merata agar tujuan peningkatan keharmonisan dan solidaritas dapat tercapai secara lebih optimal.\"",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1dYU-8mAL8IwVfHTxmg7yHWFFixDBKHAC"
+  },
+  {
+    "div": "PSDM",
+    "name": "GenBI Goes To Company",
+    "date": "2025-11-05",
+    "status": "DONE",
+    "description": "Kegiatan ini dilaksanakan dalam bentuk kunjungan edukatif (company visit) ke Museum De Javasche Bank Surabaya, yang meliputi sesi diskusi dan observasi mengenai transformasi digital dalam sistem pembayaran nasional, serta diakhiri dengan tur keliling museum untuk mengenal lebih dekat sejarah perkembangan sistem moneter di Indonesia.",
+    "description_long": "KPI: seluruh pengurus Generasi Baru Indonesia Universitas Trunojoyo Madura 2025/2026.\nDAMPAK: Kunjungan edukatif ke Museum De Javasche Bank Surabaya meningkatkan wawasan anggota GenBI UTM tentang transformasi digital sistem pembayaran, memperkuat kebersamaan antarpeserta, menumbuhkan kesadaran sejarah moneter Indonesia, serta membuka peluang untuk inisiatif edukasi lanjutan setelah kegiatan.\nEVALUASI: Dalam pelaksanaan GenBI Goes To Company, terdapat beberapa catatan evaluasi. Perubahan jadwal dari rencana awal terjadi karena menyesuaikan pihak instansi, sehingga pelaksanaan sempat mundur. Selain itu, ada anggota yang kurang aktif dalam kepanitiaan dan koordinasi divisi, sementara pembagian tugas belum jelas, sehingga menghambat efektivitas kerja dan memicu mis komunikasi. Tautan progress kegiatan juga tidak dibagikan secara merata, membuat sebagian anggota tidak mengetahui perkembangan pekerjaan.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1EhIREk_55nuL0Ip-p7zi8JUU08Cpsbz-"
+  },
+  {
+    "div": "PSDM",
+    "name": "GenBI Harmony Camp \"Harmonizing BondsThrough Heritage Journey\"",
+    "date": "2026-04-11",
+    "status": "DONE",
+    "description": "Kegiatan ini diselenggarakan dalam bentuk tour atau perjalanan ke berbagai tempat wisata sebagai bentuk apresiasi atas kinerja pengurus GenBI periode 2025–2026. Melalui kegiatan rekreatif ini, hubungan antaranggota menjadi lebih dekat karena adanya interaksi yang lebih santai dan penuh kebersamaan. Selain mempererat tali persaudaraan, kegiatan ini juga mendorong peningkatan semangat, motivasi, dan loyalitas para pengurus untuk periode selanjutnya.",
+    "description_long": "KPI: adalah seluruh pengurus Generasi Baru Indonesia Universitas Trunojoyo Madura 2025/2026.\nDAMPAK: Dampak dari terselenggaranya kegiatan ini terasa pada penguatan hubungan dan rasa kebersamaan antaranggota GenBI. Interaksi yang terjalin selama perjalanan membuat komunikasi menjadi lebih cair, sehingga solidaritas dan kerja sama tim meningkat. Selain itu, peserta merasakan apresiasi atas kontribusi mereka sebagai pengurus, yang berdampak pada tumbuhnya motivasi dan loyalitas untuk terus berkontribusi pada periode berikutnya.\nEVALUASI: Keterlambatan keberangkatan ke tempat tujuan disebabkan karena misskomunikasi antara narahubung pemesanan dengan crewbus yang bertugas yang mengakibatkan perubahan rundown acara yang telah disusun dan perubahan tempat tujuan awal ke tempat wisata. Kesulitan akses ke Villa Sastro Putih dikarenakan jalan menanjak dan crewbus yang kurang yakin dalam medan tersebut. Kesalahan teknis yang terjadi pada microphone yang tidak dapat terkoneksi pada acara. Keterlambatan penjemputan dari bus yang mengakibatkan seluruh anggota GenBI UTM menunggu hingga kurang lebih 1jam disertai hujan, serta perubahan tujuan destinasi wisata yang tidak disanggupi oleh crew bus dikarenakan medan yang belum cukup dikuasai dan cuaca yang pada saat itu dilanda hujan.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/10Mv0AK1838snRMfTm5tWOICSV54N0skg"
+  },
+  {
+    "div": "PSDM",
+    "name": "GenBI Career Zone Batch 1 dan 2",
+    "date": "Minggu, 14 Desember 2025 dan 25 Januari 2026",
+    "status": "DONE",
+    "description": "Kegiatan ini berbentuk webinar edukatif yang menjadi ajang pertemuan antara GenBI aktif dan para alumni, sehingga tercipta ruang untuk membangun koneksi yang bermanfaat. Melalui sesi interaktif dan berbagi pengalaman, peserta memperoleh wawasan tentang pengembangan karier, strategi menghadapi dunia kerja, serta inspirasi dari alumni yang telah sukses di bidangnya. Format webinar memungkinkan dialog yang lebih terbuka dan dinamis, sehingga hubungan antara generasi GenBI semakin erat.",
+    "description_long": "KPI: Umum\nDAMPAK: Kegiatan ini memberikan dampak berupa peningkatan wawasan karier melalui pengalaman alumni, memperkuat jaringan antara GenBI aktif dan alumni, serta menumbuhkan motivasi peserta untuk mempersiapkan tujuan karier secara lebih terarah dan percaya diri untuk jenjang karir kedepannya\nEVALUASI: Terkait medrpat jauh sblm acara dikomunikasikan dengan ketum² komis lain terkait medrpat. Diperhatikan pamflet ditambah yg keberapa acaranya, kurang ditulis alumni GenBI UTM pada pemateri",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1gCpnrfCbU0Hi-HHbdLWn9xkEMNP7VPbc"
+  },
+  {
+    "div": "SOSMA",
+    "name": "GENBI FUNCARE",
+    "date": "2025-12-06",
+    "status": "DONE",
+    "description": "kegiatan berbagi yang dilakukan oleh GenBI dengan melibatkan para siswa kreativitas dan kepedulian adalah dua nilai dasar yang ingin ditanamkan kepada siswa-siswi SDN Junganyar 1. Target kegiatan GENBI Funcare pada siswa kelas 3. Kegiatan melukis tas kanvas ini tidak hanya bertujuan untuk melatih motorik halus dan mengembangkan bakat seni anak, tetapi juga menjadi media yang powerful untuk mengajarkan makna berbagi dan empati. Setiap goresan warna dan imajinasi yang dituangkan ke atas tas kanvas akan diakhiri dengan sebuah tindakan nyata. Menyerahkan tas hasil karya mereka sendiri sebagai hadiah kepada anak-anak.",
+    "description_long": "KPI: para siswa kelas 3 SDN 1 Junganyar, Socah\nDAMPAK: Tas kanvas berhasil menjadi media powerful yang menghubungkan hasil karya (kreativitas) dengan aksi nyata (berbagi/kepedulian).\nEVALUASI: 1. Terlihat dari kualitas dan antusiasme siswa dalam melukis tas kanvas. Setiap siswa berhasil menyelesaikan karyanya.2 Pelaksanaan kegiatan sempat mengalami penyesuaian signifikan terhadap rundown awal dikarenakan adanya miskoordinasi internal panitia, yang utamanya disebabkan oleh kurangnya partisipasi beberapa anggota dalam rapat perencanaan. Hal ini mengakibatkan beberapa susunan acara dan linimasa terlewati (ter-skip). Namun demikian, berkat soliditas dan inisiatif yang tinggi dari seluruh anggota tim di lapangan, hambatan tersebut dapat diatasi dengan cepat dan lancar. Yang terpenting, tujuan inti proker tercapai: anak-anak peserta menunjukkan antusiasme yang tinggi dan merasa senang dengan kegiatan ini, sesuai dengan konsep yang telah direncanakan",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1A154b-L51cUoYkn9NYduv2JbYiKT2ImD"
+  },
+  {
+    "div": "SOSMA",
+    "name": "CEK MATA",
+    "date": "2025-12-06",
+    "status": "DONE",
+    "description": "Kegiatan cek mata gratis yang diutamakan kepada murid-murid SDN 1 Junganyar, Socah dan Dewan guru disana. kegiatan pemeriksaan mata gratis ini diselenggarakan sebagai bentuk perhatian dan upaya deteksi dini masalah kesehatan mata bagi murid-murid dan dewan guru di SDN 1 Junganyar.pelaksanaan cek masa ini dibagi menjadi tiga tahapan 1. Pemeriksaan awal mennggunakan mesin Auto Refrakto Keratometer (ARK) gunanya untuk mendeteksi indikasi penglihatan jarak jauh pada pasien serta untuk pendeteksian dini untuk kelainan organik (katarak, glaukoma, pteligium dll).\n2. Pemeriksaan Actual menggunakan lensa, setelah menggunakan mesin ARK hasilnya pemeriksaannya di aktualkan lagi menggunakan lensa, guna mencari kenyamanan pada jarak pandang baik jarak jauh sama dekat.\n3. Tahap 3 Edukasi personal. setelah dilakukan pemeriksaan, maka dilakukan edukasi personal pada pasien sebagai bentuk penjelasan dari hasil pemeriksaan yanh telah dilakukan sehingga pasien dapat mengetahui indikasi gangguan seperti apa yang ada pada penglihatannya serta tindakan apa yang selanjutnya harus dilakukan oleh pasien (Operasi, Penanganan Dokter, Bantuan Optical/Kacamata dll). \nkegiatan cek masa ini berjalan lancar, antusias dari siswa dan guru sangat tinggi sehingga kegiatan dapat berjalan dengan baik.",
+    "description_long": "KPI: Anak-anak, dewan guru dan panitia kegiatan cek mata\nDAMPAK: Mereka semakin aware akan kesehatan mata dan mendeteksi masalah kesehatan mata sejak dini\nEVALUASI: 1. Kegiatan berjalan lancar (sesuai pernyataan pada deskripsi)  2. Antusiasme siswa dan guru sangat tinggi   3. Deteksi dini berhasil dilakukan (melalui mesin ARK) untuk mengidentifikasi indikasi kelainan organik 4. Terdapat keterlambatan inisiasi kegiatan karena kendala kedatangan petugas pemeriksaan mata. Situasi ini sempat menimbulkan kebingungan dalam penanganan peserta didik serta kurang jelasnya pembagian tugas (job desk) di antara panitia. Namun, berkat kontribusi dan inisiatif yang luar biasa dari seluruh anggota, kendala tersebut dapat diatasi dengan cepat, dan keseluruhan kegiatan berhasil berjalan sesuai rencana awal",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1A154b-L51cUoYkn9NYduv2JbYiKT2ImD"
+  },
+  {
+    "div": "PPR",
+    "name": "Foto Profil Pengurus",
+    "date": "27-29 Oktober 2025",
+    "status": "DONE",
+    "description": "Foto Profil Pengurus bukan sekadar potret, melainkan representasi visual dari identitas dan profesionalisme kepengurusan GenBI UTM 2025/2026. Program ini bertujuan untuk menciptakan citra resmi dan solid bagi para pengurus, memperkuat branding organisasi di mata publik.",
+    "description_long": "KPI: Seluruh pengurus GenBI UTM 2025/2026.\nDAMPAK: Memberikan identitas visual resmi and memperkuat branding kepengurusan.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1cVXXKixMvly3Wy5plPejZGpJWSHhWL1P"
+  },
+  {
+    "div": "PPR",
+    "name": "GenBI Congrats: Apresiasi Prestasi Anggota",
+    "date": "Setiap bulan rekap prestasi anggota",
+    "status": "DONE",
+    "description": "Program GenBI Congrats adalah inisiatif publikasi untuk memberikan apresiasi dan pengakuan kepada anggota GenBI UTM yang telah mencapai prestasi membanggakan tiap 2 bulan sekali. Melalui spotlight di media sosial, kami akan menyoroti keberhasilan mereka, mulai dari prestasi akademik, non-akademik, hingga kontribusi positif dalam berbagai kegiatan.",
+    "description_long": "KPI: Anggota aktif GenBI UTM 2025/2026.\nDAMPAK: Menciptakan lingkungan yang suportif, meningkatkan motivasi, dan mendorong partisipasi aktif seluruh anggota. Ini adalah cara kami merayakan setiap pencapaian, sekecil apa pun itu.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://www.instagram.com/p/DPknpFdE6cN/?igsh=MXhiaHAyYjU4dHBxNA=="
+  },
+  {
+    "div": "PPR",
+    "name": "PRIMA: Publication & Relation Integrated Management Agenda",
+    "date": "Setiap Saat Upload",
+    "status": "DONE",
+    "description": "PRIMA (Publication & Relation Integrated Management Agenda) adalah sistem terintegrasi yang dirancang untuk mengelola branding, publikasi, and dokumentasi seluruh program kerja GenBI UTM secara efisien dan efektif selama 1 periode.",
+    "description_long": "KPI: Seluruh divisi GenBI UTM dan audiens publik.\nDAMPAK: PRIMA memastikan bahwa setiap kegiatan GenBI UTM terekam, terpublikasi, dan dikomunikasikan dengan baik, menciptakan jejak digital yang kuat dan memperkuat hubungan dengan seluruh pemangku kepentingan.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://www.instagram.com/genbi_utm?igsh=amwxemcxMzFwOTlv&utm_source=qr"
+  },
+  {
+    "div": "PPR",
+    "name": "Sosialisasi Beasiswa Bank Indonesia",
+    "date": "Menyusul",
+    "status": "ON_PROGRESS",
+    "description": "Menyampaikan informasi komprehensif mengenai Beasiswa Bank Indonesia 2026, termasuk syarat, alur pendaftaran, dan tips sukses. Program ini juga menjadi ajang pengenalan lebih dalam tentang komunitas GenBI kepada mahasiswa Universitas Trunojoyo Madura.",
+    "description_long": "KPI: Mahasiswa Universitas Trunojoyo Madura.\nDAMPAK: Memberikan pemahaman yang jelas mengenai prosedur beasiswa dan memotivasi mahasiswa untuk mendaftar, sekaligus memperluas jangkauan dan daya tarik GenBI di kampus.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": null
+  },
+  {
+    "div": "PPR",
+    "name": "GenBI Creative Competition",
+    "date": "2025-12-12",
+    "status": "DONE",
+    "description": "Program Kerja GCC adalah sebuah ajang kompetisi infografis dan BMC (Business Model Canva) bertema kebanksentralan.",
+    "description_long": "KPI: Siswa dan Mahasiswa seluruh Indonesia\nDAMPAK: Program ini dirancang untuk menggali potensi kreativitas mahasiswa sembari memperdalam pengetahuan mereka mengenai isu-isu kebanksentralan yang relevan. Kami berharap melalui kompetisi ini, akan lahir inovator-inovator muda yang mampu menyampaikan pesan-pesan kompleks dengan cara yang menarik dan mudah dipahami.",
+    "proposal_url": "https://drive.google.com/file/d/1hDLMfLp10ciLPRlAJeCsBlN3x2-FSWu5/view?usp=drivesdk",
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1bQaKBu2kzcKP_FPzP00BsH2lmpVDza0S"
+  },
+  {
+    "div": "PENDIDIKAN",
+    "name": "GenBI Mengajar (GEMAR)",
+    "date": "2025-12-06",
+    "status": null,
+    "description": "GEMAR merupakan salah satu program kerja yang berfokus pada kegiatan edukasi di tingkat Sekolah Dasar melalui penyampaian materi kebanksentralan serta pelaksanaan audiensi dengan pihak sekolah. Materi yang disampaikan meliputi Cinta, Bangga, dan Paham (CBP) Rupiah serta penggunaan bahasa Indonesia yang baik dan benar. Program GEMAR telah dilaksanakan di SDN Junganyar 1, dengan tambahan kegiatan “pojok baca” sebagai sarana literasi bagi siswa. Pojok baca tersebut menyediakan berbagai buku yang diperoleh melalui kerja sama antara GenBI UTM dan Perpustakaan UTM. Selain itu, GenBI UTM juga memberikan reward kepada seluruh siswa kelas V dan VI SDN Junganyar 1 sebagai bentuk apresiasi dan motivasi dalam meningkatkan semangat belajar. Program GEMAR sendiri merupakan bagian dari program kerja besar yang dinamakan Ekspedisi Bakti Negeri (EBN), yang melibatkan kolaborasi dari divisi pendidikan, divisi sosial dan masyarakat, serta divisi lingkungan hidup.",
+    "description_long": "KPI: Siswa-siswi kelas 5 utuk GEMAR and Seluruh siswa untuk kegiatan pojok baca.\nDAMPAK: Meningkatkan pemahaman siswa Sekolah Dasar mengenai kebanksentralan, khususnya terkait Cinta, Bangga, dan Paham (CBP) Rupiah, serta menanamkan penggunaan bahasa Indonesia yang baik dan benar sejak dini. Selain itu, program ini juga bertujuan untuk menumbuhkan minat baca melalui penyediaan fasilitas pojok baca, serta memberikan motivasi belajar kepada siswa melalui pemberian apresiasi. Secara lebih luas, GEMAR bertujuan untuk mendukung pengembangan pendidikan, kepedulian sosial, dan kesadaran lingkungan sebagai bagian dari rangkaian kegiatan Ekspedisi Bakti Negeri (EBN).\nEVALUASI: Program kerja telah direncanakan dengan dukungan Mobil Pintar. Namun, karena Mobil Pintar belum dapat beroperasi pada waktu pelaksanaan, evaluasi dilakukan sebagai bahan perbaikan dan penyesuaian pada kegiatan selanjutnya.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1mPJcqv9yfie-_OX_BclDemq68V8Clrs2"
+  },
+  {
+    "div": "PENDIDIKAN",
+    "name": "Literasi Perbankan (Sosialisasi Kredit Usaha Rakyat (KUR))",
+    "date": "2026-01-28",
+    "status": null,
+    "description": "Kegiatan Literasi Perbankan merupakan program edukatif yang dirancang untuk meningkatkan pemahaman pelaku usaha mikro, kecil, dan menengah (UMKM) mengenai dunia perbankan, khususnya terkait peran perbankan dalam mendukung pengembangan dan keberlanjutan usaha. Kegiatan ini difokuskan pada peningkatan pengetahuan peserta mengenai layanan perbankan, akses pembiayaan usaha, serta pemanfaatan program perbankan yang relevan bagi UMKM, termasuk Program Kredit Usaha Rakyat (KUR) Bank Jatim. Sasaran kegiatan ini adalah pelaku UMKM di wilayah Kecamatan Kamal, Kabupaten Bangkalan. Melalui pendekatan edukatif dan interaktif, kegiatan Literasi Perbankan diharapkan mampu membantu pelaku UMKM memahami konsep perbankan secara praktis dan aplikatif sesuai dengan kebutuhan usaha. Kegiatan ini diselenggarakan oleh Generasi Baru Indonesia (GenBI) Universitas Trunojoyo Madura Divisi Pendidikan bekerja sama dengan Perpustakaan Universitas Trunojoyo Madura, dengan menghadirkan pemateri yang kompeten dari pihak Bank Jatim serta kalangan akademisi.",
+    "description_long": "KPI: Para Pelaku UMKM Kamal\nDAMPAK: Memberikan pemahaman dasar kepada pelaku UMKM mengenai sistem dan layanan perbankan, termasuk Program KUR Bank Jatim, serta mendorong penerapan pengelolaan keuangan yang tertib and peningkatan kapasitas usaha secara berkelanjutan.\nEVALUASI: Kekeliruan penyebutan nama pemberi cinderamata oleh MC terjadi akibat faktor grogi saat pelaksanaan acara. Hal ini menjadi bahan evaluasi agar ke depannya dilakukan persiapan dan briefing yang lebih matang",
+    "proposal_url": "https://drive.google.com/drive/folders/10gS3cTOZh0cRHuIPg3UPuictM_q11JIp?usp=drive_link",
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1gFibZckPKfuWh--hN7wgssTVhnmXfMMs"
+  },
+  {
+    "div": "PENDIDIKAN",
+    "name": "G-NEWS (GenBI News)",
+    "date": "29 Desember 2025, 31 Januari 2026, 18 April 2026",
+    "status": null,
+    "description": "Program kerja GENBI NEWS merupakan salah satu bentuk kegiatan publikasi dan edukasi yang bertujuan untuk menyampaikan informasi terkini terkait kebijakan Bank Indonesia kepada masyarakat, khususnya kalangan mahasiswa dan generasi muda. Informasi tersebut dikemas secara menarik dan informatif dalam bentuk konten visual berupa postingan foto yang disertai penjelasan singkat, sehingga mudah dipahami dan relevan dengan perkembangan isu ekonomi dan keuangan.",
+    "description_long": "KPI: Masyarakat umum yang bermain instagram\nDAMPAK: Meningkatkan pemahaman mengenai kebijakan Bank Indonesia.\nEVALUASI: Penggalian informasi terkait aspek kebanksentralan masih belum optimal. Ke depannya, kami perlu memperluas dan memperdalam riset sumber, materi, serta narasumber yang berkaitan dengan fungsi dan peran kebanksentralan agar konten yang dihasilkan lebih komprehensif, akurat, dan sesuai tujuan program.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1jFTV4wgnCC2GyrVM9i68Bdf_gFcbeYD8"
+  },
+  {
+    "div": "EKRAF",
+    "name": "Merchandise GenBI",
+    "date": "contoh: Minggu, 1 Februari 2026",
+    "status": null,
+    "description": "Merchandise merupakan program kerja devisi Ekraf yang berfokus pada pembuatan dan pengelolaan, berbagai item merchandise yang berkaitan dengan genbi.",
+    "description_long": "KPI: Seluruh pengurus GenBI UTM 2025/2026.\nDAMPAK: Meningkatkan rasa solidaritas dan kebersamaan antar anggota genbi\nMeningkatkan brand awareness genbi kepada publik melalui desain dan logo yang terdapat pada produk merchandise. Memberikan identitas visual resmi dan memperkuat branding kepengurusan.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1cVXXKixMvly3Wy5plPejZGpJWSHhWL1P"
+  },
+  {
+    "div": "EKRAF",
+    "name": "GenBI Creative Competition (GCC)",
+    "date": "contoh: Minggu, 1 Februari 2026",
+    "status": "ON_PROGRESS",
+    "description": "Genbi creative Competition (GCC) adalah sebuah sebuah program kerja gabungan antara divisi ekonomi kreatif dan divisi PPR GenBI Universitas trunojoyo Madura. Genbi Creative Competition dirancang sebagai wadah edukasi, kreativitas, dan inovasi yang menggabungkan berbagai kegiatan menarik untuk mendorong pemahaman yang lebih mendalam tentang peran Bank Indonesia dalam perekonomian nasional. Rangkaian kegiatan Generasi Baru Indonesia Creative Competition (GCC) mencakup beberapa program utama, yaitu Sosialisasi QRIS dan Pembuatan NIB untuk UMKM Menuju Transaksi Digital yang Cepat dan Inklusif, serta beberapa kategori lomba yang dirancang untuk mengasah kreativitas dan inovasi peserta, antara lain: 1. Lomba Desain Infografis yang bertema “Transformasi Digital Menuju Ekonomi Indonesia yang Tangguh dan Inklusif” sebagai Media Literasi Ekonomi. 2. Lomba Business Model Canvas (BMC) yang bertema “Inovasi Model Bisnis Digital untuk Mewujudkan Ketahanan Ekonomi Nasional”",
+    "description_long": "KPI: Siswa dan Mahasiswa seluruh Indonesia\nDAMPAK: Meningkatkan pemahaman masyarakat terhadap sinergi tiga pilar Bank Indonesia dalam akselerasi digitalisasi melalui pendekatan visual yang menarik dalam kompetisi infografis. Meningkatkan kemampuan peserta dalam merancang model bisnis yang inovatif, adaptif, dan berbasis teknologi digital melalui lomba Business Model Canvas (BMC). Mendorong terciptanya ide-ide bisnis kreatif yang dapat berkontribusi pada pembangunan ekonomi nasional serta membuka peluang bagi pengembangan UMKM berbasis digital. Program ini juga dirancang untuk menggali potensi kreativitas mahasiswa sembari memperdalam pengetahuan mereka mengenai isu-isu kebanksentralan yang relevan. Kami berharap melalui kompetisi ini, akan lahir inovator-inovator muda yang mampu menyampaikan pesan-pesan kompleks dengan cara yang menarik dan mudah dipahami.",
+    "proposal_url": "https://drive.google.com/file/d/1hDLMfLp10ciLPRlAJeCsBlN3x2-FSWu5/view?usp=drivesdk",
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1bQaKBu2kzcKP_FPzP00BsH2lmpVDza0S"
+  },
+  {
+    "div": "EKRAF",
+    "name": "Sosialisasi Qris dan Pembuatan NIB",
+    "date": "contoh: Minggu, 1 Februari 2026",
+    "status": null,
+    "description": "Sosialisasi QRIS untuk UMKM merupakan program kerja yang bertujuan untuk memperkenalkan dan mendorong para UMKM untuk penggunaan sistem pembayaran digital yang lebih efisien dan aman. Ini bisa dilakukan melalui edukasi dan pelatihan yang mengajarkan UMKM tentang QRIS.\n1. Menjelaskan Cara Kerja QRIS: Panduan tentang bagaimana QRIS bekerja, bagaimana pelanggan dapat membayar, dan bagaimana UMKM dapat menerima pembayaran.\n2. Serta dari pengurus GenBI UTM terjun langsung ke lapangan untuk membantu para UMKM yang masih belum mempunyai Qris untuk pembuatan Qris dan NIB",
+    "description_long": "KPI: Para UMKM dan Pedagang yang masih belum mempunyai Qris and NIB\nDAMPAK: Para UMKM yang masih belum mempunyai Qris dan NIB jadi mempunyai Qris dan NIB serta membuat para UMKM yang awalnya tidak memahami apa itu Qris, bagaimana cara transaksinya juga menjadi paham, dan membantu para UMKM dan Pedagang lebih mudah untuk bertransanksi secara non tunai dengan para pelanggannya. Memperluas adopsi QRIS dan pembuatan NIB di kalangan UMKM untuk mendukung transformasi transaksi non-tunai yang cepat, efisien, dan aman.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/drive/folders/1ZPf9k7rfFPQzSzrUFFGwVSbxj5tnvA1T?usp=sharing"
+  },
+  {
+    "div": "LH",
+    "name": "compos your waste",
+    "date": "contoh: Minggu, 1 Februari 2026",
+    "status": "DONE",
+    "description": "program kerja yang berfokus pada edukasi dan sosialisasi pengelolaan sampah organik menjadi pupuk kompos. melailui kegiatan ini, peserta diajak untuk memahami pentingnya pengelolaan limbah ramah lingkungan serta mempraktikkan langsung cara membuat kompos sebagai langkah nyata menuju gaya hidup berkelanjutan",
+    "description_long": "KPI: masyarakat atau ibu-ibu PKK\nDAMPAK: memberikan kesadaran serta pengetahuan kepada masyarakat bahwa sampah organik yang terdapat di rumah dapat menjadi pupuk kompos yang baik untuk tanaman, and kesuburan tanah serta mengurangi timbunan sampah yang nantinya tidak dapat berguna.",
+    "proposal_url": null,
+    "lpj_url": null,
+    "documentation_url": "https://drive.google.com/file/d/1h3pIuhEB_Sj6BKh9Cv0VdsHbwk5yzG2E/view?usp=drivesdk"
+  }
+];

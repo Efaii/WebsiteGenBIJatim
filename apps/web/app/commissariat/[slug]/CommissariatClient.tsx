@@ -1,326 +1,92 @@
 "use client";
 
-import { useState, use, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn, getAssetUrl } from "@/lib/utils";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { Card } from "@/components/Card";
 import {
-  Download,
-  ArrowRight,
   Instagram,
   Mail,
   Search,
-  ExternalLink,
   ClipboardList,
-  Wallet,
+  User,
+  Users,
+  GraduationCap,
+  Calendar,
+  SearchX,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { DocumentCard } from "@/components/DocumentCard";
 import { ProkerCard } from "@/components/ProkerCard";
+import { getPublicProkers } from "@/lib/services/proker.service";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FadeIn,
   SlideUp,
+  BlurIn,
   StaggerContainer,
   StaggerItem,
 } from "@/components/MotionWrapper";
 import { PageBackground } from "@/components/PageBackground";
-import { MemberDetailModal, BPHMember } from "@/components/MemberDetailModal";
-import { ProkerData } from "@/app/types";
-// import { COMMISSARIAT_DATA } from "@/app/data/commissariatData"; // REMOVED
+import { VisionMission } from "@/components/about/VisionMission";
+import { ProfileCard } from "@/components/about/ProfileCard";
+import { SectionHeader } from "@/components/SectionHeader";
+import { MemberDetailModal } from "@/components/MemberDetailModal";
+import {
+  Member as BPHMember,
+  Proker,
+  Awardee,
+  OrganizationProfile,
+} from "@repo/types";
 
 // --- Types ---
 type TabType = "profil" | "proker" | "awardee" | "arsip";
 
-// Local types
-// interface Proker was replaced by imported ProkerData
-
-interface Awardee {
-  id: number;
-  name: string;
-  major: string;
-  year: string;
-}
-
-interface Document {
-  id: number;
+interface Division {
+  id: string;
   title: string;
-  type:
-    | "SK"
-    | "LPJ"
-    | "SOP"
-    | "Other"
-    | "Proposal"
-    | "Data"
-    | "Materi"
-    | "Surat"
-    | "Notulensi"
-    | "Dokumentasi";
-  fileType: "PDF" | "DOCX" | "XLSX" | "PPTX" | "ZIP";
-  size: string;
-  date: string;
+  subtitle?: string;
+  accent: string;
+  members: BPHMember[];
 }
 
-interface CommissariatData {
-  slug: string;
-  name: string;
-  university: string;
-  logo_univ: string;
-  logo_genbi: string; // Using generic genbi logo for now
-  cover_image: string;
-  description: string;
-  socials: {
-    instagram: string;
-    email: string;
-  };
+interface CommissariatData extends OrganizationProfile {
   bph: BPHMember[];
-  divisions: BPHMember[];
-  proker: ProkerData[];
-  awardees: Awardee[]; // Specific to this commissariat
-  documents: Document[];
+  divisions: Division[]; // Changed to match About page dynamic structure
+  proker: Proker[];
+  awardees: Awardee[];
 }
-
-// --- Mock Data ---
-// Data imported from @/app/data/commissariatData
 
 export default function CommissariatClient({
   initialData,
 }: {
   initialData: CommissariatData;
 }) {
-  const { slug } = initialData;
   const [selectedMember, setSelectedMember] = useState<BPHMember | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("profil");
-  // Replaced modal with static page, so selectedProker state is removed.
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState<string>("All"); // New state for Archive filter
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const tabsRef = useRef<HTMLElement>(null);
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
+  const [prokers, setProkers] = useState<Proker[]>(initialData.proker?.slice(0, 9) || []);
+  const [prokerPage, setProkerPage] = useState(1);
+  const [hasMoreProkers, setHasMoreProkers] = useState((initialData.proker?.length || 0) > 9);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalProkers, setTotalProkers] = useState(initialData.proker?.length || 0);
+  const [expandedPeriods, setExpandedPeriods] = useState<string[]>([]);
 
-  // Dynamic Data Generator for Fallback
-  const generateMockData = (slug: string): CommissariatData => {
-    const universityName = slug.toUpperCase().replace("-", " ");
-    const name = `GenBI Komisariat ${universityName}`;
+  const data = initialData || {};
 
-    // Check if we have a specific logo for this slug in public/assets/logos
-    // For now we map common ones or default to genbi
-    let logo_univ = "/assets/logos/genbi.svg";
-    const commonLogos = [
-      "unair",
-      "unesa",
-      "its",
-      "upnvjt",
-      "uinsa",
-      "unugiri",
-      "utm",
-      "pens",
-      "uin-madura",
-    ];
-    if (commonLogos.includes(slug)) {
-      // Handle special naming conventions if needed, e.g. uinMadura
-      if (slug === "uin-madura") logo_univ = "/assets/logos/uinMadura.svg";
-      else if (slug === "upnvjt")
-        logo_univ = "/assets/logos/upnvjt.svg"; // Fixed filename
-      else logo_univ = `/assets/logos/${slug}.svg`;
-    }
-
-    return {
-      slug,
-      name,
-      university: universityName,
-      logo_univ,
-      logo_genbi: "/assets/logos/genbi.svg",
-      cover_image: "/assets/images/raker.jpg",
-      description: `GenBI Komisariat ${universityName} adalah komunitas penerima beasiswa Bank Indonesia yang berdedikasi untuk mengembangkan potensi diri dan berkontribusi bagi masyarakat di lingkungan ${universityName} dan sekitarnya.`,
-      socials: {
-        instagram: `@genbi_${slug.replace("-", "")}`,
-        email: `genbi${slug.replace("-", "")}@gmail.com`,
-      },
-      bph: Array.from({ length: 6 }).map((_, i) => ({
-        role:
-          i === 0
-            ? "Ketua Umum"
-            : i === 1
-              ? "Wakil Ketua"
-              : i === 2
-                ? "Sekretaris Umum"
-                : i === 3
-                  ? "Sekretaris 2"
-                  : i === 4
-                    ? "Bendahara Umum"
-                    : "Bendahara 2",
-        name: `Pengurus ${universityName} ${i + 1}`,
-        image: "/assets/images/individu.jpg",
-        university: universityName,
-        major: "Manajemen",
-        instagram: "@genbi_jatim",
-        linkedin: "GenBI Jatim",
-      })),
-      divisions: Array.from({ length: 4 }).map((_, i) => ({
-        role: `Kadiv ${
-          ["Pendidikan", "Lingkungan", "Kominfo", "Kewirausahaan"][i]
-        }`,
-        name: `Koordinator ${i + 1}`,
-        image: "/assets/images/individu.jpg",
-        university: universityName,
-        major: "Ekonomi",
-        instagram: "@genbi_jatim",
-        linkedin: "GenBI Jatim",
-      })),
-      proker: [
-        {
-          id: 1,
-          title: "Sosialisasi Beasiswa BI",
-          slug: "sosialisasi-beasiswa",
-          commissariat: universityName,
-          type: "Sosialisasi",
-          audience: "External",
-          status: "Completed",
-          date: "10 Jan 2025",
-          dateIso: "2025-01-10",
-          format: "Offline",
-          description:
-            "Kegiatan sosialisasi beasiswa Bank Indonesia kepada mahasiswa baru.",
-          description_long:
-            "Kegiatan ini bertujuan untuk memberikan informasi mendalam mengenai proses seleksi Beasiswa Bank Indonesia. Dihadiri oleh lebih dari 200 mahasiswa, acara ini menjelaskan tahapan administrasi, wawancara, hingga benefit menjadi bagian dari GenBI.",
-          objectives: [
-            "Meningkatkan awareness mahasiswa tentang Beasiswa BI",
-            "Memberikan tips lolos seleksi berkas & wawancara",
-            "Memperkenalkan komunitas GenBI kepada publik",
-          ],
-          benefits: [
-            "Mahasiswa paham alur pendaftaran",
-            "Meningkatnya jumlah pendaftar berkualitas",
-            "Branding GenBI semakin kuat",
-          ],
-          gallery: [
-            "/assets/images/raker.jpg",
-            "/assets/images/bnsp.JPG",
-            "/assets/images/background.jpg",
-          ],
-          documentation: "https://instagram.com",
-          newsUrl: "https://unair.ac.id/news",
-        },
-        {
-          id: 2,
-          title: "GenBI Mengajar",
-          slug: "genbi-mengajar",
-          commissariat: universityName,
-          type: "Social",
-          audience: "External",
-          status: "On-going",
-          date: "20 Feb 2025",
-          dateIso: "2025-02-20",
-          format: "Offline",
-          description:
-            "Program pengabdian masyarakat berupa pengajaran di sekolah dasar binaan.",
-        },
-        {
-          id: 3,
-          title: "Bersih-Bersih Pantai",
-          slug: "bersih-pantai",
-          commissariat: universityName,
-          type: "Social",
-          audience: "External",
-          status: "Upcoming",
-          date: "15 Mar 2025",
-          dateIso: "2025-03-15",
-          format: "Offline",
-          description: "Aksi kepedulian lingkungan di pantai kenjeran.",
-        },
-      ],
-      awardees: Array.from({ length: 25 }).map((_, i) => ({
-        id: i + 1,
-        name: `Mahasiswa ${universityName} ${i + 1}`,
-        major: ["Manajemen", "Akuntansi", "Ekonomi Islam", "Ilmu Komunikasi"][
-          i % 4
-        ],
-        year: "2024",
-      })),
-      documents: [
-        {
-          id: 1,
-          title: "SK Pengurus Wilayah GenBI Jatim 2025-2026",
-          type: "SK",
-          fileType: "PDF",
-          size: "2.4 MB",
-          date: "10 Jan 2025",
-        },
-        {
-          id: 2,
-          title: "Laporan Pertanggungjawaban (LPJ) Triwulan I",
-          type: "LPJ",
-          fileType: "PDF",
-          size: "15.8 MB",
-          date: "05 Apr 2025",
-        },
-        {
-          id: 3,
-          title: "Proposal Sponsorship GenBI Leadership Camp",
-          type: "Proposal",
-          fileType: "PDF",
-          size: "4.2 MB",
-          date: "12 Feb 2025",
-        },
-        {
-          id: 4,
-          title: "Database Anggota Aktif & Alumni 2025",
-          type: "Data",
-          fileType: "XLSX",
-          size: "850 KB",
-          date: "15 Jan 2025",
-        },
-        {
-          id: 5,
-          title: "Materi Presentasi Sosialisasi Kebanksentralan",
-          type: "Materi",
-          fileType: "PPTX",
-          size: "12.5 MB",
-          date: "20 Feb 2025",
-        },
-        {
-          id: 6,
-          title: "Surat Tugas Delegasi Rakornas 2025",
-          type: "Surat",
-          fileType: "PDF",
-          size: "320 KB",
-          date: "01 Mar 2025",
-        },
-        {
-          id: 7,
-          title: "Notulensi Rapat Koordinasi Wilayah (Rakorwil)",
-          type: "Notulensi",
-          fileType: "DOCX",
-          size: "145 KB",
-          date: "28 Feb 2025",
-        },
-        {
-          id: 8,
-          title: "Dokumentasi Foto Kegiatan Buka Bersama",
-          type: "Dokumentasi",
-          fileType: "ZIP",
-          size: "45.2 MB",
-          date: "15 Apr 2025",
-        },
-      ],
-    };
-  };
-
-  // Use initialData passed from Server Component
-  const data = initialData;
-
-  // Filter awardees
-  const filteredAwardees = data.awardees.filter((a) =>
+  const filteredAwardees = (data.awardees || []).filter((a) =>
     a.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredAwardees.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -329,687 +95,779 @@ export default function CommissariatClient({
     indexOfLastItem,
   );
 
-  // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+  // const prokersShadow = data.proker || []; // Removed to avoid shadowing state
 
-  const downloadMockFile = (title: string) => {
-    alert(`Memulai unduhan dokumen: ${title}`);
+  const periods = Array.from(new Set((initialData.proker || []).map((p) => p.period || "")))
+    .filter(Boolean)
+    .sort()
+    .reverse();
+  const currentPeriod = data.activePeriod || "2024/2025";
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    if (dateStr.toLowerCase().includes("setiap")) return dateStr;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "Mei",
+      "Jun",
+      "Jul",
+      "Agu",
+      "Sep",
+      "Okt",
+      "Nov",
+      "Des",
+    ];
+    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
+
+  const loadMoreProkers = async () => {
+    if (isLoadingMore || !hasMoreProkers) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = prokerPage + 1;
+      const result = await getPublicProkers({ 
+        orgId: data.id, 
+        page: nextPage, 
+        limit: 9 
+      });
+      
+      setProkers(prev => [...prev, ...result.prokers]);
+      setProkerPage(nextPage);
+      setHasMoreProkers(result.prokers.length === 9);
+      setTotalProkers(result.pagination.total);
+    } catch (error) {
+      console.error("Failed to load more prokers:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Initial load sync for prokers count
+  useEffect(() => {
+    if (activeTab === "proker" && prokers.length <= 10) {
+      // Just to initialize total count if needed, but initialData.proker might be full
+      // Actually, if initialData.proker is full, we don't need to load more until requested
+      // Let's assume initialData.proker is the full list for now, 
+      // but we will limit it visually if we want server-side load more.
+    }
+  }, [activeTab]);
+
+  const renderTitle = (title: string) => {
+    if (!title) return "";
+    if (title.includes(" - ")) {
+      const parts = title.split(" - ");
+      return (
+        <>
+          {parts[0]}{" "}
+          <span className="text-blue-600">- {parts.slice(1).join(" - ")}</span>
+        </>
+      );
+    }
+    if (title.includes(" dan ")) {
+      const parts = title.split(" dan ");
+      return (
+        <>
+          {parts[0]}{" "}
+          <span className="text-blue-600">
+            dan {parts.slice(1).join(" dan ")}
+          </span>
+        </>
+      );
+    }
+    const words = title.split(" ");
+    if (words.length <= 1) return title;
+    const lastWord = words.pop();
+    return (
+      <>
+        {words.join(" ")} <span className="text-blue-600">{lastWord}</span>
+      </>
+    );
+  };
+
+  // --- Dynamic Section Logic (Standardized with About page) ---
+  const bphDivision = (data.divisions || []).find(
+    (d) =>
+      d.title.toLowerCase().includes("harian") ||
+      d.title.toLowerCase().includes("inti") ||
+      d.title.toUpperCase() === "BPH",
+  );
+
+  const otherDivisions = (data.divisions || []).filter(
+    (d) => d.id !== bphDivision?.id,
+  );
+
+  const allSections = [
+    {
+      id: "bph",
+      title: bphDivision?.title || "Badan Pengurus Harian",
+      subtitle:
+        bphDivision?.subtitle ||
+        `Struktur inti pengurus GenBI Komisariat ${data.name} untuk Periode ${data.activePeriod || "2025/2026"}`,
+      members:
+        data.bph && data.bph.length > 0 ? data.bph : bphDivision?.members || [],
+      accent: bphDivision?.accent || "blue",
+    },
+    ...otherDivisions.map((div) => ({
+      ...div,
+      members: div.members || [],
+    })),
+  ];
+
   return (
-    <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900 selection:bg-blue-600 selection:text-white relative overflow-clip">
       <Navbar />
+      <PageBackground />
 
-      {/* Background Blobs */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
+      <main className="flex-1 w-full relative z-10">
+        {/* --- HERO SECTION: Synchronized with Korkom (About) --- */}
+        <section className="relative w-full min-h-[70vh] flex flex-col justify-center overflow-hidden bg-white pt-24 pb-20 lg:pt-32">
+          {/* Background architectural elements */}
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-blue-50/40 blur-[100px]" />
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] lg:w-[500px] lg:h-[500px] rounded-full bg-blue-50/40 blur-[100px]" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#0F172A08_1px,transparent_1px),linear-gradient(to_bottom,#0F172A08_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_100%_100%_at_50%_40%,#000_30%,transparent_100%)]" />
+          </div>
 
-      <main className="flex-1 w-full relative z-10 pb-20">
-        {/* Hero Section */}
-        <section className="relative pt-40 pb-10 px-6">
-          <div className="container mx-auto">
-            <SlideUp once={false} className="w-full">
-              <div className="relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden group">
-                {/* Decorative Shine Effect */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/15 transition-all duration-700"></div>
-
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-                  {/* Logos Container - "Floating" inside the card */}
-                  <div className="flex items-center gap-6 bg-blue-950/50 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-inner shrink-0 group/logos cursor-pointer hover:bg-blue-950/70 transition-colors">
-                    <div className="w-20 h-20 relative">
-                      <Image
-                        src={data.logo_univ}
-                        alt={data.university}
-                        fill
-                        className="object-contain brightness-0 invert opacity-70 group-hover/logos:brightness-100 group-hover/logos:invert-0 group-hover/logos:opacity-100 transition-all duration-500"
-                      />
-                    </div>
-                    <div className="w-px h-12 bg-white/10"></div>
-                    <div className="w-20 h-20 relative">
-                      <Image
-                        src={data.logo_genbi}
-                        alt="GenBI"
-                        fill
-                        className="object-contain brightness-0 invert opacity-70 group-hover/logos:brightness-100 group-hover/logos:invert-0 group-hover/logos:opacity-100 transition-all duration-500 delay-75"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Text Info */}
-                  <div className="text-center md:text-left flex-1 space-y-3">
-                    <div className="space-y-1">
-                      <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm shadow-sm text-sm font-medium text-blue-100 transition-colors hover:bg-white/20 hover:border-white/30 cursor-default mb-2">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
-                        </span>
-                        Komisariat Aktif
+          <div className="container relative z-20 px-6 lg:px-8 xl:px-12 mx-auto max-w-7xl flex-1 flex flex-col justify-center py-20">
+            <div className="w-full lg:px-6 xl:px-10">
+              <div className="text-center flex flex-col items-center gap-8">
+                {/* Brand Narrative */}
+                <div className="max-w-4xl mx-auto px-4">
+                  <div className="flex flex-col items-center">
+                    {/* Social Eyebrow - Synchronized & Integrated */}
+                    <FadeIn delay={0.1} className="mb-4">
+                      <div className="flex items-center justify-center gap-3">
+                        {data.socials?.instagram && (
+                          <a
+                            href={`https://instagram.com/${data.socials.instagram.replace("@", "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group/social flex items-center gap-2.5 bg-white/80 backdrop-blur-md hover:bg-blue-50 px-6 py-3 rounded-full border border-slate-200/80 hover:border-blue-400/50 transition-all duration-300"
+                          >
+                            <Instagram className="w-4 h-4 text-blue-600 transition-colors" />
+                            <span className="font-bold text-xs text-slate-600 group-hover/social:text-blue-600 uppercase tracking-widest transition-colors">
+                              {data.socials.instagram}
+                            </span>
+                          </a>
+                        )}
+                        {data.socials?.email && (
+                          <a
+                            href={`mailto:${data.socials.email}`}
+                            className="group/social flex items-center gap-2.5 bg-white/80 backdrop-blur-md hover:bg-slate-50 px-5 py-2 rounded-full border border-slate-200/80 hover:border-slate-400/50 transition-all duration-300"
+                          >
+                            <Mail className="w-3.5 h-3.5 text-slate-400 transition-colors" />
+                            <span className="font-bold text-[10px] text-slate-600 group-hover/social:text-slate-900 uppercase tracking-widest transition-colors">
+                              Email
+                            </span>
+                          </a>
+                        )}
                       </div>
-                      <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-                        {data.name}
-                      </h1>
-                      <p className="text-xl text-blue-200/80 font-light">
-                        {data.university}
-                      </p>
-                    </div>
+                    </FadeIn>
 
-                    {/* Socials */}
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-6">
-                      <a
-                        href={`https://instagram.com/${data.socials.instagram.replace(
-                          "@",
-                          "",
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
-                      >
-                        <span className="group-hover/social:scale-110 transition-transform">
-                          <Instagram className="w-4 h-4" />
-                        </span>{" "}
-                        <span className="font-medium text-sm">
-                          {data.socials.instagram}
-                        </span>
-                      </a>
-                      <a
-                        href={`mailto:${data.socials.email}`}
-                        className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
-                      >
-                        <span className="group-hover/social:scale-110 transition-transform">
-                          <Mail className="w-4 h-4" />
-                        </span>{" "}
-                        <span className="font-medium text-sm">
-                          {data.socials.email}
-                        </span>
-                      </a>
-                    </div>
+                    <BlurIn delay={0.3} initial={{ opacity: 0, y: 60 }}>
+                      <h1 className="h1">
+                        Mengenal <br />
+                        <span className="text-blue-600">{data.name}</span>
+                      </h1>
+                    </BlurIn>
+
+                    <FadeIn
+                      delay={0.8}
+                      initial={{ opacity: 0, y: 80 }}
+                      className="mt-8"
+                    >
+                      <div className="max-w-3xl mx-auto">
+                        <p className="text-[17px] md:text-lg text-slate-600 leading-relaxed font-medium">
+                          {data.description || data.university}
+                        </p>
+                      </div>
+                    </FadeIn>
                   </div>
                 </div>
+
+                {/* Hero Featured Image */}
+                <div className="relative group w-full max-w-6xl mx-auto">
+                  <SlideUp
+                    once
+                    delay={0.3}
+                    amount={0.1}
+                    initial={{ opacity: 0, y: 100 }}
+                  >
+                    <div className="relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] w-full rounded-[2rem] overflow-hidden shadow-2xl border-4 lg:border-8 border-white ring-1 ring-slate-900/5 group transform-gpu transition-all duration-[800ms] ease-[cubic-bezier(0.33,1,0.68,1)]">
+                      <Image
+                        src="/assets/images/GenBIJatim.JPG"
+                        alt={data.name || "Komisariat"}
+                        fill
+                        priority
+                        className="object-cover transition-transform duration-[1.5s] ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-white/20 to-transparent opacity-60 group-hover:opacity-0 transition-opacity duration-500" />
+                    </div>
+                  </SlideUp>
+                </div>
               </div>
-            </SlideUp>
+            </div>
           </div>
         </section>
 
-        {/* Tabs Navigation - Separated from Hero */}
-        <div ref={scrollAnchorRef} className="absolute mt-[-100px]" />
-        <section
-          ref={tabsRef}
-          className="sticky top-20 z-40 py-4 transition-all duration-300"
-        >
-          {/* Glass Background for Sticky Effect can be added here if needed */}
-          <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 opacity-0 data-[sticky=true]:opacity-100 transition-opacity"></div>
-
-          <FadeIn
-            delay={0.2}
-            className="container mx-auto px-6 flex justify-center relative z-10"
+        <div className="bg-slate-50 min-h-screen">
+          {/* Tabs Navigation - Persistent & Sticky */}
+          <div ref={scrollAnchorRef} className="pt-8" />
+          <section
+            ref={tabsRef}
+            className="sticky top-20 z-40 py-4 mb-6 transition-all duration-300"
           >
-            <div className="flex flex-wrap items-center justify-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
-              {[
-                { id: "profil", label: "Profil & Kepengurusan" },
-                { id: "proker", label: "Program Kerja" },
-                { id: "awardee", label: "Data Awardee" },
-                { id: "arsip", label: "Arsip Internal & LPJ" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id as TabType);
-                    setTimeout(() => {
+            <div className="absolute inset-0 bg-slate-50 backdrop-blur-xl border-b border-slate-200 opacity-0 data-[sticky=true]:opacity-100 transition-opacity"></div>
+            <FadeIn
+              delay={0.4}
+              className="container mx-auto px-6 flex justify-center relative z-10 w-full overflow-hidden"
+            >
+              <div className="flex items-center justify-start md:justify-center gap-1 bg-white p-1.5 rounded-full border border-slate-200 shadow-sm overflow-x-auto no-scrollbar w-full md:w-auto min-w-0 flex-nowrap scroll-smooth">
+                {[
+                  { id: "profil", label: "Profil & Struktur" },
+                  { id: "proker", label: "Program Kerja" },
+                  { id: "awardee", label: "Data Awardee" },
+                  { id: "arsip", label: "Arsip Program" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={(e) => {
+                      setActiveTab(tab.id as TabType);
+                      (e.currentTarget as HTMLElement).scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                        inline: "center",
+                      });
+
+                      // Controlled scroll to exactly the start of the content area
                       if (scrollAnchorRef.current) {
                         const y =
                           scrollAnchorRef.current.getBoundingClientRect().top +
                           window.scrollY -
-                          20; // Slight buffer
+                          100;
                         window.scrollTo({ top: y, behavior: "smooth" });
                       }
-                    }, 100);
-                  }}
-                  className={cn(
-                    "px-6 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
-                    activeTab === tab.id
-                      ? "text-cyan-200"
-                      : "text-blue-200/60 hover:text-white",
-                  )}
+                    }}
+                    className={cn(
+                      "px-4 md:px-6 py-2 md:py-2.5 rounded-full text-[13px] md:text-sm font-semibold transition-all duration-300 relative z-10 shrink-0 whitespace-nowrap cursor-pointer",
+                      activeTab === tab.id
+                        ? "text-blue-600"
+                        : "text-slate-500 hover:text-slate-800",
+                    )}
+                  >
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTabComm"
+                        className="absolute inset-0 bg-blue-50 border border-blue-100 rounded-full -z-10"
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </FadeIn>
+          </section>
+
+          {/* --- CONTENT SECTIONS --- */}
+          <div className="min-h-[400px]">
+            <AnimatePresence mode="wait">
+              {/* TAB: PROFIL & STRUKTUR (Refactored for Dynamic Sections) */}
+              {activeTab === "profil" && (
+                <motion.div
+                  key="profil"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full bg-slate-50 flex flex-col"
                 >
-                  {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </FadeIn>
-        </section>
+                  <VisionMission
+                    vision={data.vision}
+                    missions={data.missions || []}
+                  />
 
-        {/* Content Sections */}
-        <div className="container mx-auto px-6 min-h-[400px] pt-12 pb-20">
-          <AnimatePresence mode="wait">
-            {/* Tab 1: Profil */}
-            {activeTab === "profil" && (
-              <motion.div
-                key="profil"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="space-y-20">
-                  {/* Tentang Kami */}
-                  <FadeIn delay={0.1} once={false}>
-                    <Card className="bg-white/5 border-white/10 p-8 backdrop-blur-sm relative overflow-hidden group">
-                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
-                      <h3 className="text-2xl font-bold mb-4 text-white relative z-10 flex items-center gap-3 tracking-tight">
-                        <span className="w-1 h-8 bg-cyan-500 rounded-full"></span>
-                        Tentang Kami
-                      </h3>
-                      <p className="text-blue-100/80 leading-relaxed text-lg relative z-10">
-                        {data.description}
-                      </p>
-                    </Card>
-                  </FadeIn>
-
-                  {/* Organizational Structure */}
-                  <section className="py-20 relative border-t border-white/5">
-                    <div className="container mx-auto px-6 relative z-10">
-                      <div className="text-center mb-20">
-                        <SlideUp once={false}>
-                          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight">
-                            Struktur Organisasi
-                          </h2>
-                        </SlideUp>
-                        <SlideUp once={false} delay={0.1}>
-                          <p className="text-blue-200/70 max-w-2xl mx-auto">
-                            Susunan pengurus {data.name} Periode 2025/2026.
-                          </p>
-                        </SlideUp>
-                      </div>
-
-                      <div className="max-w-6xl mx-auto">
-                        {/* Leaders Section */}
-                        <div className="flex flex-col items-center mb-12">
-                          <SlideUp
-                            once={false}
-                            className="flex items-center gap-4 mb-8 w-full justify-center"
+                  <div className="flex flex-col gap-24 py-16 md:py-24 relative">
+                    <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-40 pointer-events-none" />
+                    {allSections.map(
+                      (section, idx) =>
+                        section.members &&
+                        section.members.length > 0 && (
+                          <section
+                            key={section.id || idx}
+                            className="container mx-auto px-6 lg:px-8 xl:px-12 max-w-7xl relative z-10"
                           >
-                            <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
-                            <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
-                              Leaders
-                            </h3>
-                            <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
-                          </SlideUp>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20 justify-center max-w-2xl">
-                            {data.bph
-                              .filter(
-                                (m) =>
-                                  m.role.toLowerCase().includes("ketua") ||
-                                  m.role.toLowerCase().includes("wakil"),
-                              )
-                              .map((member, idx) => (
-                                <FadeIn
-                                  key={idx}
-                                  delay={idx * 0.1}
-                                  className="w-full h-full"
-                                  once={false}
-                                >
-                                  <Card
-                                    onClick={() => setSelectedMember(member)}
-                                    className="bg-white/5 backdrop-blur-md border border-white/10 p-8 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-2 cursor-pointer group hover:border-cyan-500/30 h-full"
-                                  >
-                                    <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors">
-                                      <Image
-                                        src={member.image}
-                                        alt={member.name}
-                                        width={96}
-                                        height={96}
-                                        className="w-full h-full object-cover transition-all duration-500"
-                                      />
-                                    </div>
-                                    <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
-                                      {member.name}
-                                    </h3>
-                                    <p className="text-sm font-semibold text-cyan-400 uppercase tracking-wider">
-                                      {member.role}
-                                    </p>
-                                  </Card>
-                                </FadeIn>
-                              ))}
-                          </div>
-
-                          {/* Secretaries & Treasurers */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
-                            {/* Secretaries */}
-                            <FadeIn delay={0.2} className="h-full" once={false}>
-                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
-                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <ClipboardList className="w-6 h-6 text-cyan-400" />
-                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                                    Sekretaris
-                                  </h3>
-                                </div>
-                                <div className="space-y-4">
-                                  {data.bph
-                                    .filter((m) =>
-                                      m.role
-                                        .toLowerCase()
-                                        .includes("sekretaris"),
-                                    )
-                                    .map((member, idx) => (
-                                      <div
-                                        key={idx}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                                      >
-                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                          <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            width={48}
-                                            height={48}
-                                            className="w-full h-full object-cover transition-all"
-                                          />
-                                        </div>
-                                        <div className="text-left">
-                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                            {member.name}
-                                          </p>
-                                          <p className="text-xs text-blue-200/60">
-                                            {member.role}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                              </div>
-                            </FadeIn>
-
-                            {/* Treasurers */}
-                            <FadeIn delay={0.2} className="h-full" once={false}>
-                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
-                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <Wallet className="w-6 h-6 text-yellow-400" />
-                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
-                                    Bendahara
-                                  </h3>
-                                </div>
-                                <div className="space-y-4">
-                                  {data.bph
-                                    .filter((m) =>
-                                      m.role
-                                        .toLowerCase()
-                                        .includes("bendahara"),
-                                    )
-                                    .map((member, idx) => (
-                                      <div
-                                        key={idx}
-                                        onClick={() =>
-                                          setSelectedMember(member)
-                                        }
-                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
-                                      >
-                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
-                                          <Image
-                                            src={member.image}
-                                            alt={member.name}
-                                            width={48}
-                                            height={48}
-                                            className="w-full h-full object-cover transition-all"
-                                          />
-                                        </div>
-                                        <div className="text-left">
-                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
-                                            {member.name}
-                                          </p>
-                                          <p className="text-xs text-blue-200/60">
-                                            {member.role}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ))}
-                                </div>
-                              </div>
-                            </FadeIn>
-                          </div>
-
-                          {/* Divisions */}
-                          {data.divisions && data.divisions.length > 0 && (
-                            <div className="w-full">
-                              <SlideUp
-                                once={false}
-                                className="flex items-center gap-4 mb-8 w-full justify-center"
-                              >
-                                <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
-                                <h3 className="text-xl font-bold text-white uppercase tracking-widest">
-                                  Koordinator Divisi
-                                </h3>
-                                <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
+                            <div className="w-full lg:px-6 xl:px-10">
+                              <SlideUp once amount={0.1} delay={0.3}>
+                                <SectionHeader
+                                  title={renderTitle(section.title)}
+                                  description={section.subtitle}
+                                  align="center"
+                                  variant="light"
+                                  className="mb-12"
+                                />
                               </SlideUp>
-                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full justify-center">
-                                {data.divisions.map((member, idx) => (
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                                {section.members.map((member, i) => (
                                   <FadeIn
-                                    key={idx}
-                                    delay={idx * 0.05}
-                                    once={false}
+                                    key={`${section.title}-${i}`}
+                                    delay={0.2 + i * 0.08}
+                                    duration={1.5}
+                                    once
+                                    amount={0.1}
                                   >
-                                    <Card
-                                      onClick={() => setSelectedMember(member)}
-                                      className="bg-white/5 backdrop-blur-md border border-white/10 p-6 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
-                                    >
-                                      <div className="w-16 h-16 bg-blue-950/50 rounded-full border-2 border-white/10 flex items-center justify-center shadow-md overflow-hidden mb-3 group-hover:border-cyan-400 transition-colors">
-                                        <Image
-                                          src={member.image}
-                                          alt={member.name}
-                                          width={64}
-                                          height={64}
-                                          className="w-full h-full object-cover transition-all duration-500"
-                                        />
-                                      </div>
-                                      <h3 className="font-bold text-sm text-white mb-2 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
-                                        {member.name}
-                                      </h3>
-                                      <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider truncate w-full">
-                                        {member.role}
-                                      </p>
-                                    </Card>
+                                    <ProfileCard member={member} />
                                   </FadeIn>
                                 ))}
                               </div>
                             </div>
-                          )}
+                          </section>
+                        ),
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* TAB: PROGRAM KERJA */}
+              {activeTab === "proker" && (
+                <motion.div
+                  key="proker"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full bg-slate-50 flex flex-col"
+                >
+                  <section className="container mx-auto px-6 lg:px-8 xl:px-12 max-w-7xl pb-16 md:pb-24 relative z-10">
+                    <div className="w-full lg:px-6 xl:px-10">
+                      <SlideUp once amount={0.1} delay={0.3}>
+                        <SectionHeader
+                          title={
+                            <>
+                              Program Kerja{" "}
+                              <span className="text-blue-600">Unggulan</span>
+                            </>
+                          }
+                          description={`Inisiatif strategis dan program kerja inovatif yang dirancang untuk memberikan dampak nyata, memberdayakan masyarakat, serta mengembangkan potensi anggota GenBI Komisariat ${data.name} secara berkelanjutan`}
+                          align="center"
+                          variant="light"
+                          className="mb-12"
+                        />
+                      </SlideUp>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {prokers.filter(
+                          (p) =>
+                            p.period === currentPeriod ||
+                            (!currentPeriod &&
+                              new Date(p.date || "").getFullYear() ===
+                                new Date().getFullYear()),
+                        ).length > 0 ? (
+                          prokers
+                            .filter(
+                              (p) =>
+                                p.period === currentPeriod ||
+                                (!currentPeriod &&
+                                  new Date(p.date || "").getFullYear() ===
+                                    new Date().getFullYear()),
+                            )
+                            .map((proker, idx) => (
+                              <SlideUp key={proker.id} delay={0.1 + (idx % 3) * 0.1}>
+                                <ProkerCard
+                                  image={proker.gallery?.[0]}
+                                  title={proker.name || proker.title}
+                                  date={proker.date || "-"}
+                                  status={proker.executionFormat || "Selesai"}
+                                  description={
+                                    proker.description?.substring(0, 150) +
+                                    (proker.description?.length > 150
+                                      ? "..."
+                                      : "")
+                                  }
+                                  href={`/program/${proker.id || proker.slug}`}
+                                />
+                              </SlideUp>
+                            ))
+                        ) : (
+                          <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200 lg:col-span-3">
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">
+                              Belum ada program kerja untuk periode ini (
+                              {currentPeriod}).
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {hasMoreProkers && prokers.length >= 9 && (
+                        <div className="mt-16 flex flex-col items-center gap-6">
+                          <Button
+                            variant="secondary"
+                            onClick={loadMoreProkers}
+                            disabled={isLoadingMore}
+                            className="group relative px-10 py-4 bg-white hover:bg-blue-600 text-slate-900 hover:text-white border-2 border-slate-200 hover:border-blue-600 rounded-full font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-500 shadow-xl shadow-slate-200/50 hover:shadow-blue-200 overflow-hidden"
+                          >
+                            <span className="relative z-10 flex items-center gap-3">
+                              {isLoadingMore ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin group-hover:border-white/30 group-hover:border-t-white" />
+                                  Memuat...
+                                </>
+                              ) : (
+                                <>
+                                  Lihat Lebih Banyak
+                                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </>
+                              )}
+                            </span>
+                          </Button>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Menampilkan {prokers.length} program kerja
+                          </p>
                         </div>
+                      )}
+                    </div>
+                  </section>
+                </motion.div>
+              )}
+
+              {/* TAB: DATA AWARDEE */}
+              {activeTab === "awardee" && (
+                <motion.div
+                  key="awardee"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full bg-slate-50 flex flex-col"
+                >
+                  <section className="container mx-auto px-6 lg:px-8 xl:px-12 max-w-7xl pb-16 md:pb-24 relative z-10">
+                    <div className="w-full lg:px-6 xl:px-10">
+                      <SlideUp once amount={0.1} delay={0.3}>
+                        <SectionHeader
+                          title={
+                            <>
+                              Database{" "}
+                              <span className="text-blue-600">Awardee</span>
+                            </>
+                          }
+                          description={`Daftar resmi mahasiswa penerima Beasiswa Bank Indonesia di lingkungan Komisariat ${data.name} yang memiliki potensi kepemimpinan dan integritas tinggi`}
+                          align="center"
+                          variant="light"
+                          className="mb-12"
+                        />
+                      </SlideUp>
+
+                      <FadeIn delay={0.2} once amount={0.2}>
+                        <div className="relative z-20 mb-8 p-3 md:p-4 rounded-[2rem] md:rounded-full bg-white border border-slate-200/60 shadow-xl shadow-slate-200/20 flex flex-col md:flex-row gap-4 items-center justify-between">
+                          <div className="relative w-full md:w-[460px] group">
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
+                            <input
+                              type="text"
+                              placeholder="Cari nama awardee..."
+                              className="w-full pl-12 pr-6 py-3 rounded-full bg-slate-50 border border-slate-200 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-600/5 text-slate-900 placeholder:text-slate-400 font-semibold text-sm transition-all"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                          </div>
+                          <div className="flex items-center justify-center md:justify-start gap-3 w-full md:w-auto px-6 py-3 bg-slate-50 rounded-2xl md:rounded-full border border-slate-200 shadow-sm text-[11px] font-bold text-slate-500 whitespace-nowrap uppercase tracking-[0.2em] group">
+                            <Users className="w-3.5 h-3.5 text-blue-500" />
+                            <span>
+                              Total:{" "}
+                              <span className="text-blue-600 font-black">
+                                {filteredAwardees.length}
+                              </span>{" "}
+                              Awardee
+                            </span>
+                          </div>
+                        </div>
+
+                        <Card
+                          variant="default"
+                          className="bg-white border border-slate-200 shadow-[0_30px_60px_-15px_rgba(15,23,42,0.1)] overflow-hidden rounded-[2.5rem]"
+                        >
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="bg-slate-100 border-b border-slate-200">
+                                  <th className="px-6 py-4 md:px-8 md:py-5 text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                                    <div className="flex items-center gap-3 md:gap-4">
+                                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 shrink-0">
+                                        <User className="w-4 h-4 md:w-5 md:h-5 text-blue-500/70" />
+                                      </div>
+                                      <span>Nama Lengkap</span>
+                                    </div>
+                                  </th>
+                                  <th className="px-6 py-4 md:px-8 md:py-5 text-xs font-bold text-slate-500 uppercase tracking-[0.2em] table-cell">
+                                    <div className="flex items-center gap-3 md:gap-4">
+                                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 shrink-0">
+                                        <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-blue-500/70" />
+                                      </div>
+                                      <span>Program Studi</span>
+                                    </div>
+                                  </th>
+                                  <th className="px-6 py-4 md:px-8 md:py-5 text-xs font-bold text-slate-500 uppercase tracking-[0.2em] text-center">
+                                    <div className="flex items-center justify-center gap-3 md:gap-4">
+                                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 shrink-0">
+                                        <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-500/70" />
+                                      </div>
+                                      <span>Angkatan</span>
+                                    </div>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {currentItems.length > 0 ? (
+                                  currentItems.map((awardee) => (
+                                    <tr
+                                      key={awardee.id}
+                                      className="group relative transition-all duration-300 hover:bg-slate-50/70 border-b border-slate-100 last:border-0 cursor-default"
+                                    >
+                                      <td className="px-6 py-5 md:px-8 md:py-6 relative">
+                                        {/* Simple Hover Accent Strip */}
+                                        <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-600 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-center opacity-0 group-hover:opacity-100" />
+
+                                        <div className="flex flex-col">
+                                          <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors duration-300 text-sm md:text-base">
+                                            {awardee.name}
+                                          </span>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-5 md:px-8 md:py-6 text-slate-500 font-medium table-cell text-sm md:text-base">
+                                        <span>{awardee.major}</span>
+                                      </td>
+                                      <td className="px-6 py-5 md:px-8 md:py-6 text-center">
+                                        <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-[10px] font-black bg-white group-hover:bg-blue-600 group-hover:text-white text-blue-600 border border-blue-100 group-hover:border-blue-500 transition-all duration-300 uppercase tracking-widest shadow-sm">
+                                          {awardee.batch}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={3}
+                                      className="p-12 md:p-20 text-center"
+                                    >
+                                      <div className="flex flex-col items-center justify-center gap-4 py-8 md:py-12">
+                                        <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center border border-slate-100">
+                                          <SearchX className="w-8 h-8 text-slate-300" />
+                                        </div>
+                                        <div className="space-y-1">
+                                          <p className="text-slate-900 font-bold uppercase tracking-widest text-[13px]">
+                                            Data Tidak Ditemukan
+                                          </p>
+                                          <p className="text-slate-400 text-xs font-medium">
+                                            Maaf, nama atau jurusan yang Anda
+                                            cari belum terdaftar.
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {totalPages > 1 && (
+                            <div className="px-6 py-4 md:px-8 md:py-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6 bg-slate-100/50 backdrop-blur-sm">
+                              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <div className="w-1 h-1 bg-blue-600 rounded-full" />
+                                Memuat {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredAwardees.length)} dari {filteredAwardees.length} Awardee
+                              </span>
+                              
+                              <div className="flex items-center bg-white p-1 rounded-full border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="w-10 h-10 p-0 rounded-full bg-transparent border-0 hover:bg-slate-50 text-slate-600 disabled:opacity-30 transition-colors"
+                                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                  disabled={currentPage === 1}
+                                  title="Halaman Sebelumnya"
+                                >
+                                  <ChevronLeft className="w-5 h-5" />
+                                </Button>
+
+                                <div className="px-5 border-x border-slate-100 flex items-center gap-2 min-w-[120px] justify-center">
+                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Halaman</span>
+                                  <span className="text-xs font-black text-blue-600">{currentPage}</span>
+                                  <span className="text-[10px] font-bold text-slate-300">/</span>
+                                  <span className="text-xs font-bold text-slate-500">{totalPages}</span>
+                                </div>
+
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="w-10 h-10 p-0 rounded-full bg-transparent border-0 hover:bg-slate-50 text-slate-600 disabled:opacity-30 transition-colors"
+                                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                  disabled={currentPage === totalPages}
+                                  title="Halaman Selanjutnya"
+                                >
+                                  <ChevronRight className="w-5 h-5" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </Card>
+                      </FadeIn>
+                    </div>
+                  </section>
+                </motion.div>
+              )}
+
+              {/* TAB: ARSIP PROGRAM */}
+              {activeTab === "arsip" && (
+                <motion.div
+                  key="arsip"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full bg-slate-50 flex flex-col"
+                >
+                  <section className="container mx-auto px-6 lg:px-8 xl:px-12 max-w-7xl pb-16 md:pb-24 relative z-10">
+                    <div className="w-full lg:px-6 xl:px-10">
+                      <SlideUp once amount={0.1} delay={0.3}>
+                        <SectionHeader
+                          title={
+                            <>
+                              Arsip{" "}
+                              <span className="text-blue-600">
+                                Program Kerja
+                              </span>
+                            </>
+                          }
+                          description="Menjelajahi dedikasi kami dari masa ke masa. Dokumentasi rekam jejak dan pencapaian program kerja dari berbagai periode kepengurusan sebagai bentuk transparansi organisasi"
+                          align="center"
+                          variant="light"
+                          className="mb-12"
+                        />
+                      </SlideUp>
+
+                      <div className="space-y-12">
+                        {periods.filter((p) => p !== currentPeriod).length >
+                        0 ? (
+                          periods
+                            .filter((p) => p !== currentPeriod)
+                            .map((period) => {
+                              const periodProkers = (initialData.proker || []).filter(
+                                (p) => p.period === period
+                              );
+                              
+                              if (periodProkers.length === 0) return null;
+
+                              return (
+                                <div key={period} className="space-y-8">
+                                  <FadeIn once delay={0.1}>
+                                    <div className="flex items-center gap-4">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">
+                                        Arsip Periode
+                                      </span>
+                                      <span className="text-lg font-bold text-blue-600 bg-blue-50/50 px-4 py-1 rounded-full border border-blue-100/50">
+                                        {period}
+                                      </span>
+                                      <div className="flex-1 h-px bg-slate-200" />
+                                    </div>
+                                  </FadeIn>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                                    {periodProkers
+                                      .slice(0, expandedPeriods.includes(period) ? undefined : 9) // LIMIT TO 9 ITEMS PER YEAR UNLESS EXPANDED
+                                      .map((proker, idx) => (
+                                        <SlideUp
+                                          key={proker.id}
+                                          delay={0.1 + (idx % 3) * 0.1}
+                                        >
+                                          <ProkerCard
+                                            image={proker.gallery?.[0]}
+                                            title={
+                                              proker.name || "Untitled Proker"
+                                            }
+                                            date={formatDate(proker.date || "")}
+                                            status={
+                                              proker.executionFormat || "Selesai"
+                                            }
+                                            description={
+                                              proker.description?.substring(
+                                                0,
+                                                150,
+                                              ) +
+                                              (proker.description?.length > 150
+                                                ? "..."
+                                                : "")
+                                            }
+                                            href={`/program/${proker.id}`}
+                                          />
+                                        </SlideUp>
+                                      ))}
+                                  </div>
+                                  {periodProkers.length > 9 && (
+                                    <div className="flex justify-center mt-8">
+                                      <button
+                                        onClick={() => {
+                                          if (expandedPeriods.includes(period)) {
+                                            setExpandedPeriods(expandedPeriods.filter(p => p !== period));
+                                          } else {
+                                            setExpandedPeriods([...expandedPeriods, period]);
+                                          }
+                                        }}
+                                        className="group flex items-center gap-2 px-6 py-2.5 rounded-full bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-500 hover:text-blue-600 font-bold text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                                      >
+                                        {expandedPeriods.includes(period) ? (
+                                          <>
+                                            Sembunyikan
+                                            <ChevronUp className="w-3 h-3 group-hover:-translate-y-0.5 transition-transform" />
+                                          </>
+                                        ) : (
+                                          <>
+                                            Tampilkan {periodProkers.length - 9} Program Lainnya
+                                            <ChevronDown className="w-3 h-3 group-hover:translate-y-0.5 transition-transform" />
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                        ) : (
+                          <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">
+                              Belum ada arsip program kerja tersedia.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </section>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Tab 2: Proker */}
-            {activeTab === "proker" && (
-              <motion.div
-                key="proker"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="grid gap-6">
-                  {data.proker.map((item, idx) => (
-                    <FadeIn key={item.id} delay={idx * 0.1} once={false}>
-                      {/* Proker Card (Updated with href) */}
-                      <div key={item.id} className="h-full">
-                        <ProkerCard
-                          href={`/program/${item.id}`}
-                          title={item.title}
-                          status={item.status}
-                          date={item.date}
-                          description={item.description}
-                          className="h-full"
-                        />
-                      </div>
-                    </FadeIn>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Tab 3: Awardee */}
-            {activeTab === "awardee" && (
-              <motion.div
-                key="awardee"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <FadeIn
-                  delay={0.2}
-                  className="w-full"
-                  once={false}
-                  amount={0.2}
-                >
-                  {/* Visual Filter */}
-                  <div className="relative z-20 mb-10 bg-white/5 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
-                    <div className="relative w-full">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50">
-                        <Search className="w-5 h-5" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Cari nama awardee..."
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <div className="text-sm text-blue-200/60 whitespace-nowrap">
-                      Total: {filteredAwardees.length} Awardee
-                    </div>
-                  </div>
-
-                  {/* Table Data Card */}
-                  <Card className="bg-white/5 backdrop-blur-md border border-white/10 shadow-xl overflow-hidden rounded-3xl">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-white/10 border-b border-white/10">
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-left">
-                              Nama Lengkap
-                            </th>
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest hidden sm:table-cell">
-                              Jurusan
-                            </th>
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-center">
-                              Angkatan
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                          {currentItems.length > 0 ? (
-                            currentItems.map((awardee, idx) => (
-                              <tr
-                                key={awardee.id}
-                                className="hover:bg-white/5 transition-colors group"
-                              >
-                                <td className="p-6 font-semibold text-white group-hover:text-cyan-200 transition-colors">
-                                  {awardee.name}
-                                </td>
-                                <td className="p-6 text-blue-100/70 hidden sm:table-cell">
-                                  {awardee.major}
-                                </td>
-                                <td className="p-6 text-center">
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
-                                    {awardee.year}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td
-                                colSpan={3}
-                                className="p-12 text-center text-slate-400"
-                              >
-                                Data tidak ditemukan.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                      <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5">
-                        <span className="text-sm text-blue-200/60">
-                          Menampilkan {indexOfFirstItem + 1} -{" "}
-                          {Math.min(indexOfLastItem, filteredAwardees.length)}{" "}
-                          dari {filteredAwardees.length} data
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8 md:h-9"
-                            onClick={() => {
-                              setCurrentPage((prev) => Math.max(prev - 1, 1));
-                              setTimeout(() => {
-                                if (scrollAnchorRef.current) {
-                                  const y =
-                                    scrollAnchorRef.current.getBoundingClientRect()
-                                      .top +
-                                    window.scrollY -
-                                    20;
-                                  window.scrollTo({
-                                    top: y,
-                                    behavior: "smooth",
-                                  });
-                                }
-                              }, 100);
-                            }}
-                            disabled={currentPage === 1}
-                          >
-                            Previous
-                          </Button>
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-cyan-200 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
-                              Page {currentPage} of {totalPages}
-                            </span>
-                          </div>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8 md:h-9"
-                            onClick={() => {
-                              setCurrentPage((prev) =>
-                                Math.min(prev + 1, totalPages),
-                              );
-                              setTimeout(() => {
-                                if (scrollAnchorRef.current) {
-                                  const y =
-                                    scrollAnchorRef.current.getBoundingClientRect()
-                                      .top +
-                                    window.scrollY -
-                                    20;
-                                  window.scrollTo({
-                                    top: y,
-                                    behavior: "smooth",
-                                  });
-                                }
-                              }, 100);
-                            }}
-                            disabled={currentPage === totalPages}
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-                </FadeIn>
-              </motion.div>
-            )}
-
-            {/* Tab 4: Arsip */}
-            {activeTab === "arsip" && (
-              <motion.div
-                key="arsip"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Year Filter for Archives */}
-                <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <span className="text-sm font-medium text-blue-200/60 mr-2">
-                    Filter Tahun:
-                  </span>
-                  {[
-                    "All",
-                    ...Array.from(
-                      new Set(
-                        data.documents.map((d) => d.date.split(" ").pop()),
-                      ),
-                    )
-                      .sort()
-                      .reverse(),
-                  ].map((year) => (
-                    <button
-                      key={year}
-                      onClick={() => setSelectedYear(year as string)}
-                      className={cn(
-                        "px-4 py-1.5 rounded-full text-sm font-medium border transition-all",
-                        selectedYear === year
-                          ? "bg-cyan-500/20 text-cyan-200 border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                          : "bg-white/5 text-blue-200/60 border-white/10 hover:bg-white/10 hover:text-white",
-                      )}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-
-                <StaggerContainer
-                  once={false}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                >
-                  {data.documents
-                    .filter(
-                      (doc) =>
-                        selectedYear === "All" ||
-                        doc.date.includes(selectedYear),
-                    )
-                    .map((doc) => (
-                      <StaggerItem key={doc.id}>
-                        <DocumentCard
-                          title={doc.title}
-                          fileType={doc.fileType}
-                          date={doc.date}
-                          size={doc.size}
-                          onClick={() =>
-                            alert(
-                              `Preview Dokumen (Tab Baru)\n\nDalam implementasi nyata, ini akan membuka: \nwindow.open(url, '_blank')`,
-                            )
-                          }
-                          onDownload={() => downloadMockFile(doc.title)}
-                        />
-                      </StaggerItem>
-                    ))}
-                  {data.documents.filter(
-                    (doc) =>
-                      selectedYear === "All" || doc.date.includes(selectedYear),
-                  ).length === 0 && (
-                    <div className="col-span-full py-12 text-center text-blue-200/40 italic">
-                      Tidak ada dokumen arsip di tahun {selectedYear}.
-                    </div>
-                  )}
-                </StaggerContainer>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 bg-blue-950/50 backdrop-blur-3xl -z-10"></div>
+      <div className="relative border-t border-slate-100">
         <AnimatePresence>
           {selectedMember && (
             <MemberDetailModal
               member={selectedMember}
               onClose={() => setSelectedMember(null)}
-              contextTitle={`Pengurus GenBI Komisariat ${data.slug.toUpperCase()}`}
+              contextTitle={`Pengurus GenBI Komisariat ${(data.name || "").toUpperCase()}`}
             />
           )}
         </AnimatePresence>

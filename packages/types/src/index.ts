@@ -1,55 +1,88 @@
-export interface BPHMember {
-  role: string;
+export interface Member {
+  id?: string;
   name: string;
-  image: string;
+  role: string;
   university: string;
+  image?: string | null;
+  instagram?: string | null;
+  linkedin?: string | null;
   major?: string;
   division?: string;
-  instagram?: string;
-  linkedin?: string;
+  email?: string;
+  order?: number;
+  divisionId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface BPHMember extends Member {}
+
+export interface Mission {
+  id?: string;
+  title: string;
+  desc: string;
+  icon: string;
+  order?: number;
 }
 
 export interface NewsItem {
-  id: number;
-  title: string;
-  category: "Kegiatan" | "Webinar" | "Sosial" | "Edukasi" | "Pelatihan";
-  date: string;
-  image_color: string;
-  image?: string;
-  snippet: string;
-}
-
-export interface ProkerData {
-  id: number | string;
+  id: string | number;
   title: string;
   slug?: string;
-  commissariat?: string;
-  type?: string;
-  audience: "Internal" | "External";
-  status: "Completed" | "On-going" | "Upcoming" | "Recurring";
+  category?: string | null;
   date: string;
-  dateIso: string;
-  time?: string;
-  location?: string;
-  format?: "Offline" | "Online" | "Hybrid";
-  link?: string;
-  description: string;
-  description_long?: string;
-  background?: string;
-  objectives?: string[];
-  kpi?: string[];
-  impact?: string[];
-  benefits?: string[];
-  evaluation?: string;
-  proposalLink?: string;
-  lpjLink?: string;
-  documentation?: string;
-  newsUrl?: string;
-  gallery?: string[];
-  image?: string;
+  image: string;
+  image_color?: string;
+  content?: string;
+  author?: string;
+  snippet?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface EventItem extends Partial<ProkerData> {
+export enum ProkerStatus {
+  PLANNED = 'PLANNED',
+  ON_PROGRESS = 'ON_PROGRESS',
+  DONE = 'DONE',
+  CANCELLED = 'CANCELLED'
+}
+
+export interface Proker {
+  id?: string | number;
+  slug?: string;          // For static/mock data routing
+  title: string;          // Frontend compatibility (maps to name)
+  name?: string;           // Database compatibility
+  date: string;
+  dateIso?: string;       // ISO format for mapping
+  status: ProkerStatus | string;         // Derived status (PLANNED, ON_PROGRESS, DONE)
+  category?: string;
+  executionFormat?: string;
+  format?: string;        // Legacy alias for UI
+  description: string;
+  description_long?: string;
+  objectives?: string | string[];
+  benefits?: string | string[];
+  target?: string;
+  impact?: string | string[];
+  evaluation?: string;
+  documentation?: string;
+  lpjLink?: string;
+  proposalUrl?: string;
+  lpjUrl?: string;
+  newsUrl?: string;       // Link to related news
+  commissariat?: string;   // For calendar display
+  type?: string;          // For calendar display
+  location?: string;      // For calendar display
+  link?: string;          // For calendar display
+  audience: string;
+  period?: string;
+  gallery?: any;
+  organizationProfileId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventItem extends Omit<Partial<Proker>, 'impact'> {
   id: string;
   date: string;
   day: string;
@@ -59,12 +92,18 @@ export interface EventItem extends Partial<ProkerData> {
   time: string;
   location: string;
   description?: string;
+  description_long?: string;
+  objectives?: string[] | string;
+  impact?: string[] | string;
+  benefits?: string[] | string;
   image?: string;
-  audience: "Internal" | "External";
+  audience: string;
   link?: string;
-  dateIso: string; // for filtering
+  proposalLink?: string;
+  lpjLink?: string;
+  dateIso: string;
   month?: string;
-  status?: "Completed" | "On-going" | "Upcoming" | "Recurring";
+  status?: ProkerStatus | string;
 }
 
 export interface Event {
@@ -75,67 +114,78 @@ export interface Event {
   items: EventItem[];
 }
 
-export interface CalendarGroup {
+export interface CalendarEventGroup {
   month: string;
   items: EventItem[];
 }
 
+export type CalendarGroup = CalendarEventGroup;
+
 export interface Awardee {
-  id: number;
+  id: string;
   name: string;
+  university: string;
   major: string;
-  year: string;
+  batch: string;
+  period: string;
+  organizationProfileId: string;
 }
 
 export interface Document {
-  id: number;
+  id: string;
   title: string;
-  type:
-    | "SK"
-    | "LPJ"
-    | "SOP"
-    | "Other"
-    | "Proposal"
-    | "Data"
-    | "Materi"
-    | "Surat"
-    | "Notulensi"
-    | "Dokumentasi";
-  fileType: "PDF" | "DOCX" | "XLSX" | "PPTX" | "ZIP";
+  type: string;
+  fileType: string;
   size: string;
   date: string;
   url?: string;
   category?: string;
+  period?: string;
+  isPublic?: boolean;
+  organizationProfileId?: string;
 }
 
-export interface CommissariatData {
-  slug: string;
+export interface OrganizationProfile {
+  id?: string;
+  type?: "KOORDINATOR" | "KOMISARIAT" | "WILAYAH";
+  slug: string | null;
   name: string;
   university: string;
-  logo_univ: string;
-  logo_genbi: string;
-  cover_image: string;
+  activePeriod?: string | null;
   description: string;
-  socials: {
-    instagram: string;
-    email: string;
+  vision?: string | null;
+  missions?: Mission[] | null;
+  socials?: any | null;
+  logo?: string | null;
+  logo_genbi?: string | null; // Legacy alias for UI
+  univLogo?: string | null;
+  logo_univ?: string | null; // Legacy alias for UI
+  coverImage?: string | null;
+  cover_image?: string | null; // Legacy alias for UI
+  _count?: {
+    prokers?: number;
+    awardees?: number;
+    documents?: number;
+    divisions?: number;
   };
-  instagram?: string;
-  email?: string;
-  bph: BPHMember[];
-  divisions: BPHMember[];
-  proker: ProkerData[];
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface CommissariatData extends OrganizationProfile {
+  proker: Proker[];
   awardees: Awardee[];
   documents: Document[];
+  bph?: Member[];
+  divisions?: any[];
 }
 
-export interface KorkomData {
-  name: string;
-  university: string;
-  description?: string;
-  vision?: string;
-  bph: BPHMember[];
-  divisions: BPHMember[];
-  documents: Document[];
+export interface KorkomData extends OrganizationProfile {
+  type: "WILAYAH" | "KOORDINATOR" | "KOMISARIAT";
+  activePeriod?: string;
+  missions: Mission[];
+  proker?: Proker[];
+  bph?: Member[];
+  divisions?: any[];
+  documents?: Document[];
 }
-
