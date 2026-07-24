@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -14,94 +13,12 @@ import {
 } from "@/components/MotionWrapper";
 import { SectionHeader } from "@/components/SectionHeader";
 import Image from "next/image";
-import { Search, Calendar, ChevronDown, ArrowRight } from "lucide-react";
+import { Calendar, ChevronDown, ArrowRight } from "lucide-react";
+import { getAllCommissariats, getGlobalCommissariatStats } from "@/lib/services/commissariat.service";
+import { CommissariatData } from "@repo/types";
 
 // List Data Komisariat
 const YEARS = ["Semua Tahun", "2025-2026"];
-
-const COMMISSARIATS = [
-  {
-    id: 1,
-    name: "Komisariat UNESA",
-    university: "Universitas Negeri Surabaya",
-    year: "2025-2026",
-    members: 64,
-    logo: "/assets/logos/unesa.svg",
-    color: "from-blue-600 to-cyan-500",
-  },
-  {
-    id: 2,
-    name: "Komisariat UPNVJT",
-    university: "UPN Veteran Jawa Timur",
-    year: "2025-2026",
-    members: 50,
-    logo: "/assets/logos/upnvjt.svg",
-    color: "from-green-600 to-emerald-500",
-  },
-  {
-    id: 3,
-    name: "Komisariat UNAIR",
-    university: "Universitas Airlangga",
-    year: "2025-2026",
-    members: 112,
-    logo: "/assets/logos/unair.svg",
-    color: "from-yellow-500 to-orange-500",
-  },
-  {
-    id: 4,
-    name: "Komisariat ITS",
-    university: "Institut Teknologi Sepuluh Nopember",
-    year: "2025-2026",
-    members: 87,
-    logo: "/assets/logos/its.svg",
-    color: "from-blue-800 to-indigo-600",
-  },
-  {
-    id: 5,
-    name: "Komisariat UINSA",
-    university: "UIN Sunan Ampel",
-    year: "2025-2026",
-    members: 83,
-    logo: "/assets/logos/uinsa.svg",
-    color: "from-teal-600 to-green-500",
-  },
-  {
-    id: 6,
-    name: "Komisariat UNUGIRI",
-    university: "UNU Sunan Giri",
-    year: "2025-2026",
-    members: 50,
-    logo: "/assets/logos/unugiri.svg",
-    color: "from-green-700 to-emerald-600",
-  },
-  {
-    id: 7,
-    name: "Komisariat UTM",
-    university: "Universitas Trunojoyo Madura",
-    year: "2025-2026",
-    members: 75,
-    logo: "/assets/logos/utm.svg",
-    color: "from-blue-500 to-cyan-400",
-  },
-  {
-    id: 8,
-    name: "Komisariat PENS",
-    university: "Politeknik Elektronika Negeri Surabaya",
-    year: "2025-2026",
-    members: 48,
-    logo: "/assets/logos/pens.svg",
-    color: "from-blue-400 to-blue-600",
-  },
-  {
-    id: 9,
-    name: "Komisariat UIN Madura",
-    university: "UIN Madura",
-    year: "2025-2026",
-    members: 50,
-    logo: "/assets/logos/uinMadura.svg",
-    color: "from-green-500 to-lime-500",
-  },
-];
 
 const RECENT_ACTIVITIES = [
   {
@@ -131,59 +48,83 @@ const RECENT_ACTIVITIES = [
 ];
 
 export default function CommissariatPage() {
-  const [filterYear, setFilterYear] = useState<string>("Semua Tahun");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const filteredCommissariats = COMMISSARIATS.filter((c) => {
-    const matchYear = filterYear === "Semua Tahun" || c.year === filterYear;
-    const matchName =
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.university.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchYear && matchName;
+  const [data, setData] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalProker: 0,
+    totalCommissariats: 0,
+    totalMembers: 0,
   });
+  const [loading, setLoading] = useState(true);
 
-  // Calculate Stats
-  const totalMembers = COMMISSARIATS.reduce(
-    (acc, curr) => acc + curr.members,
-    0,
-  );
-  const totalCommissariats = COMMISSARIATS.length;
-  // Mock total programs
-  const totalPrograms = 45;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [commData, statsData] = await Promise.all([
+          getAllCommissariats(),
+          getGlobalCommissariatStats(),
+        ]);
+        setData(commData);
+        setStats(statsData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-slate-50 items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Calculate Stats from state or use pre-calculated from backend
+  const totalMembers = stats.totalMembers;
+  const totalCommissariats = stats.totalCommissariats;
+  const totalPrograms = stats.totalProker;
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white relative overflow-clip">
       <Navbar />
 
-      {/* Background Blobs */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
+      {/* Hero section background matching homepage */}
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-blue-50 to-slate-50 pointer-events-none -z-10"></div>
 
       <main className="flex-1 container mx-auto px-4 py-20 relative z-10">
         {/* Header & Stats Dashboard */}
-        <section className="mb-20">
-          <SectionHeader
-            title="Pusat Data Komisariat"
-            description="Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9 Komisariat GenBI di Jawa Timur."
-          />
+        <section className="mb-12">
+          <div className="text-center items-center mx-auto flex flex-col mb-12 relative z-10 max-w-4xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight">
+              Pusat Data Komisariat
+            </h2>
+            <div className="mt-4">
+              <p className="text-lg text-slate-600 leading-relaxed mx-auto max-w-2xl">
+                Dashboard terintegrasi untuk memantau kinerja dan perkembangan 9
+                Komisariat GenBI di Jawa Timur.
+              </p>
+            </div>
+          </div>
 
-          <FadeIn once={false} delay={0.2}>
+          <FadeIn once={true} delay={0}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {/* Stat 1 */}
               <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-colors"
+                className="p-6 relative overflow-hidden group hover:border-blue-400 transition-colors bg-white shadow-md border-slate-200 rounded-xl"
               >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl group-hover:bg-cyan-500/30 transition-colors"></div>
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors"></div>
                 <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
+                  <p className="text-slate-500 font-medium text-sm uppercase tracking-wider mb-1">
                     Total Anggota
                   </p>
-                  <p className="text-4xl font-bold text-white">
+                  <p className="text-4xl font-bold text-slate-900">
                     {totalMembers}+
                   </p>
-                  <div className="mt-4 text-xs font-medium text-cyan-200 bg-cyan-500/10 inline-block px-3 py-1 rounded-full border border-cyan-500/20">
+                  <div className="mt-4 text-xs font-semibold text-blue-800 bg-blue-100 inline-block px-3 py-1 rounded-md border border-blue-300 shadow-sm">
                     Se-Jawa Timur
                   </div>
                 </div>
@@ -191,18 +132,17 @@ export default function CommissariatPage() {
 
               {/* Stat 2 */}
               <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-blue-500/30 transition-colors"
+                className="p-6 relative overflow-hidden group hover:border-blue-400 transition-colors bg-white shadow-md border-slate-200 rounded-xl"
               >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-colors"></div>
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors"></div>
                 <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
+                  <p className="text-slate-500 font-medium text-sm uppercase tracking-wider mb-1">
                     Komisariat Aktif
                   </p>
-                  <p className="text-4xl font-bold text-white">
+                  <p className="text-4xl font-bold text-slate-900">
                     {totalCommissariats}
                   </p>
-                  <div className="mt-4 text-xs font-medium text-blue-200 bg-blue-500/10 inline-block px-3 py-1 rounded-full border border-blue-500/20">
+                  <div className="mt-4 text-xs font-semibold text-blue-800 bg-blue-100 inline-block px-3 py-1 rounded-md border border-blue-300 shadow-sm">
                     Perguruan Tinggi Negeri
                   </div>
                 </div>
@@ -210,18 +150,17 @@ export default function CommissariatPage() {
 
               {/* Stat 3 */}
               <Card
-                variant="glass"
-                className="p-6 relative overflow-hidden group hover:border-indigo-500/30 transition-colors"
+                className="p-6 relative overflow-hidden group hover:border-blue-400 transition-colors bg-white shadow-md border-slate-200 rounded-xl"
               >
-                <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-colors"></div>
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors"></div>
                 <div className="relative z-10">
-                  <p className="text-blue-200/60 font-medium text-sm uppercase tracking-wider mb-1">
+                  <p className="text-slate-500 font-medium text-sm uppercase tracking-wider mb-1">
                     Total Program Kerja
                   </p>
-                  <p className="text-4xl font-bold text-white">
+                  <p className="text-4xl font-bold text-slate-900">
                     {totalPrograms}+
                   </p>
-                  <div className="mt-4 text-xs font-medium text-indigo-200 bg-indigo-500/10 inline-block px-3 py-1 rounded-full border border-indigo-500/20">
+                  <div className="mt-4 text-xs font-semibold text-blue-800 bg-blue-100 inline-block px-3 py-1 rounded-md border border-blue-300 shadow-sm">
                     Terealisasi Tahun Ini
                   </div>
                 </div>
@@ -236,12 +175,12 @@ export default function CommissariatPage() {
                 Let's put it on the Right as a "Sidebar".
             */}
           <aside className="lg:col-span-1 lg:order-last space-y-8">
-            <FadeIn once={false} delay={0.4}>
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 tracking-tight">
+            <FadeIn once={true} delay={0.1}>
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2 tracking-tight">
                   <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-600"></span>
                   </span>
                   Baru Saja Terjadi
                 </h3>
@@ -249,131 +188,69 @@ export default function CommissariatPage() {
                   {RECENT_ACTIVITIES.map((activity) => (
                     <div
                       key={activity.id}
-                      className="relative pl-6 border-l border-white/10 pb-2 last:pb-0"
+                      className="relative pl-6 border-l border-slate-200 pb-2 last:pb-0"
                     >
-                      <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-blue-950 border border-white/20"></div>
-                      <p className="text-xs text-blue-200/50 mb-1">
+                      <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-blue-600 border border-white"></div>
+                      <p className="text-xs text-slate-500 mb-1">
                         {activity.date}
                       </p>
-                      <p className="text-sm text-white font-medium leading-snug">
-                        <span className="text-cyan-300">
+                      <p className="text-sm text-slate-700 font-medium leading-snug">
+                        <span className="text-blue-600">
                           {activity.commissariat}
                         </span>{" "}
                         {activity.action}{" "}
-                        <span className="text-white/90">{activity.item}</span>
+                        <span className="text-slate-900">{activity.item}</span>
                       </p>
                     </div>
                   ))}
                 </div>
                 <Link href="/news" className="w-full">
-                  <Button
-                    variant="secondary"
-                    className="w-full mt-6 text-sm h-10 rounded-full flex items-center justify-center gap-2 group hover:bg-cyan-500/10 hover:border-cyan-500/30 transition-all font-medium"
-                  >
+                  <div className="w-full mt-6 text-sm h-10 rounded-full flex items-center justify-center gap-2 hover:bg-blue-50 hover:text-blue-700 text-slate-900 font-bold border border-slate-200 transition-all cursor-pointer group bg-white shadow-sm">
                     Lihat Semua Aktivitas
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
+                  </div>
                 </Link>
               </div>
             </FadeIn>
           </aside>
 
-          {/* Main Content: Search & List */}
+          {/* Main Content: Grid List */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Modern Filters */}
-            <FadeIn
-              once={false}
-              delay={0.3}
-              className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between relative z-30"
-            >
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Cari komisariat..."
-                  className="w-full pl-12 pr-4 py-3 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
 
-              <div className="relative w-full md:w-auto">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50 w-5 h-5" />
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full md:w-64 pl-12 py-3 pr-6 rounded-full bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white font-bold text-left hover:bg-white/10 transition-colors flex items-center justify-between cursor-pointer"
-                >
-                  <span className="truncate">{filterYear}</span>
-                  <span
-                    className={`transition-transform duration-200 text-blue-200/60 ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </span>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-full md:w-64 bg-blue-950/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 max-h-60 overflow-y-auto no-scrollbar p-2 flex flex-col gap-1">
-                    {YEARS.map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => {
-                          setFilterYear(year);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-full text-base font-medium transition-colors cursor-pointer ${
-                          filterYear === year
-                            ? "bg-cyan-500/20 text-cyan-200 font-bold"
-                            : "text-blue-100/80 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Overlay to close dropdown */}
-                {isDropdownOpen && (
-                  <div
-                    className="fixed inset-0 z-40 bg-transparent"
-                    onClick={() => setIsDropdownOpen(false)}
-                  />
-                )}
-              </div>
-            </FadeIn>
 
             {/* Grid List */}
             <StaggerContainer
-              once={false}
-              staggerDelay={0.2}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+              once={true}
+              staggerDelay={0.05}
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
             >
-              {filteredCommissariats.length > 0 ? (
-                filteredCommissariats.map((comm) => (
-                  <StaggerItem key={comm.id}>
+              {data.map((comm) => (
+                <StaggerItem key={comm.id}>
                     <Card
-                      variant="glass"
-                      className="group h-full flex flex-col justify-between"
+                      className="group h-full flex flex-col justify-between bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-400 transition-all rounded-xl"
                     >
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-4">
-                          {/* Logo Placeholder */}
-                          <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+                          {/* Logo */}
+                          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden shadow-inner font-bold text-blue-600 text-xl">
+                            {/* Assuming some logos are dark and some light, just display them normally instead of invert hack */}
                             <Image
-                              src={comm.logo}
+                              src={comm.logo_univ || "/assets/logos/genbi.svg"}
                               alt={`${comm.name} Logo`}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-contain p-3 brightness-0 invert opacity-80 group-hover:opacity-100 group-hover:brightness-100 group-hover:invert-0 transition-all duration-300"
+                              width={48}
+                              height={48}
+                              className="w-full h-full object-contain p-2"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = comm.name.charAt(11); // Fallback letter e.g 'U' from Komisariat U...
+                              }}
                             />
                           </div>
                           <div>
-                            <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors tracking-tight">
+                            <h3 className="font-bold text-xl text-slate-900 mb-1 group-hover:text-blue-600 transition-colors tracking-tight">
                               {comm.name}
                             </h3>
-                            <p className="text-xs text-blue-200/60 line-clamp-1">
+                            <p className="text-xs text-slate-500 line-clamp-1">
                               {comm.university}
                             </p>
                           </div>
@@ -381,17 +258,17 @@ export default function CommissariatPage() {
                       </CardHeader>
 
                       <div className="px-6 py-2">
-                        <div className="flex gap-4 text-xs text-blue-100/70 border-t border-white/5 pt-3">
+                        <div className="flex gap-4 text-xs text-slate-500 border-t border-slate-100 pt-3">
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-base">
-                              {comm.members}
+                            <span className="font-bold text-slate-900 text-base">
+                              {comm.memberCount || 0}
                             </span>
                             <span>Anggota</span>
                           </div>
-                          <div className="w-px bg-white/10"></div>
+                          <div className="w-px bg-slate-200"></div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-white text-base">
-                              24
+                            <span className="font-bold text-slate-900 text-base">
+                              {comm.prokerCount || 0}
                             </span>
                             <span>Proker</span>
                           </div>
@@ -400,43 +277,24 @@ export default function CommissariatPage() {
 
                       <div className="p-6 pt-2">
                         <Link
-                          href={`/commissariat/${comm.name
-                            .toLowerCase()
-                            .replace("komisariat ", "")
-                            .replace(/\s+/g, "-")}`}
+                          href={`/commissariat/${comm.slug}`}
+                          className="w-full block"
                         >
-                          <Button
-                            variant="secondary"
-                            className="w-full text-sm h-10 rounded-full group-hover:bg-cyan-500/10 group-hover:text-cyan-300 group-hover:border-cyan-500/30 transition-all flex items-center justify-center gap-2"
-                          >
+                          <div className="w-full text-sm h-10 rounded-lg flex items-center justify-center gap-2 border border-slate-200 text-slate-900 bg-slate-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all font-bold group/btn shadow-sm">
                             Kunjungi Profil
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                          </Button>
+                            <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                          </div>
                         </Link>
                       </div>
                     </Card>
                   </StaggerItem>
-                ))
-              ) : (
-                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-16 h-16 bg-blue-100/10 rounded-full flex items-center justify-center text-blue-400 mb-4 text-2xl">
-                    ?
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">
-                    Tidak ada data ditemukan
-                  </h3>
-                  <p className="text-blue-200/60">
-                    Coba ubah kata kunci pencarian atau filter tahun.
-                  </p>
-                </div>
-              )}
+              ))}
             </StaggerContainer>
           </div>
         </div>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 bg-blue-950/50 backdrop-blur-3xl -z-10"></div>
+      <div className="relative border-t border-slate-200 bg-white">
         <Footer />
       </div>
     </div>

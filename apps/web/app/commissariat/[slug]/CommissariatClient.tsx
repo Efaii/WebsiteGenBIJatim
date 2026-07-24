@@ -3,7 +3,7 @@
 import { useState, use, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -22,12 +22,11 @@ import {
 import { DocumentCard } from "@/components/DocumentCard";
 import { ProkerCard } from "@/components/ProkerCard";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FadeIn,
-  SlideUp,
-  StaggerContainer,
-  StaggerItem,
-} from "@/components/MotionWrapper";
+// Disable scroll animations per user request to load everything instantly
+const FadeIn = ({ children, className }: any) => <div className={className}>{children}</div>;
+const SlideUp = ({ children, className }: any) => <div className={className}>{children}</div>;
+const StaggerContainer = ({ children, className }: any) => <div className={className}>{children}</div>;
+const StaggerItem = ({ children, className }: any) => <div className={className}>{children}</div>;
 import { PageBackground } from "@/components/PageBackground";
 import { MemberDetailModal, BPHMember } from "@/components/MemberDetailModal";
 import { ProkerData } from "@/app/types";
@@ -94,9 +93,25 @@ export default function CommissariatClient({
 }) {
   const { slug } = initialData;
   const [selectedMember, setSelectedMember] = useState<BPHMember | null>(null);
+  const searchParams = useSearchParams();
+  const rawTab = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<TabType>("profil");
+  
+  useEffect(() => {
+    if (rawTab && ["profil", "proker", "awardee", "arsip"].includes(rawTab)) {
+      setActiveTab(rawTab as TabType);
+      setTimeout(() => {
+        if (scrollAnchorRef.current) {
+          const y = scrollAnchorRef.current.getBoundingClientRect().top + window.scrollY - 20;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+      }, 500); // Wait for render
+    }
+  }, [rawTab]);
+
   // Replaced modal with static page, so selectedProker state is removed.
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDivisi, setSelectedDivisi] = useState<string>("All"); // New state for Proker Divisi filter
   const [selectedYear, setSelectedYear] = useState<string>("All"); // New state for Archive filter
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -339,40 +354,41 @@ export default function CommissariatClient({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white relative overflow-clip">
       <Navbar />
 
-      {/* Background Blobs */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
+      {/* Decorative Headers */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/50 rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-blob pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-2000 pointer-events-none"></div>
 
       <main className="flex-1 w-full relative z-10 pb-20">
         {/* Hero Section */}
         <section className="relative pt-40 pb-10 px-6">
           <div className="container mx-auto">
             <SlideUp once={false} className="w-full">
-              <div className="relative w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 shadow-2xl overflow-hidden group">
+              <div className="relative w-full bg-white border border-slate-200 rounded-[2.5rem] p-8 md:p-12 shadow-sm overflow-hidden group">
                 {/* Decorative Shine Effect */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/15 transition-all duration-700"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-100/50 transition-all duration-700"></div>
 
                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
                   {/* Logos Container - "Floating" inside the card */}
-                  <div className="flex items-center gap-6 bg-blue-950/50 p-6 rounded-3xl border border-white/10 backdrop-blur-sm shadow-inner shrink-0 group/logos cursor-pointer hover:bg-blue-950/70 transition-colors">
+                  <div className="flex items-center gap-6 bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner shrink-0 group/logos cursor-pointer hover:bg-slate-100 transition-colors">
                     <div className="w-20 h-20 relative">
                       <Image
                         src={data.logo_univ}
                         alt={data.university}
                         fill
-                        className="object-contain brightness-0 invert opacity-70 group-hover/logos:brightness-100 group-hover/logos:invert-0 group-hover/logos:opacity-100 transition-all duration-500"
+                        className="object-contain opacity-90 group-hover/logos:opacity-100 transition-all duration-500"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                     </div>
-                    <div className="w-px h-12 bg-white/10"></div>
+                    <div className="w-px h-12 bg-slate-200"></div>
                     <div className="w-20 h-20 relative">
                       <Image
                         src={data.logo_genbi}
                         alt="GenBI"
                         fill
-                        className="object-contain brightness-0 invert opacity-70 group-hover/logos:brightness-100 group-hover/logos:invert-0 group-hover/logos:opacity-100 transition-all duration-500 delay-75"
+                        className="object-contain opacity-90 group-hover/logos:opacity-100 transition-all duration-500 delay-75"
                       />
                     </div>
                   </div>
@@ -380,17 +396,17 @@ export default function CommissariatClient({
                   {/* Text Info */}
                   <div className="text-center md:text-left flex-1 space-y-3">
                     <div className="space-y-1">
-                      <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm shadow-sm text-sm font-medium text-blue-100 transition-colors hover:bg-white/20 hover:border-white/30 cursor-default mb-2">
+                      <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 shadow-sm text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 hover:border-blue-200 cursor-default mb-2">
                         <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
                         </span>
                         Komisariat Aktif
                       </div>
-                      <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                      <h1 className="text-3xl md:text-5xl font-bold text-slate-900 tracking-tight">
                         {data.name}
                       </h1>
-                      <p className="text-xl text-blue-200/80 font-light">
+                      <p className="text-xl text-slate-500 font-light">
                         {data.university}
                       </p>
                     </div>
@@ -404,7 +420,7 @@ export default function CommissariatClient({
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
+                        className="flex items-center gap-2 bg-white px-5 py-2.5 rounded-full border border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-slate-600 transition-all cursor-pointer group/social shadow-sm"
                       >
                         <span className="group-hover/social:scale-110 transition-transform">
                           <Instagram className="w-4 h-4" />
@@ -415,7 +431,7 @@ export default function CommissariatClient({
                       </a>
                       <a
                         href={`mailto:${data.socials.email}`}
-                        className="flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-full border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 hover:text-white text-blue-200/70 transition-all cursor-pointer group/social"
+                        className="flex items-center gap-2 bg-white px-5 py-2.5 rounded-full border border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-slate-600 transition-all cursor-pointer group/social shadow-sm"
                       >
                         <span className="group-hover/social:scale-110 transition-transform">
                           <Mail className="w-4 h-4" />
@@ -436,16 +452,14 @@ export default function CommissariatClient({
         <div ref={scrollAnchorRef} className="absolute mt-[-100px]" />
         <section
           ref={tabsRef}
-          className="sticky top-20 z-40 py-4 transition-all duration-300"
+          className="relative z-40 py-4 transition-all duration-300"
         >
-          {/* Glass Background for Sticky Effect can be added here if needed */}
-          <div className="absolute inset-0 bg-[#020617]/80 backdrop-blur-xl border-b border-white/5 opacity-0 data-[sticky=true]:opacity-100 transition-opacity"></div>
 
           <FadeIn
             delay={0.2}
             className="container mx-auto px-6 flex justify-center relative z-10"
           >
-            <div className="flex flex-wrap items-center justify-center gap-1 bg-white/5 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-lg">
+            <div className="flex flex-wrap items-center justify-center gap-1 bg-white p-1.5 rounded-full border border-slate-200 shadow-sm">
               {[
                 { id: "profil", label: "Profil & Kepengurusan" },
                 { id: "proker", label: "Program Kerja" },
@@ -469,14 +483,14 @@ export default function CommissariatClient({
                   className={cn(
                     "px-6 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300 relative z-10",
                     activeTab === tab.id
-                      ? "text-cyan-200"
-                      : "text-blue-200/60 hover:text-white",
+                      ? "text-blue-700"
+                      : "text-slate-500 hover:text-slate-900",
                   )}
                 >
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-cyan-500/20 border border-cyan-500/30 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.1)] -z-10"
+                      className="absolute inset-0 bg-blue-50 border border-blue-100 rounded-full shadow-sm -z-10"
                       transition={{
                         type: "spring",
                         stiffness: 300,
@@ -506,29 +520,29 @@ export default function CommissariatClient({
                 <div className="space-y-20">
                   {/* Tentang Kami */}
                   <FadeIn delay={0.1} once={false}>
-                    <Card className="bg-white/5 border-white/10 p-8 backdrop-blur-sm relative overflow-hidden group">
-                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
-                      <h3 className="text-2xl font-bold mb-4 text-white relative z-10 flex items-center gap-3 tracking-tight">
-                        <span className="w-1 h-8 bg-cyan-500 rounded-full"></span>
+                    <Card className="bg-white border-slate-200 shadow-sm p-8 relative overflow-hidden group">
+                      <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl group-hover:bg-blue-100 transition-all duration-500"></div>
+                      <h3 className="text-2xl font-bold mb-4 text-slate-900 relative z-10 flex items-center gap-3 tracking-tight">
+                        <span className="w-1 h-8 bg-blue-600 rounded-full"></span>
                         Tentang Kami
                       </h3>
-                      <p className="text-blue-100/80 leading-relaxed text-lg relative z-10">
+                      <p className="text-slate-600 leading-relaxed text-lg relative z-10">
                         {data.description}
                       </p>
                     </Card>
                   </FadeIn>
 
                   {/* Organizational Structure */}
-                  <section className="py-20 relative border-t border-white/5">
+                  <section className="py-20 relative border-t border-slate-200">
                     <div className="container mx-auto px-6 relative z-10">
                       <div className="text-center mb-20">
                         <SlideUp once={false}>
-                          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight">
+                          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 tracking-tight">
                             Struktur Organisasi
                           </h2>
                         </SlideUp>
                         <SlideUp once={false} delay={0.1}>
-                          <p className="text-blue-200/70 max-w-2xl mx-auto">
+                          <p className="text-slate-500 max-w-2xl mx-auto">
                             Susunan pengurus {data.name} Periode 2025/2026.
                           </p>
                         </SlideUp>
@@ -541,11 +555,11 @@ export default function CommissariatClient({
                             once={false}
                             className="flex items-center gap-4 mb-8 w-full justify-center"
                           >
-                            <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-32"></div>
-                            <h3 className="text-2xl font-bold text-white uppercase tracking-widest">
+                            <div className="h-px bg-gradient-to-r from-transparent to-slate-200 w-32"></div>
+                            <h3 className="text-2xl font-bold text-slate-900 uppercase tracking-widest">
                               Leaders
                             </h3>
-                            <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-32"></div>
+                            <div className="h-px bg-gradient-to-l from-transparent to-slate-200 w-32"></div>
                           </SlideUp>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20 justify-center max-w-2xl">
@@ -564,9 +578,9 @@ export default function CommissariatClient({
                                 >
                                   <Card
                                     onClick={() => setSelectedMember(member)}
-                                    className="bg-white/5 backdrop-blur-md border border-white/10 p-8 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-2 cursor-pointer group hover:border-cyan-500/30 h-full"
+                                    className="bg-white border border-slate-200 shadow-sm p-8 flex flex-col items-center text-center hover:shadow-md transition-all hover:-translate-y-2 cursor-pointer group hover:border-blue-300 h-full"
                                   >
-                                    <div className="w-24 h-24 bg-blue-950/50 rounded-full border-4 border-white/10 flex items-center justify-center shadow-lg overflow-hidden mb-6 group-hover:border-cyan-400 transition-colors">
+                                    <div className="w-24 h-24 bg-slate-50 rounded-full border-4 border-slate-100 flex items-center justify-center overflow-hidden mb-6 group-hover:border-blue-400 transition-colors">
                                       <Image
                                         src={member.image}
                                         alt={member.name}
@@ -575,10 +589,10 @@ export default function CommissariatClient({
                                         className="w-full h-full object-cover transition-all duration-500"
                                       />
                                     </div>
-                                    <h3 className="font-bold text-xl text-white mb-1 group-hover:text-cyan-300 transition-colors">
+                                    <h3 className="font-bold text-xl text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
                                       {member.name}
                                     </h3>
-                                    <p className="text-sm font-semibold text-cyan-400 uppercase tracking-wider">
+                                    <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
                                       {member.role}
                                     </p>
                                   </Card>
@@ -590,10 +604,10 @@ export default function CommissariatClient({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
                             {/* Secretaries */}
                             <FadeIn delay={0.2} className="h-full" once={false}>
-                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
-                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <ClipboardList className="w-6 h-6 text-cyan-400" />
-                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:border-blue-300 transition-colors h-full">
+                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-slate-100 pb-4">
+                                  <ClipboardList className="w-6 h-6 text-blue-500" />
+                                  <h3 className="font-bold text-lg text-slate-900 uppercase tracking-wider">
                                     Sekretaris
                                   </h3>
                                 </div>
@@ -610,9 +624,9 @@ export default function CommissariatClient({
                                         onClick={() =>
                                           setSelectedMember(member)
                                         }
-                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                        className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
                                       >
-                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 group-hover:border-blue-400 transition-colors bg-white">
                                           <Image
                                             src={member.image}
                                             alt={member.name}
@@ -622,10 +636,10 @@ export default function CommissariatClient({
                                           />
                                         </div>
                                         <div className="text-left">
-                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
+                                          <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
                                             {member.name}
                                           </p>
-                                          <p className="text-xs text-blue-200/60">
+                                          <p className="text-xs text-slate-500">
                                             {member.role}
                                           </p>
                                         </div>
@@ -637,10 +651,10 @@ export default function CommissariatClient({
 
                             {/* Treasurers */}
                             <FadeIn delay={0.2} className="h-full" once={false}>
-                              <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-6 hover:border-white/20 transition-colors h-full">
-                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-white/5 pb-4">
-                                  <Wallet className="w-6 h-6 text-yellow-400" />
-                                  <h3 className="font-bold text-lg text-white uppercase tracking-wider">
+                              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 hover:border-blue-300 transition-colors h-full">
+                                <div className="flex items-center gap-3 mb-6 justify-center border-b border-slate-100 pb-4">
+                                  <Wallet className="w-6 h-6 text-amber-500" />
+                                  <h3 className="font-bold text-lg text-slate-900 uppercase tracking-wider">
                                     Bendahara
                                   </h3>
                                 </div>
@@ -657,9 +671,9 @@ export default function CommissariatClient({
                                         onClick={() =>
                                           setSelectedMember(member)
                                         }
-                                        className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 hover:border-cyan-500/30 transition-all cursor-pointer group"
+                                        className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
                                       >
-                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/20 flex-shrink-0 group-hover:border-cyan-400 transition-colors">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 flex-shrink-0 group-hover:border-blue-400 transition-colors bg-white">
                                           <Image
                                             src={member.image}
                                             alt={member.name}
@@ -669,10 +683,10 @@ export default function CommissariatClient({
                                           />
                                         </div>
                                         <div className="text-left">
-                                          <p className="font-bold text-white text-sm group-hover:text-cyan-200 transition-colors">
+                                          <p className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">
                                             {member.name}
                                           </p>
-                                          <p className="text-xs text-blue-200/60">
+                                          <p className="text-xs text-slate-500">
                                             {member.role}
                                           </p>
                                         </div>
@@ -690,11 +704,11 @@ export default function CommissariatClient({
                                 once={false}
                                 className="flex items-center gap-4 mb-8 w-full justify-center"
                               >
-                                <div className="h-px bg-gradient-to-r from-transparent to-white/20 w-24"></div>
-                                <h3 className="text-xl font-bold text-white uppercase tracking-widest">
+                                <div className="h-px bg-gradient-to-r from-transparent to-slate-200 w-24"></div>
+                                <h3 className="text-xl font-bold text-slate-900 uppercase tracking-widest">
                                   Koordinator Divisi
                                 </h3>
-                                <div className="h-px bg-gradient-to-l from-transparent to-white/20 w-24"></div>
+                                <div className="h-px bg-gradient-to-l from-transparent to-slate-200 w-24"></div>
                               </SlideUp>
                               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full justify-center">
                                 {data.divisions.map((member, idx) => (
@@ -705,9 +719,9 @@ export default function CommissariatClient({
                                   >
                                     <Card
                                       onClick={() => setSelectedMember(member)}
-                                      className="bg-white/5 backdrop-blur-md border border-white/10 p-6 flex flex-col items-center text-center hover:bg-white/10 transition-all hover:-translate-y-1 cursor-pointer group hover:border-cyan-500/30 min-h-[160px]"
+                                      className="bg-white border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer group hover:border-blue-300 min-h-[160px]"
                                     >
-                                      <div className="w-16 h-16 bg-blue-950/50 rounded-full border-2 border-white/10 flex items-center justify-center shadow-md overflow-hidden mb-3 group-hover:border-cyan-400 transition-colors">
+                                      <div className="w-16 h-16 bg-slate-50 rounded-full border-2 border-slate-100 flex items-center justify-center overflow-hidden mb-3 group-hover:border-blue-400 transition-colors">
                                         <Image
                                           src={member.image}
                                           alt={member.name}
@@ -716,10 +730,10 @@ export default function CommissariatClient({
                                           className="w-full h-full object-cover transition-all duration-500"
                                         />
                                       </div>
-                                      <h3 className="font-bold text-sm text-white mb-2 group-hover:text-cyan-300 transition-colors truncate w-full leading-tight">
+                                      <h3 className="font-bold text-sm text-slate-900 mb-2 group-hover:text-blue-600 transition-colors truncate w-full leading-tight">
                                         {member.name}
                                       </h3>
-                                      <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider truncate w-full">
+                                      <p className="text-[10px] font-semibold text-blue-600 uppercase tracking-wider truncate w-full">
                                         {member.role}
                                       </p>
                                     </Card>
@@ -745,8 +759,44 @@ export default function CommissariatClient({
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
+                {/* Divisi Filter for Proker */}
+                <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <span className="text-sm font-medium text-slate-500 mr-2">
+                    Filter Divisi:
+                  </span>
+                  {[
+                    "All",
+                    ...Array.from(
+                      new Set(
+                        data.proker
+                          .map((p) => p.divisi)
+                          .filter(Boolean)
+                      ),
+                    ).sort(),
+                  ].map((divisi) => (
+                    <button
+                      key={divisi as string}
+                      onClick={() => setSelectedDivisi(divisi as string)}
+                      className={cn(
+                        "px-4 py-1.5 rounded-full text-sm font-medium border transition-all cursor-pointer",
+                        selectedDivisi === divisi
+                          ? "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                          : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-900",
+                      )}
+                    >
+                      {divisi as string}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="grid gap-6">
-                  {data.proker.map((item, idx) => (
+                  {data.proker
+                    .filter(
+                      (item) =>
+                        selectedDivisi === "All" ||
+                        item.divisi === selectedDivisi,
+                    )
+                    .map((item, idx) => (
                     <FadeIn key={item.id} delay={idx * 0.1} once={false}>
                       {/* Proker Card (Updated with href) */}
                       <div key={item.id} className="h-full">
@@ -761,6 +811,15 @@ export default function CommissariatClient({
                       </div>
                     </FadeIn>
                   ))}
+                  {data.proker.filter(
+                    (item) =>
+                      selectedDivisi === "All" ||
+                      item.divisi === selectedDivisi,
+                  ).length === 0 && (
+                    <div className="py-12 text-center text-slate-400 italic">
+                      Tidak ada program kerja untuk divisi {selectedDivisi}.
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -781,56 +840,56 @@ export default function CommissariatClient({
                   amount={0.2}
                 >
                   {/* Visual Filter */}
-                  <div className="relative z-20 mb-10 bg-white/5 backdrop-blur-md p-6 rounded-2xl shadow-xl border border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between">
+                  <div className="relative z-20 mb-10 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="relative w-full">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                         <Search className="w-5 h-5" />
                       </div>
                       <input
                         type="text"
                         placeholder="Cari nama awardee..."
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-cyan-400/50 text-white placeholder:text-blue-200/40 font-medium transition-all"
+                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:border-blue-500 focus:bg-white text-slate-900 placeholder:text-slate-400 font-medium transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                     </div>
-                    <div className="text-sm text-blue-200/60 whitespace-nowrap">
+                    <div className="text-sm text-slate-500 whitespace-nowrap">
                       Total: {filteredAwardees.length} Awardee
                     </div>
                   </div>
 
                   {/* Table Data Card */}
-                  <Card className="bg-white/5 backdrop-blur-md border border-white/10 shadow-xl overflow-hidden rounded-3xl">
+                  <Card className="bg-white border border-slate-200 shadow-sm overflow-hidden rounded-3xl">
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-white/10 border-b border-white/10">
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-left">
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest text-left">
                               Nama Lengkap
                             </th>
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest hidden sm:table-cell">
+                            <th className="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell">
                               Jurusan
                             </th>
-                            <th className="p-6 text-xs font-bold text-blue-200 uppercase tracking-widest text-center">
+                            <th className="p-6 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">
                               Angkatan
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-slate-100">
                           {currentItems.length > 0 ? (
                             currentItems.map((awardee, idx) => (
                               <tr
                                 key={awardee.id}
-                                className="hover:bg-white/5 transition-colors group"
+                                className="hover:bg-slate-50 transition-colors group"
                               >
-                                <td className="p-6 font-semibold text-white group-hover:text-cyan-200 transition-colors">
+                                <td className="p-6 font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                                   {awardee.name}
                                 </td>
-                                <td className="p-6 text-blue-100/70 hidden sm:table-cell">
+                                <td className="p-6 text-slate-600 hidden sm:table-cell">
                                   {awardee.major}
                                 </td>
                                 <td className="p-6 text-center">
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shadow-[0_0_10px_rgba(34,211,238,0.1)]">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
                                     {awardee.year}
                                   </span>
                                 </td>
@@ -852,17 +911,17 @@ export default function CommissariatClient({
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (
-                      <div className="p-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/5">
-                        <span className="text-sm text-blue-200/60">
+                      <div className="p-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50">
+                        <span className="text-sm text-slate-500">
                           Menampilkan {indexOfFirstItem + 1} -{" "}
                           {Math.min(indexOfLastItem, filteredAwardees.length)}{" "}
                           dari {filteredAwardees.length} data
                         </span>
                         <div className="flex items-center gap-2">
                           <Button
-                            variant="secondary"
+                            variant="outline"
                             size="sm"
-                            className="h-8 md:h-9"
+                            className="h-8 md:h-9 border-slate-200 text-slate-700 hover:bg-slate-100"
                             onClick={() => {
                               setCurrentPage((prev) => Math.max(prev - 1, 1));
                               setTimeout(() => {
@@ -884,14 +943,14 @@ export default function CommissariatClient({
                             Previous
                           </Button>
                           <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-cyan-200 bg-white/10 px-3 py-1.5 rounded-lg border border-white/10">
+                            <span className="text-sm font-bold text-blue-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
                               Page {currentPage} of {totalPages}
                             </span>
                           </div>
                           <Button
-                            variant="secondary"
+                            variant="outline"
                             size="sm"
-                            className="h-8 md:h-9"
+                            className="h-8 md:h-9 border-slate-200 text-slate-700 hover:bg-slate-100"
                             onClick={() => {
                               setCurrentPage((prev) =>
                                 Math.min(prev + 1, totalPages),
@@ -933,7 +992,7 @@ export default function CommissariatClient({
               >
                 {/* Year Filter for Archives */}
                 <div className="flex flex-wrap items-center gap-2 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <span className="text-sm font-medium text-blue-200/60 mr-2">
+                  <span className="text-sm font-medium text-slate-500 mr-2">
                     Filter Tahun:
                   </span>
                   {[
@@ -950,10 +1009,10 @@ export default function CommissariatClient({
                       key={year}
                       onClick={() => setSelectedYear(year as string)}
                       className={cn(
-                        "px-4 py-1.5 rounded-full text-sm font-medium border transition-all",
+                        "px-4 py-1.5 rounded-full text-sm font-medium border transition-all cursor-pointer",
                         selectedYear === year
-                          ? "bg-cyan-500/20 text-cyan-200 border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
-                          : "bg-white/5 text-blue-200/60 border-white/10 hover:bg-white/10 hover:text-white",
+                          ? "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                          : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-900",
                       )}
                     >
                       {year}
@@ -991,7 +1050,7 @@ export default function CommissariatClient({
                     (doc) =>
                       selectedYear === "All" || doc.date.includes(selectedYear),
                   ).length === 0 && (
-                    <div className="col-span-full py-12 text-center text-blue-200/40 italic">
+                    <div className="col-span-full py-12 text-center text-slate-400 italic">
                       Tidak ada dokumen arsip di tahun {selectedYear}.
                     </div>
                   )}
@@ -1002,8 +1061,7 @@ export default function CommissariatClient({
         </div>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 bg-blue-950/50 backdrop-blur-3xl -z-10"></div>
+      <div className="relative border-t border-slate-200 bg-white">
         <AnimatePresence>
           {selectedMember && (
             <MemberDetailModal
