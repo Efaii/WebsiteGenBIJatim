@@ -24,6 +24,7 @@ export interface ProkerData {
   title: string;
   slug?: string;
   commissariat?: string;
+  divisi?: string;
   type?: string;
   audience: "Internal" | "External";
   status: "Completed" | "On-going" | "Upcoming" | "Recurring";
@@ -41,9 +42,15 @@ export interface ProkerData {
   impact?: string[];
   benefits?: string[];
   evaluation?: string;
-  proposalLink?: string;
-  lpjLink?: string;
-  documentation?: string;
+  
+  // Real DB Fields mapped from backend
+  kpiTukTarget?: string;
+  dampak?: string;
+  evaluasi?: string;
+  linkProposalPdf?: string;
+  linkLpjPdf?: string;
+  dokumentasiDrive?: string;
+  commissariatSlug?: string;
   newsUrl?: string;
   gallery?: string[];
   image?: string;
@@ -122,6 +129,8 @@ export interface CommissariatData {
   };
   instagram?: string;
   email?: string;
+  memberCount?: number;
+  prokerCount?: number;
   bph: BPHMember[];
   divisions: BPHMember[];
   proker: ProkerData[];
