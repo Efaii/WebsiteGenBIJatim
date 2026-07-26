@@ -1,0 +1,140 @@
+{
+  "project": "GenBI Jatim Remediation",
+  "version": "1.0.0",
+  "description": "PRD Machine-Readable Remediasi Audit Teknis Website GenBI Jatim",
+  "status": "in_progress",
+  "userStories": [
+    {
+      "id": "TASK-001",
+      "title": "Standardize News API & Service Contract",
+      "category": "contract News",
+      "priority": 1,
+      "description": "Align news backend API endpoints and frontend services with uniform `{ success: boolean, data: any, message: string }` response envelope. Ensure News payload type definitions match strictly across frontend and backend schema.",
+      "acceptanceCriteria": [
+        "GET /api/news returns HTTP 200 with standard payload wrapper.",
+        "Frontend news.service.ts parses payload safely without type mismatches or undefined field errors."
+      ],
+      "verification": [
+        "Run GET /api/news API test and verify 200 status with standard wrapper.",
+        "Verify frontend news.service.ts type handling."
+      ],
+      "passes": true,
+      "dependsOn": []
+    },
+    {
+      "id": "TASK-002",
+      "title": "Route Decision & Sync for Docs, Profile, and Events",
+      "category": "route docs/profile/events decision+sync",
+      "priority": 2,
+      "description": "Audit existing routes for docs, profile, and events across API and Web. Fix static vs dynamic route conflict order (e.g. register specific routes before parameter routes `/proker` before `/proker/:id`). Synchronize frontend dynamic routes and link contracts to match active API contracts.",
+      "acceptanceCriteria": [
+        "All static endpoints resolve without being captured by dynamic parametric handlers.",
+        "Frontend routes for docs, profile, and events render without 404 or route collision."
+      ],
+      "verification": [
+        "Verify static and parametric route order on backend.",
+        "Verify frontend routing resolution for docs, profile, events."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-001"
+      ]
+    },
+    {
+      "id": "TASK-003",
+      "title": "Safe Mock Fallback Handling in Production",
+      "category": "mock fallback production",
+      "priority": 3,
+      "description": "Guard dynamic fetcher fallback mechanisms so API failures in production produce explicit error state logging rather than silent fallback to stale mock data if unwanted. Allow toggleable mock fallback behavior based on NODE_ENV.",
+      "acceptanceCriteria": [
+        "Mock fallback does not silently disguise API server errors in production environment.",
+        "Local development fallback works cleanly when API server is unreachable."
+      ],
+      "verification": [
+        "Test mock fallback behavior under simulated API failure in both dev and prod modes."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-002"
+      ]
+    },
+    {
+      "id": "TASK-004",
+      "title": "Prisma Singleton, Error Handling, Type Safety & Request Validation",
+      "category": "Prisma singleton/error/type safety/request validation",
+      "priority": 4,
+      "description": "Ensure PrismaClient uses singleton pattern in backend to avoid connection leaks. Add global error middleware for API handling Prisma known errors (P2002, P2025). Add strict request validation middleware on write endpoints. Enforce strict TypeScript types without `any` casts in services and controllers.",
+      "acceptanceCriteria": [
+        "Backend uses a single PrismaClient instance across hot-reloads.",
+        "Invalid requests return 400 Bad Request with explicit validation errors.",
+        "Database constraint violations return structured 400/409 errors instead of 500 internal crash."
+      ],
+      "verification": [
+        "Verify Prisma singleton pattern.",
+        "Test validation and constraint error responses."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-003"
+      ]
+    },
+    {
+      "id": "TASK-005",
+      "title": "Asset & Media URL Normalization Pipeline",
+      "category": "asset URL",
+      "priority": 5,
+      "description": "Standardize image path references between backend uploads directory and frontend public assets. Update `process_images.ts` script to align proker image directory structure with commissariat slugs. Configure Next.js remotePatterns in `next.config.ts` to allow backend asset domains.",
+      "acceptanceCriteria": [
+        "Proker images render on `/program/[id]` without broken image links or Next.js Image policy violations.",
+        "Asset URL helper handles both absolute host URLs and relative Next.js public routes."
+      ],
+      "verification": [
+        "Check media URL rendering on program detail pages.",
+        "Validate Next.js image domain configuration."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-004"
+      ]
+    },
+    {
+      "id": "TASK-006",
+      "title": "DB Index & Commissariat Data Import Transaction Security",
+      "category": "DB index+data komisariat decision",
+      "priority": 6,
+      "description": "Add missing foreign key indexes in Prisma schema for Commissariat <-> ProgramKerja relations. Wrap wipe and re-import sequence in `src/scripts/import.ts` inside an atomic `$transaction` block. Ensure foreign key cascade behavior prevents orphan records.",
+      "acceptanceCriteria": [
+        "Executing `import.ts` is fully atomic (rolls back completely if error occurs during Excel parsing).",
+        "Prisma database queries utilize indexes on commissariat foreign keys."
+      ],
+      "verification": [
+        "Verify Prisma schema index declarations.",
+        "Verify import script transaction wrapper."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-005"
+      ]
+    },
+    {
+      "id": "TASK-007",
+      "title": "UX, Contact Form, Accessibility, Metadata & Button Standardization",
+      "category": "UX/contact/a11y/metadata/button",
+      "priority": 7,
+      "description": "Add Loading, Error, and Empty UI states to main dynamic pages (/program, /program/[id], /komisariat/[slug]). Fix hydration mismatches caused by localized dynamic date formatting. Ensure standard buttons adhere to accessible contrast and aria labels. Set up full page dynamic metadata (title, description, openGraph).",
+      "acceptanceCriteria": [
+        "Zero React hydration errors on dynamic client pages.",
+        "All buttons and interactive controls pass basic keyboard accessibility and contrast checks.",
+        "Contact form handles input validation and feedback response cleanly."
+      ],
+      "verification": [
+        "Verify UI state handling and accessibility.",
+        "Validate metadata configuration."
+      ],
+      "passes": false,
+      "dependsOn": [
+        "TASK-006"
+      ]
+    }
+  ]
+}

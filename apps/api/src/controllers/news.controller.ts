@@ -16,6 +16,36 @@ function generateSlug(title: string) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 }
 
+export const getPublicNews = async (req: Request, res: Response) => {
+  try {
+    const news = await (prisma as any).news.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.status(200).json({
+      success: true,
+      message: 'News retrieved successfully',
+      data: news,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getNewsBySlug = async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const article = await (prisma as any).news.findUnique({
+      where: { slug },
+    });
+    if (!article) {
+      return res.status(404).json({ message: 'News article not found' });
+    }
+    res.status(200).json(article);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 export const getLatestNews = async (req: Request, res: Response) => {
   try {
     const news = await (prisma as any).news.findMany({
@@ -107,7 +137,7 @@ export const updateNews = async (req: Request, res: Response) => {
 
       // Delete old cover
       if (existing.image && existing.image.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '../../public', existing.image);
+        const oldPath = path.join(UPLOAD_DIR, path.basename(existing.image));
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
     }
@@ -132,7 +162,7 @@ export const deleteNews = async (req: Request, res: Response) => {
     if (!existing) return res.status(404).json({ message: 'Not found' });
 
     if (existing.image && existing.image.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, '../../public', existing.image);
+      const oldPath = path.join(UPLOAD_DIR, path.basename(existing.image));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
