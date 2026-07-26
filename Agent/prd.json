@@ -53,7 +53,7 @@
       "verification": [
         "Test mock fallback behavior under simulated API failure in both dev and prod modes."
       ],
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "TASK-002"
       ]

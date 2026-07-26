@@ -3,11 +3,6 @@ import { COMMISSARIAT_DATA } from "@/content/commissariatData";
 import { CommissariatData } from "@repo/types";
 
 const getApiBase = () => {
-  if (typeof window !== "undefined") {
-    // Di client side, gunakan host yang sedang diakses agar tidak stuck di localhost
-    const host = window.location.hostname;
-    return `http://${host}:5000/api`;
-  }
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 };
 
@@ -21,6 +16,7 @@ export const getAllCommissariats = async (): Promise<any[]> => {
     if (!res.ok) throw new Error("API error");
     return await res.json();
   } catch (error) {
+    if (process.env.NODE_ENV !== "development") throw error;
     console.warn("[commissariat.service] API unavailable, using mock data");
     return Object.values(COMMISSARIAT_DATA).map(c => ({
       ...c,
@@ -39,6 +35,7 @@ export const getCommissariatBySlug = async (slug: string): Promise<CommissariatD
     if (!res.ok) throw new Error("API error");
     return await res.json();
   } catch (error) {
+    if (process.env.NODE_ENV !== "development") throw error;
     console.warn("[commissariat.service] API unavailable, using mock data");
     return COMMISSARIAT_DATA[slug] || null;
   }
@@ -53,6 +50,7 @@ export const getCommissariatCount = async (): Promise<number> => {
     const data = await res.json();
     return data.length;
   } catch (error) {
+    if (process.env.NODE_ENV !== "development") throw error;
     return Object.keys(COMMISSARIAT_DATA).length;
   }
 };
@@ -65,6 +63,7 @@ export const getGlobalCommissariatStats = async () => {
     if (!res.ok) throw new Error("API error");
     return await res.json();
   } catch (error) {
+    if (process.env.NODE_ENV !== "development") throw error;
     console.warn("[commissariat.service] API stats unavailable, using fallback");
     const mockData = Object.values(COMMISSARIAT_DATA);
     return {
