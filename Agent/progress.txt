@@ -1,0 +1,1 @@
+2026-07-27: docs/profile/events existing routes required mounts in apps/api/src/index.ts; backend HTTP and web build passed.
