@@ -12,5 +12,13 @@
 - Executed `npx tsc --noEmit` from `apps/web` with 0 type errors.
 - Marked TASK-003 `passes: true` in `Agent/prd.json`.
 
+## [2026-07-27] TASK-004 Prisma Singleton, Error Handling, Type Safety & Request Validation Verification
+- Verified `PrismaClient` singleton export in `apps/api/src/lib/prisma.ts`.
+- Verified global error middleware handles Prisma known errors (P2002 -> 409, P2003 -> 400, P2025 -> 404, PrismaClientValidationError -> 400) in `apps/api/src/middlewares/error.middleware.ts`.
+- Verified strict request validation on write endpoints (`/api/auth/login`, `/api/contact`, `/api/news`) returning HTTP 400 with explicit validation errors.
+- Verified 0 type errors in `apps/api` via `npm run build` (`tsc`).
+- Executed `apps/api/src/__tests__/error_middleware.test.ts` unit assertions successfully.
+- Marked TASK-004 `passes: true` in `Agent/prd.json`.
+
 
 
