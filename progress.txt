@@ -5,4 +5,12 @@
 - Ran fresh TypeScript typechecks for `apps/api` (`npx tsc --noEmit`) and `apps/web` (`npx tsc --noEmit`) with 0 type errors.
 - Confirmed `apps/web/lib/services/news.service.ts` correctly handles wrapped `{ success, message, data }` responses.
 
+## [2026-07-27] TASK-003 Safe Mock Fallback Handling Verification
+- Ran simulated unreachable API test in `development` and `production` environments across all affected service functions: `getAllCommissariats`, `getCommissariatBySlug`, `getCommissariatCount`, `getGlobalCommissariatStats`, `getAllPrograms`, `getProgramById`, `getAllProgramIds`.
+- Verified `development` mode returns mock fallback data when API is unreachable.
+- Verified `production` mode strictly throws/rejects on API failure without leaking mock fallback data.
+- Executed `npx tsc --noEmit` from `apps/web` with 0 type errors.
+- Marked TASK-003 `passes: true` in `Agent/prd.json`.
+
+
 
