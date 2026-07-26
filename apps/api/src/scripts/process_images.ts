@@ -1,11 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
-import { PrismaClient } from "@prisma/client";
-import stringSimilarity = require("string-similarity");
-import sharp = require("sharp");
+import { prisma } from "../lib/prisma";
+import stringSimilarity from "string-similarity";
+import sharp from "sharp";
 import { exiftool } from "exiftool-vendored";
-
-const prisma = new PrismaClient();
 const INPUT_DIR = path.join(__dirname, "../../data/images/Dokumentasi Proker");
 const OUTPUT_DIR = path.join(__dirname, "../../../web/public/uploads/proker");
 
@@ -165,8 +163,9 @@ async function processImages() {
 
             photoUrls[`foto${photoIdx}`] = `/uploads/proker/${bestComMatch.slug}/${bestProkerMatch.id}/${outputFilename}`;
             photoIdx++;
-          } catch (e: any) {
-            console.error(`     - Failed processing ${file}: ${e.message}`);
+          } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.error(`     - Failed processing ${file}: ${message}`);
           }
         }
 
