@@ -1,2 +1,3 @@
 2026-07-27: docs/profile/events existing routes required mounts in apps/api/src/index.ts; backend HTTP and web build passed.
 2026-07-27: TASK-004 verification passed. Verified Prisma singleton pattern in lib/prisma.ts, request validation on POST endpoints, error handling middleware for P2002/P2003/P2025/validation errors, zero any casts in api src, unit test execution and tsc build cleanly passed.
+2026-07-27: TASK-005 verification passed. Verified normalizeAssetUrl helper, Next.js remotePatterns config allowing localhost:5000/uploads/**, program detail gallery/hero image URL normalization, and TypeScript check (tsc --noEmit) passing. Note: next build fails during static param collection if backend API port 5000 is not running.

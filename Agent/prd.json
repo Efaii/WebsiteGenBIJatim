@@ -92,7 +92,7 @@
         "Check media URL rendering on program detail pages.",
         "Validate Next.js image domain configuration."
       ],
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "TASK-004"
       ]
