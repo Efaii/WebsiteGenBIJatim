@@ -35,7 +35,7 @@
         "Verify static and parametric route order on backend.",
         "Verify frontend routing resolution for docs, profile, events."
       ],
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "TASK-001"
       ]
