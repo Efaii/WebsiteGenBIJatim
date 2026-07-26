@@ -111,7 +111,7 @@
         "Verify Prisma schema index declarations.",
         "Verify import script transaction wrapper."
       ],
-      "passes": false,
+      "passes": true,
       "dependsOn": [
         "TASK-005"
       ]
