@@ -20,7 +20,7 @@ export const commitMembershipImport = async (req: CmsRequest, res: Response) => 
 export const getMembershipImport = async (req: CmsRequest, res: Response) => {
   const preview = await (await import('../lib/prisma')).prisma.membershipImportPreview.findUnique({ where: { id: req.params.id }, include: { rows: true } });
   if (!preview) throw new ApiError('NOT_FOUND', 'Import preview not found.', 404);
-  if (preview.cmsAccountId !== req.cmsSession!.cmsAccount.id) throw new ApiError('FORBIDDEN', 'Preview belongs to another account.', 403);
+  if (req.cmsSession!.cmsAccount.role !== 'ADMIN_GLOBAL' && preview.cmsAccountId !== req.cmsSession!.cmsAccount.id) throw new ApiError('FORBIDDEN', 'Preview belongs to another account.', 403);
   return sendSuccess(res, preview);
 };
 

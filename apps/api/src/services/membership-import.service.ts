@@ -20,7 +20,8 @@ const text = (value: unknown) => {
 };
 
 const normalizeHeader = (value: unknown) => aliases[text(value).toLowerCase()] ?? text(value).toLowerCase();
-const key = (row: Pick<ParsedRow['normalized'], 'nama' | 'jabatan' | 'prodi' | 'divisi'>) => [row.nama.toLowerCase(), row.jabatan.toLowerCase(), row.prodi.toLowerCase(), (row.divisi ?? '').toLowerCase()].join('|');
+const identityKey = (row: Pick<ParsedRow['normalized'], 'nama' | 'prodi'>) => [row.nama.toLowerCase(), row.prodi.toLowerCase()].join('|');
+const valueKey = (row: Pick<ParsedRow['normalized'], 'nama' | 'jabatan' | 'prodi' | 'divisi'>) => [identityKey(row), row.jabatan.toLowerCase(), (row.divisi ?? '').toLowerCase()].join('|');
 
 export const parseMembershipWorkbook = (buffer: Buffer): { rows: ParsedRow[]; hash: string } => {
   if (buffer.length > MAX_BYTES) throw new ApiError('VALIDATION_ERROR', 'Import file exceeds 10 MB.', 400, { file: ['Maximum 10 MB'] });
@@ -77,13 +78,14 @@ export const createMembershipPreview = async (session: CmsSession, buffer: Buffe
     const divisionAlias = row.normalized.divisi ? approvedAliases.find((alias) => alias.kind === 'DIVISION' && alias.rawValue.toLowerCase() === row.normalized.divisi!.toLowerCase()) : null;
     const division = row.normalized.divisi ? divisions.find((item) => item.name.toLowerCase() === row.normalized.divisi!.toLowerCase() || item.id === divisionAlias?.divisionId) : null;
     if (row.normalized.divisi && !division) errors.push('UNMAPPED_DIVISION');
-    const rowKey = key(row.normalized);
+    const rowKey = valueKey(row.normalized);
     if (seen.has(rowKey)) errors.push('DUPLICATE_IN_FILE');
     seen.add(rowKey);
-    const matches = existing.filter((item) => key({ nama: item.name, jabatan: item.position, prodi: item.studyProgram, divisi: division?.id ?? item.divisionId }) === rowKey);
+    const matches = existing.filter((item) => identityKey({ nama: item.name, prodi: item.studyProgram }) === identityKey(row.normalized));
     if (matches.length > 1) errors.push('AMBIGUOUS_MATCH');
     const matched = matches[0];
-    const classification: ImportRowClassification = errors.includes('DUPLICATE_IN_FILE') ? 'DUPLICATE_IN_FILE' : errors.includes('AMBIGUOUS_MATCH') ? 'AMBIGUOUS_MATCH' : errors.length ? 'INVALID' : !matched ? 'NEW' : matched.name === row.normalized.nama && matched.position === row.normalized.jabatan && matched.studyProgram === row.normalized.prodi && (matched.divisionId ?? null) === (division?.id ?? null) ? 'UNCHANGED' : 'UPDATED';
+    const unchanged = matched && matched.name === row.normalized.nama && matched.position === row.normalized.jabatan && matched.studyProgram === row.normalized.prodi && (matched.divisionId ?? null) === (division?.id ?? null);
+    const classification: ImportRowClassification = errors.includes('DUPLICATE_IN_FILE') ? 'DUPLICATE_IN_FILE' : errors.includes('AMBIGUOUS_MATCH') ? 'AMBIGUOUS_MATCH' : errors.length ? 'INVALID' : !matched ? 'NEW' : unchanged ? 'UNCHANGED' : 'UPDATED';
     return { row, errors, classification, matched, division };
   });
   const counts = results.reduce((acc, item) => { const name = `${item.classification.toLowerCase()}Count` as keyof typeof acc; acc[name]++; return acc; }, { newCount: 0, updatedCount: 0, unchangedCount: 0, invalidCount: 0, ambiguousCount: 0, duplicateCount: 0 });
@@ -92,8 +94,13 @@ export const createMembershipPreview = async (session: CmsSession, buffer: Buffe
 };
 
 export const expireMembershipImportPreviews = async (now = new Date()) => {
-  const result = await prisma.membershipImportPreview.updateMany({ where: { status: 'PREVIEW_READY', expiresAt: { lt: now } }, data: { status: 'EXPIRED' } });
-  return result.count;
+  const expired = await prisma.membershipImportPreview.findMany({ where: { status: 'PREVIEW_READY', expiresAt: { lt: now } }, select: { id: true, cmsAccountId: true } });
+  if (!expired.length) return 0;
+  await prisma.$transaction(async (tx) => {
+    await tx.membershipImportPreview.updateMany({ where: { id: { in: expired.map((item) => item.id) } }, data: { status: 'EXPIRED' } });
+    await tx.auditEvent.createMany({ data: expired.map((item) => ({ cmsAccountId: item.cmsAccountId, action: 'IMPORT_EXPIRED', entity: 'MEMBERSHIP_IMPORT', entityId: item.id, newStatus: 'EXPIRED' })) });
+  });
+  return expired.length;
 };
 
 export const purgeMembershipImportReports = async (cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)) => {
@@ -147,6 +154,17 @@ export const transitionMembershipImport = async (session: CmsSession, previewId:
   if (target === 'REJECTED' && (!reason || !reason.trim())) throw new ApiError('VALIDATION_ERROR', 'Rejection reason is required.', 400);
   if (target === 'APPROVED' && preview.status !== 'SUBMITTED') throw new ApiError('CONFLICT', 'Only submitted imports can be approved.', 409);
   const updated = await prisma.$transaction(async (tx) => {
+    if (target === 'APPROVED') {
+      const matchedRows = preview.rows.filter((row) => row.matchedMembershipId);
+      if (matchedRows.length) {
+        const current = await tx.membership.findMany({ where: { id: { in: matchedRows.map((row) => row.matchedMembershipId!) } }, select: { id: true, updatedAt: true } });
+        const currentById = new Map(current.map((item) => [item.id, item.updatedAt.getTime()]));
+        if (matchedRows.some((row) => currentById.get(row.matchedMembershipId!) !== row.baselineUpdatedAt?.getTime())) {
+          await tx.membershipImportPreview.update({ where: { id: preview.id }, data: { status: ImportPreviewStatus.STALE } });
+          throw new ApiError('CONFLICT', 'Import batch is stale and must be recreated.', 409, { preview: ['PREVIEW_STALE'] });
+        }
+      }
+    }
     const next = await tx.membershipImportPreview.update({ where: { id: preview.id }, data: { status: target, finalReport: target === 'REJECTED' ? { rejectionReason: reason } : preview.finalReport ?? undefined } });
     if (target === 'APPROVED') {
       for (const row of preview.rows) {

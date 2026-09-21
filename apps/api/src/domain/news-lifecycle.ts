@@ -13,7 +13,8 @@ export const assertNewsTransition = (from: PublicationStatus, to: PublicationSta
 
 export const normalizeNewsText = (value: unknown, field: string, max: number) => {
   if (typeof value !== 'string') throw new ApiError('VALIDATION_ERROR', `${field} must be text.`, 400);
-  const normalized = value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  if (/<[^>]+>/.test(value)) throw new ApiError('VALIDATION_ERROR', `${field} must be plain text.`, 400, { [field]: ['HTML_NOT_ALLOWED'] });
+  const normalized = value.replace(/\s+/g, ' ').trim();
   if (!normalized || normalized.length > max) throw new ApiError('VALIDATION_ERROR', `${field} is invalid.`, 400, { [field]: [`Must be 1-${max} characters`] });
   return normalized;
 };

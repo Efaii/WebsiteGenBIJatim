@@ -11,8 +11,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { privateStoragePath, publicStoragePath, ensureStorageRoots } from '../lib/storage';
 
-const privateNewsDir = () => privateStoragePath('news');
 const publicNewsDir = () => publicStoragePath('news');
+const privateNewsDir = () => privateStoragePath('news');
 const privateStagedNewsPath = (filename: string) => privateStoragePath(path.join('staged', 'news', filename));
 
 const assertImageSignature = (file: Express.Multer.File) => {
@@ -23,7 +23,8 @@ const assertImageSignature = (file: Express.Multer.File) => {
 };
 
 const categories = Object.values(NewsCategory);
-const publicProjection = (news: any) => ({ id: news.id, title: news.title, slug: news.slug, excerpt: news.excerpt, content: news.content, category: news.category, coverImage: news.coverAssets?.find((a: any) => a.status === 'PUBLIC')?.storageKey ?? null, publishedAt: news.publishedAt, byline: 'GenBI Jatim' });
+type PublicNews = { id: string; title: string; slug: string; excerpt: string; content: string; category: NewsCategory | null; publishedAt: Date | null; coverAssets?: Array<{ status: string; storageKey: string }> };
+const publicProjection = (news: PublicNews) => ({ id: news.id, title: news.title, slug: news.slug, excerpt: news.excerpt, content: news.content, category: news.category, coverImage: news.coverAssets?.find((asset) => asset.status === 'PUBLIC')?.storageKey ?? null, publishedAt: news.publishedAt, byline: 'GenBI Jatim' });
 const includePublic = { coverAssets: { where: { status: 'PUBLIC' } } } as const;
 const includeCms = { coverAssets: true, revisions: { orderBy: { updatedAt: 'desc' as const } }, slugAliases: true } as const;
 
@@ -119,6 +120,15 @@ const stageRevisionCover = async (revisionId: string, file: Express.Multer.File)
   return prisma.newsCoverAsset.create({ data: { revisionId, storageKey, originalFilename: file.originalname, mimeType: file.mimetype, byteSize: file.size, visibility: 'STAGED', status: 'STAGED' } });
 };
 
+const promoteStagedCover = async (cover: { storageKey: string; originalFilename: string }) => {
+  await ensureStorageRoots();
+  await fs.mkdir(publicNewsDir(), { recursive: true });
+  const publicFilename = `${crypto.randomUUID()}${path.extname(cover.originalFilename).toLowerCase()}`;
+  const publicPath = path.join(publicNewsDir(), publicFilename);
+  await fs.copyFile(privateStagedNewsPath(path.basename(cover.storageKey)), publicPath);
+  return { publicFilename, publicPath };
+};
+
 export const updateNewsRevision = async (req: CmsRequest, res: Response) => {
   const revision = await prisma.newsRevision.findUnique({ where: { id: req.params.revisionId } });
   if (!revision || revision.cancelledAt) throw new ApiError('NOT_FOUND', 'Revision not found.', 404);
@@ -146,7 +156,8 @@ export const cancelNewsRevision = async (req: CmsRequest, res: Response) => {
 export const transitionNewsRevision = async (req: CmsRequest, res: Response) => {
   const revision = await prisma.newsRevision.findUnique({ where: { id: req.params.revisionId } });
   if (!revision || revision.cancelledAt) throw new ApiError('NOT_FOUND', 'Revision not found.', 404);
-  const to = req.body.status as PublicationStatus;
+  const to = req.body.status;
+  if (!Object.values(PublicationStatus).includes(to)) throw new ApiError('VALIDATION_ERROR', 'Invalid News status.', 400, { status: ['Unsupported status'] });
   assertNewsTransition(revision.publicationStatus, to, req.body.rejectionReason);
   if (to === 'PUBLISHED' && (!revision.excerpt || !revision.content || !revision.category)) throw new ApiError('VALIDATION_ERROR', 'Revision is incomplete for publishing.', 400);
   if (to !== 'PUBLISHED') {
@@ -154,16 +165,23 @@ export const transitionNewsRevision = async (req: CmsRequest, res: Response) => 
     await audit(req.cmsSession!.cmsAccountId, to, revision.newsId, revision.publicationStatus, to);
     return sendSuccess(res, updated);
   }
-  const updated = await prisma.$transaction(async (tx) => {
+   const cover = await prisma.newsCoverAsset.findFirst({ where: { revisionId: revision.id, status: 'STAGED' } });
+   const promoted = cover ? await promoteStagedCover(cover) : null;
+   let updated;
+   try {
+   updated = await prisma.$transaction(async (tx) => {
     const now = new Date();
     await tx.news.update({ where: { id: revision.newsId }, data: { title: revision.title, slug: revision.slug, excerpt: revision.excerpt, content: revision.content, category: revision.category, publicationStatus: 'PUBLISHED', publishedAt: now } });
-    const cover = await tx.newsCoverAsset.findFirst({ where: { revisionId: revision.id, status: 'STAGED' } });
     if (cover) {
       await tx.newsCoverAsset.updateMany({ where: { newsId: revision.newsId, status: 'PUBLIC' }, data: { status: 'SUPERSEDED', supersededAt: now } });
-      await tx.newsCoverAsset.update({ where: { id: cover.id }, data: { newsId: revision.newsId, status: 'PUBLIC', visibility: 'PUBLIC' } });
+       await tx.newsCoverAsset.update({ where: { id: cover.id }, data: { newsId: revision.newsId, storageKey: `/uploads/news/${promoted!.publicFilename}`, status: 'PUBLIC', visibility: 'PUBLIC' } });
     }
     return tx.newsRevision.update({ where: { id: revision.id }, data: { publicationStatus: 'PUBLISHED', publishedAt: now } });
-  });
+   });
+   } catch (error) {
+     if (promoted) await fs.rm(promoted.publicPath, { force: true });
+     throw error;
+   }
   await audit(req.cmsSession!.cmsAccountId, 'PUBLISHED', revision.newsId, revision.publicationStatus, 'PUBLISHED');
   return sendSuccess(res, updated);
 };
@@ -192,7 +210,8 @@ export const previewNews = async (req: CmsRequest, res: Response) => {
 export const transitionNews = async (req: CmsRequest, res: Response) => {
   const news = await prisma.news.findUnique({ where: { id: req.params.id } });
   if (!news) throw new ApiError('NOT_FOUND', 'News not found.', 404);
-  const to = req.body.status as PublicationStatus;
+  const to = req.body.status;
+  if (!Object.values(PublicationStatus).includes(to)) throw new ApiError('VALIDATION_ERROR', 'Invalid News status.', 400, { status: ['Unsupported status'] });
   assertNewsTransition(news.publicationStatus, to, req.body.rejectionReason);
   const activeCover = await prisma.newsCoverAsset.findFirst({ where: { newsId: news.id, status: 'STAGED' }, orderBy: { createdAt: 'desc' } });
   if (to === 'PUBLISHED' && (!news.excerpt || !news.content || !news.category || !activeCover)) throw new ApiError('VALIDATION_ERROR', 'News is incomplete for publishing.', 400);
