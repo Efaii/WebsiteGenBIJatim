@@ -64,6 +64,31 @@ export const createProgramRevision = async (req: CmsRequest, res: Response) => {
   return sendSuccess(res, await prisma.programKerjaRevision.create({ data: { programKerjaId: program.id, namaProker: input.title, divisi: program.divisi, deskripsiProker: input.description, objectives: input.objectives, tanggalProker: input.date, startDate: input.date, endDate: input.date, formatPelaksanaan: input.format } }));
 };
 
+export const previewProgramRevision = async (req: CmsRequest, res: Response) => {
+  const revision = await prisma.programKerjaRevision.findUnique({ where: { id: req.params.revisionId }, include: { programKerja: true } });
+  if (!revision) throw new ApiError('NOT_FOUND', 'Program revision not found.', 404);
+  assertScopeAccess(req.cmsSession!, { commissariatId: revision.programKerja.commissariatId, periodId: revision.programKerja.periodId ?? undefined, divisionId: revision.programKerja.divisionId ?? undefined }, 'read');
+  return sendSuccess(res, { title: revision.namaProker, description: revision.deskripsiProker, objectives: revision.objectives, dateIso: revision.tanggalProker.toISOString().slice(0, 10), format: revision.formatPelaksanaan, divisi: revision.divisi, isPreview: true });
+};
+
+export const transitionProgramRevision = async (req: CmsRequest, res: Response) => {
+  const revision = await prisma.programKerjaRevision.findUnique({ where: { id: req.params.revisionId }, include: { programKerja: true } });
+  if (!revision || revision.cancelledAt) throw new ApiError('NOT_FOUND', 'Program revision not found.', 404);
+  assertScopeAccess(req.cmsSession!, { commissariatId: revision.programKerja.commissariatId, periodId: revision.programKerja.periodId ?? undefined, divisionId: revision.programKerja.divisionId ?? undefined }, 'write');
+  const to = req.body.status as PublicationStatus;
+  if (!Object.values(PublicationStatus).includes(to)) throw new ApiError('VALIDATION_ERROR', 'Invalid publication status.', 400);
+  if (['APPROVED', 'PUBLISHED', 'ARCHIVED'].includes(to) && req.cmsSession!.cmsAccount.role !== CmsRole.ADMIN_GLOBAL) throw new ApiError('FORBIDDEN', 'Only ADMIN_GLOBAL can approve, publish, or archive revisions.', 403);
+  assertPublicationTransition(revision.publicationStatus, to, req.body.rejectionReason);
+  const updated = await prisma.$transaction(async (tx) => {
+    const next = await tx.programKerjaRevision.update({ where: { id: revision.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
+    if (to === 'PUBLISHED') {
+      await tx.programKerja.update({ where: { id: revision.programKerjaId }, data: { namaProker: revision.namaProker, divisi: revision.divisi, tanggalProker: revision.tanggalProker, startDate: revision.startDate, endDate: revision.endDate, objectives: revision.objectives, formatPelaksanaan: revision.formatPelaksanaan, deskripsiProker: revision.deskripsiProker, publicationStatus: 'PUBLISHED' } });
+    }
+    return next;
+  });
+  return sendSuccess(res, updated);
+};
+
 export const listCmsPrograms = async (req: CmsRequest, res: Response) => {
   const where: { publicationStatus?: PublicationStatus; commissariatId?: string; periodId?: string; divisionId?: string } = {};
   if (typeof req.query.status === 'string' && Object.values(PublicationStatus).includes(req.query.status as PublicationStatus)) where.publicationStatus = req.query.status as PublicationStatus;
