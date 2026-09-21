@@ -59,7 +59,7 @@ jobs:
       - run: npm run build --workspace @repo/web
       - name: Verify isolated database backup and restore
         id: backup
-        run: npm run verify:backup-restore >> "$GITHUB_OUTPUT"
+        run: npm run verify:backup-restore
         env:
           RESTORE_DATABASE: genbi_jatim_restore_${{ github.run_id }}_${{ github.run_attempt }}
       - run: npm run test:e2e
