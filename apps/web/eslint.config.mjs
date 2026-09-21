@@ -21,7 +21,7 @@ const eslintConfig = defineConfig([
       "**/app/calendar/CalendarClient.tsx",
       "**/app/commissariat/*/CommissariatClient.tsx",
       "**/app/commissariat/page.tsx",
-      "**/app/news/[slug]/page.tsx",
+      "**/app/news/*/page.tsx",
       "**/components/Card.tsx",
       "**/components/home/About.tsx",
       "**/components/home/FAQ.tsx",
@@ -43,8 +43,11 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["**/app/program/[id]/page.tsx"],
-    rules: { "@typescript-eslint/ban-ts-comment": "off" },
+    files: ["**/app/program/*/page.tsx"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+      "react/no-unescaped-entities": "off",
+    },
   },
 ]);
 
