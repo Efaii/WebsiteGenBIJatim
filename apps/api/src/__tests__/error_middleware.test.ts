@@ -25,7 +25,7 @@ async function runTests() {
   });
   errorHandler(errP2002, {} as any, resP2002, () => {});
   assert.strictEqual(resP2002.statusCode, 409, 'P2002 must return status 409');
-  assert.strictEqual(resP2002.body.code, 'P2002');
+  assert.strictEqual(resP2002.body.error.code, 'CONFLICT');
 
   // Test P2003 -> 400
   const resP2003 = mockRes();
@@ -35,7 +35,7 @@ async function runTests() {
   });
   errorHandler(errP2003, {} as any, resP2003, () => {});
   assert.strictEqual(resP2003.statusCode, 400, 'P2003 must return status 400');
-  assert.strictEqual(resP2003.body.code, 'P2003');
+  assert.strictEqual(resP2003.body.error.code, 'VALIDATION_ERROR');
 
   // Test PrismaClientValidationError -> 400
   const resValidation = mockRes();
