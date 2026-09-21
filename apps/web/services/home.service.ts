@@ -14,11 +14,13 @@ const STATIC_COMMISSARIATS = [
   { id: "uin-madura", name: "UIN Madura", logo: "/assets/logos/uinMadura.svg" },
 ];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
 export const getHomeData = async (): Promise<HomeDataResponse> => {
   try {
     // Menarik data seluruh konten homepage via endpoint publik tunggal
     // Ini menghindari isu 'Access Denied' pada endpoint admin /faqs dan /testimonials
-    const response = await fetch('http://localhost:5000/api/home', { 
+    const response = await fetch(`${API_BASE}/home`, {
       next: { revalidate: 60 } 
     });
 
