@@ -22,9 +22,11 @@ const fields = (body: Record<string, unknown>) => {
 };
 
 const scope = async (req: CmsRequest) => {
-  const commissariatId = typeof req.body.commissariatId === 'string' ? req.body.commissariatId : req.query.commissariatId as string;
-  const periodId = typeof req.body.periodId === 'string' ? req.body.periodId : req.query.periodId as string;
-  const divisionId = typeof req.body.divisionId === 'string' ? req.body.divisionId : req.query.divisionId as string;
+  const assignment = req.cmsSession!.cmsAccount.assignments[0];
+  const isAdmin = req.cmsSession!.cmsAccount.role === CmsRole.ADMIN_GLOBAL;
+  const commissariatId = isAdmin ? (typeof req.body.commissariatId === 'string' ? req.body.commissariatId : req.query.commissariatId as string) : assignment?.commissariatId;
+  const periodId = isAdmin ? (typeof req.body.periodId === 'string' ? req.body.periodId : req.query.periodId as string) : assignment?.periodId;
+  const divisionId = isAdmin ? (typeof req.body.divisionId === 'string' ? req.body.divisionId : req.query.divisionId as string) : assignment?.divisionId;
   if (!commissariatId || !periodId || !divisionId) throw new ApiError('VALIDATION_ERROR', 'Program scope is required.', 400);
   assertScopeAccess(req.cmsSession!, { commissariatId, periodId, divisionId }, 'write');
   const division = await prisma.division.findFirst({ where: { id: divisionId, commissariatId, periodId } });
@@ -63,6 +65,7 @@ export const transitionProgram = async (req: CmsRequest, res: Response) => {
 
 export const uploadProgramArtifact = async (req: CmsRequest, res: Response) => {
   if (!req.file || !['proposal', 'lpj'].includes(String(req.body.kind))) throw new ApiError('VALIDATION_ERROR', 'A proposal or LPJ file is required.', 400);
+  if (req.file.size > 10 * 1024 * 1024 || req.file.mimetype !== 'application/pdf' || path.extname(req.file.originalname).toLowerCase() !== '.pdf' || !req.file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) throw new ApiError('UNSUPPORTED_MEDIA_TYPE', 'Only valid PDF artifacts up to 10 MB are allowed.', 415);
   const program = await prisma.programKerja.findUnique({ where: { id: req.params.id } });
   if (!program || program.publicationStatus !== 'APPROVED' && program.publicationStatus !== 'PUBLISHED') throw new ApiError('FORBIDDEN', 'Artifacts are available only for approved programs.', 403);
   assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'read');
@@ -78,5 +81,6 @@ export const downloadProgramArtifact = async (req: CmsRequest, res: Response) =>
   const artifact = await prisma.programArtifact.findUnique({ where: { id: req.params.artifactId }, include: { programKerja: true } });
   if (!artifact) throw new ApiError('NOT_FOUND', 'Artifact not found.', 404);
   if (artifact.programKerja.publicationStatus !== 'APPROVED' && artifact.programKerja.publicationStatus !== 'PUBLISHED') throw new ApiError('FORBIDDEN', 'Artifact is not available.', 403);
+  assertScopeAccess(req.cmsSession!, { commissariatId: artifact.programKerja.commissariatId, periodId: artifact.programKerja.periodId ?? undefined, divisionId: artifact.programKerja.divisionId ?? undefined }, 'read');
   return res.download(privateStoragePath(artifact.storageKey), artifact.originalFilename);
 };

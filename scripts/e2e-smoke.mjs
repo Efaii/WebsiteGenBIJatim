@@ -41,7 +41,7 @@ expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { m
 expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'APPROVED' }) }), 200, 'program approve');
 const artifactForm = new FormData();
 artifactForm.append('kind', 'proposal');
-artifactForm.append('file', new Blob([new TextEncoder().encode('private proposal')], { type: 'application/pdf' }), 'proposal.pdf');
+artifactForm.append('file', new Blob([new TextEncoder().encode('%PDF-1.7\nprivate proposal')], { type: 'application/pdf' }), 'proposal.pdf');
 const artifact = expectStatus(await request(`/api/v1/programs/${programDraft.id}/artifacts`, { method: 'POST', headers: { cookie }, body: artifactForm }), 200, 'program artifact upload');
 const artifactDownload = await request(`/api/v1/programs/${programDraft.id}/artifacts/${artifact.id}`, { headers: { cookie } });
 if (!artifactDownload.response.ok || artifactDownload.body) throw new Error('Approved Program Kerja private artifact was not downloadable.');
