@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 
 export const errorHandler = (err: unknown, req: Request, res: Response, _next: NextFunction) => {
-  const errorObj = err as { status?: number; statusCode?: number; name?: string; message?: string; code?: string; errors?: unknown };
+  const errorObj = err as { status?: number; statusCode?: number; name?: string; message?: string; code?: string; errors?: unknown; fields?: unknown };
   const requestId = res.locals?.requestId ?? req.header?.('x-request-id') ?? 'unknown';
 
   // Prisma Known Request Error handling
@@ -38,5 +38,6 @@ export const errorHandler = (err: unknown, req: Request, res: Response, _next: N
   }
 
   const code = errorObj.code && ['VALIDATION_ERROR', 'UNAUTHENTICATED', 'FORBIDDEN', 'NOT_FOUND', 'CONFLICT', 'UNSUPPORTED_MEDIA_TYPE', 'RATE_LIMITED', 'INTERNAL_ERROR'].includes(errorObj.code) ? errorObj.code : status >= 500 ? 'INTERNAL_ERROR' : 'VALIDATION_ERROR';
-  return res.status(status).json({ error: { code, message: status >= 500 ? 'Internal server error.' : message, ...(errorObj.errors && typeof errorObj.errors === 'object' ? { fields: errorObj.errors } : {}) }, meta: { requestId } });
+  const fields = errorObj.fields ?? errorObj.errors;
+  return res.status(status).json({ error: { code, message: status >= 500 ? 'Internal server error.' : message, ...(fields && typeof fields === 'object' ? { fields } : {}) }, meta: { requestId } });
 };

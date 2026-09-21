@@ -36,6 +36,17 @@ const division = period?.divisions?.[0];
 if (!commissariat || !period || !division) throw new Error('E2E seed did not provide commissariat, period, and division masters.');
 console.log('PASS canonical master reads');
 
+const programDraft = expectStatus(await request('/api/v1/programs', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ commissariatId: commissariat.id, periodId: period.id, divisionId: division.id, title: `E2E Program ${Date.now()}`, divisi: division.name, dateIso: '2026-10-01', format: 'Hybrid', description: 'E2E CMS program description' }) }), 200, 'program create');
+expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'SUBMITTED' }) }), 200, 'program submit');
+expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'APPROVED' }) }), 200, 'program approve');
+const artifactForm = new FormData();
+artifactForm.append('kind', 'proposal');
+artifactForm.append('file', new Blob([new TextEncoder().encode('private proposal')], { type: 'application/pdf' }), 'proposal.pdf');
+const artifact = expectStatus(await request(`/api/v1/programs/${programDraft.id}/artifacts`, { method: 'POST', headers: { cookie }, body: artifactForm }), 200, 'program artifact upload');
+const artifactDownload = await request(`/api/v1/programs/${programDraft.id}/artifacts/${artifact.id}`, { headers: { cookie } });
+if (!artifactDownload.response.ok || artifactDownload.body) throw new Error('Approved Program Kerja private artifact was not downloadable.');
+console.log('PASS Program Kerja CMS lifecycle and private artifact access');
+
 const rows = Array.from({ length: 101 }, (_, index) => ({ komisariat: commissariat.name, nama: `E2E Member ${index}`, jabatan: 'Staff', divisi: division.name, prodi: 'Teknik Informatika' }));
 const workbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), 'ALL');

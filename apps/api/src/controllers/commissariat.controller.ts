@@ -107,6 +107,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
 export const getAllProgramKerja = async (_req: Request, res: Response) => {
   try {
     const programs = await prisma.programKerja.findMany({
+      where: { publicationStatus: 'PUBLISHED' },
       orderBy: [{ tanggalProker: 'desc' }, { programKe: 'asc' }],
       include: { commissariat: { select: { name: true, slug: true } } },
     });
@@ -140,7 +141,7 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const proker = await prisma.programKerja.findUnique({
-      where: { id },
+      where: { id, publicationStatus: 'PUBLISHED' },
       include: {
         commissariat: {
           select: { name: true, slug: true },
