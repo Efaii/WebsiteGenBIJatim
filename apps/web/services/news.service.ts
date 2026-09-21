@@ -1,4 +1,5 @@
 // apps/web/services/news.service.ts
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 export interface AdminNewsItem {
   id: string;
   title: string;
@@ -20,7 +21,7 @@ const getHeaders = (isFormData = false) => {
 
 // Admin Fetch (Protected)
 export const getAdminNews = async (): Promise<AdminNewsItem[]> => {
-  const response = await fetch('http://localhost:5000/api/news', { 
+  const response = await fetch(`${API_BASE}/news`, {
     headers: getHeaders(),
     cache: 'no-store'
   });
@@ -33,7 +34,7 @@ export const getAdminNews = async (): Promise<AdminNewsItem[]> => {
 
 // Public Fetch (Latest 4)
 export const getLatestNews = async (): Promise<AdminNewsItem[]> => {
-  const response = await fetch('http://localhost:5000/api/news/latest', {
+  const response = await fetch(`${API_BASE}/news/latest`, {
     next: { revalidate: 60 } // Next.js ISR: Revalidate every 60 seconds
   });
   if (!response.ok) throw new Error('Failed to fetch Latest News');
@@ -41,7 +42,7 @@ export const getLatestNews = async (): Promise<AdminNewsItem[]> => {
 };
 
 export const createNews = async (formData: FormData): Promise<AdminNewsItem> => {
-  const response = await fetch('http://localhost:5000/api/news', {
+  const response = await fetch(`${API_BASE}/news`, {
     method: 'POST',
     headers: getHeaders(true),
     body: formData,
@@ -51,7 +52,7 @@ export const createNews = async (formData: FormData): Promise<AdminNewsItem> => 
 };
 
 export const updateNews = async (id: string, formData: FormData): Promise<AdminNewsItem> => {
-  const response = await fetch(`http://localhost:5000/api/news/${id}`, {
+  const response = await fetch(`${API_BASE}/news/${id}`, {
     method: 'PUT',
     headers: getHeaders(true),
     body: formData,
@@ -61,7 +62,7 @@ export const updateNews = async (id: string, formData: FormData): Promise<AdminN
 };
 
 export const deleteNews = async (id: string): Promise<void> => {
-  const response = await fetch(`http://localhost:5000/api/news/${id}`, {
+  const response = await fetch(`${API_BASE}/news/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
