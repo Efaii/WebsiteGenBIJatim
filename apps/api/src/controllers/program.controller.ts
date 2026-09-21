@@ -82,7 +82,7 @@ export const transitionProgramRevision = async (req: CmsRequest, res: Response) 
   const updated = await prisma.$transaction(async (tx) => {
     const next = await tx.programKerjaRevision.update({ where: { id: revision.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
     if (to === 'PUBLISHED') {
-      await tx.programKerja.update({ where: { id: revision.programKerjaId }, data: { namaProker: revision.namaProker, divisi: revision.divisi, tanggalProker: revision.tanggalProker, startDate: revision.startDate, endDate: revision.endDate, objectives: revision.objectives, formatPelaksanaan: revision.formatPelaksanaan, deskripsiProker: revision.deskripsiProker, publicationStatus: 'PUBLISHED' } });
+      await tx.programKerja.update({ where: { id: revision.programKerjaId }, data: { namaProker: revision.namaProker, divisi: revision.divisi, tanggalProker: revision.tanggalProker, startDate: revision.startDate, endDate: revision.endDate, objectives: revision.objectives ?? undefined, formatPelaksanaan: revision.formatPelaksanaan, deskripsiProker: revision.deskripsiProker, publicationStatus: 'PUBLISHED' } });
     }
     return next;
   });
