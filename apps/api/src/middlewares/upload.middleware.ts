@@ -31,3 +31,14 @@ export const uploadNewsImage = multer({
     cb(new Error('Hanya file gambar (JPEG, JPG, PNG, WEBP) yang diizinkan!'));
   },
 });
+
+export const uploadCanonicalNewsCover = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+    if (allowedMimeTypes.includes(file.mimetype) && allowedExtensions.includes(path.extname(file.originalname).toLowerCase())) return cb(null, true);
+    cb(new Error('Only JPEG, PNG, or WebP covers are allowed.'));
+  },
+});
