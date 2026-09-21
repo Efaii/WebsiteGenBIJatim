@@ -39,6 +39,8 @@ The E2E profile is idempotent and only upserts deterministic master data. It nev
 
 Migrations must be backward-compatible with the previous application during rollout. Rollback means rolling the application artifact back while retaining applied forward-compatible migrations; destructive down migrations are not automated.
 
+`db push` and `migrate deploy` are deliberately separate modes. `db push` is only for a disposable local/test database and must not be followed by `migrate deploy` on the same database. Staging and production must start from a migration-managed database and run `npm run check:migration-mode` before `prisma migrate deploy`. If an existing environment was historically created with `db push`, provision a fresh migration-managed database or perform a reviewed, environment-specific `prisma migrate resolve` procedure; the CI workflow never auto-resolves migration history.
+
 The staging reset guard refuses to run unless `NODE_ENV=staging`, `ALLOW_STAGING_RESET=true`, and `BACKUP_EVIDENCE_ID` are present:
 
 ```powershell

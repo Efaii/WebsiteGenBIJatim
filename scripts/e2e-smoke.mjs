@@ -3,7 +3,9 @@ import XLSX from '@e965/xlsx';
 const api = process.env.API_URL ?? 'http://127.0.0.1:5000';
 const username = process.env.ADMIN_USERNAME;
 const password = process.env.ADMIN_PASSWORD;
+const backupEvidenceId = process.env.BACKUP_EVIDENCE_ID;
 if (!username || !password) throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD are required.');
+if (!backupEvidenceId) throw new Error('BACKUP_EVIDENCE_ID is required for the E2E import evidence chain.');
 
 const request = async (path, options = {}) => {
   const response = await fetch(`${api}${path}`, options);
@@ -46,7 +48,7 @@ const preview = expectStatus(await request('/api/v1/membership-imports/preview',
 if (preview.totalRows !== 101) throw new Error(`Expected 101 preview rows, got ${preview.totalRows}`);
 const rejectedLargeCommit = await request('/api/v1/membership-imports/commit', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ previewId: preview.previewId }) });
 expectStatus(rejectedLargeCommit, 400, 'large import guard');
-const committed = expectStatus(await request('/api/v1/membership-imports/commit', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ previewId: preview.previewId, confirmLargeImport: true, backupEvidenceId: 'e2e-backup-verified' }) }), 200, 'membership commit');
+const committed = expectStatus(await request('/api/v1/membership-imports/commit', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ previewId: preview.previewId, confirmLargeImport: true, backupEvidenceId }) }), 200, 'membership commit');
 expectStatus(await request(`/api/v1/membership-imports/${committed.previewId}/submit`, { method: 'POST', headers: { cookie } }), 200, 'membership submit');
 expectStatus(await request(`/api/v1/membership-imports/${committed.previewId}/approve`, { method: 'POST', headers: { cookie } }), 200, 'membership approve');
 const memberships = expectStatus(await request(`/api/v1/memberships?commissariatId=${commissariat.id}&periodId=${period.id}`), 200, 'public memberships');
