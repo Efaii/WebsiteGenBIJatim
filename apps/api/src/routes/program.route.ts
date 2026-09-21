@@ -3,7 +3,7 @@ import multer from 'multer';
 import { CmsRole } from '@prisma/client';
 import { asyncHandler } from '../middlewares/asyncHandler';
 import { requireCmsRole, requireCmsSession } from '../middlewares/cms-session.middleware';
-import { createProgram, createProgramRevision, downloadProgramArtifact, listCmsPrograms, previewProgram, previewProgramRevision, transitionProgram, transitionProgramRevision, updateProgram, uploadProgramArtifact } from '../controllers/program.controller';
+import { createProgram, createProgramRevision, downloadProgramArtifact, listCmsPrograms, previewProgram, previewProgramRevision, transitionProgram, transitionProgramExecution, transitionProgramRevision, updateProgram, uploadProgramArtifact } from '../controllers/program.controller';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, file.mimetype === 'application/pdf' && file.originalname.toLowerCase().endsWith('.pdf')) });
@@ -15,6 +15,7 @@ router.post('/:id/revisions', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GL
 router.post('/:id/revisions/:revisionId/preview', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_DIVISI, CmsRole.SEKRETARIS_UMUM), asyncHandler(previewProgramRevision));
 router.post('/:id/revisions/:revisionId/transition', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_DIVISI), asyncHandler(transitionProgramRevision));
 router.post('/:id/transition', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_DIVISI), asyncHandler(transitionProgram));
+router.post('/:id/execution-transition', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_DIVISI), asyncHandler(transitionProgramExecution));
 router.post('/:id/artifacts', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_DIVISI), upload.single('file'), asyncHandler(uploadProgramArtifact));
 router.get('/:id/artifacts/:artifactId', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_UMUM, CmsRole.SEKRETARIS_DIVISI), asyncHandler(downloadProgramArtifact));
 export default router;
