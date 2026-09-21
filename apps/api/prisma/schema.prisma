@@ -44,6 +44,13 @@ enum MembershipStatus {
   INACTIVE
 }
 
+enum ExecutionStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
 enum ImportPreviewStatus {
   PREVIEW_READY
   COMMITTED
@@ -354,6 +361,10 @@ model ProgramKerja {
   publicationStatus PublicationStatus @default(PUBLISHED)
   rejectionReason   String?           @db.Text
   authorAccountId   String?
+  objectives        Json?
+  startDate         DateTime?
+  endDate           DateTime?
+  executionStatus   ExecutionStatus   @default(PLANNED)
 
   commissariatId String
   commissariat   Commissariat           @relation(fields: [commissariatId], references: [id], onDelete: Cascade)
@@ -378,8 +389,13 @@ model ProgramKerjaRevision {
   deskripsiProker   String            @db.Text
   publicationStatus PublicationStatus @default(DRAFT)
   rejectionReason   String?           @db.Text
+  cancelledAt       DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+  objectives        Json?
+  startDate         DateTime?
+  endDate           DateTime?
+  executionStatus   ExecutionStatus   @default(PLANNED)
   programKerja      ProgramKerja      @relation(fields: [programKerjaId], references: [id], onDelete: Cascade)
 
   @@index([programKerjaId, publicationStatus])

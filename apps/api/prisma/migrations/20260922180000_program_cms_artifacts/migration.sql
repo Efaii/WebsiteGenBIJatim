@@ -3,7 +3,11 @@ ALTER TABLE `program_kerja`
   ADD COLUMN `divisionId` VARCHAR(191) NULL,
   ADD COLUMN `publicationStatus` ENUM('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED') NOT NULL DEFAULT 'PUBLISHED',
   ADD COLUMN `rejectionReason` TEXT NULL,
-  ADD COLUMN `authorAccountId` VARCHAR(191) NULL;
+  ADD COLUMN `authorAccountId` VARCHAR(191) NULL,
+  ADD COLUMN `objectives` JSON NULL,
+  ADD COLUMN `startDate` DATETIME(3) NULL,
+  ADD COLUMN `endDate` DATETIME(3) NULL,
+  ADD COLUMN `executionStatus` ENUM('PLANNED','ONGOING','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PLANNED';
 
 CREATE TABLE `ProgramKerjaRevision` (
   `id` VARCHAR(191) NOT NULL,
@@ -15,8 +19,13 @@ CREATE TABLE `ProgramKerjaRevision` (
   `deskripsiProker` TEXT NOT NULL,
   `publicationStatus` ENUM('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED') NOT NULL DEFAULT 'DRAFT',
   `rejectionReason` TEXT NULL,
+  `cancelledAt` DATETIME(3) NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
+  `objectives` JSON NULL,
+  `startDate` DATETIME(3) NULL,
+  `endDate` DATETIME(3) NULL,
+  `executionStatus` ENUM('PLANNED','ONGOING','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PLANNED',
   PRIMARY KEY (`id`), INDEX `ProgramKerjaRevision_programKerjaId_publicationStatus_idx` (`programKerjaId`,`publicationStatus`),
   CONSTRAINT `ProgramKerjaRevision_programKerjaId_fkey` FOREIGN KEY (`programKerjaId`) REFERENCES `program_kerja`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
