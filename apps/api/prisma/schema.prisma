@@ -15,6 +15,267 @@ model User {
   role      String   @default("ADMIN")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  cmsAccount CmsAccount?
+}
+
+enum CmsRole {
+  ADMIN_GLOBAL
+  SEKRETARIS_UMUM
+  SEKRETARIS_DIVISI
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum PublicationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ImportPreviewStatus {
+  PREVIEW_READY
+  COMMITTED
+  SUBMITTED
+  APPROVED
+  REJECTED
+  STALE
+  EXPIRED
+  FAILED
+}
+
+enum ImportRowClassification {
+  NEW
+  UPDATED
+  UNCHANGED
+  INVALID
+  AMBIGUOUS_MATCH
+  DUPLICATE_IN_FILE
+}
+
+enum NewsCategory {
+  KEGIATAN
+  WEBINAR
+  SOSIAL
+  EDUKASI
+  PELATIHAN
+}
+
+enum NewsAssetStatus {
+  STAGED
+  PUBLIC
+  SUPERSEDED
+}
+
+model CmsAccount {
+  id                 String        @id @default(uuid())
+  userId             String        @unique
+  role               CmsRole
+  status             AccountStatus @default(ACTIVE)
+  mustChangePassword Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments    CmsAssignment[]
+  sessions       CmsSession[]
+  auditEvents    AuditEvent[]
+  importPreviews MembershipImportPreview[]
+  authoredNews   News[]
+}
+
+model Period {
+  id             String   @id @default(uuid())
+  label          String
+  commissariatId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  commissariat   Commissariat              @relation(fields: [commissariatId], references: [id], onDelete: Restrict)
+  divisions      Division[]
+  memberships    Membership[]
+  assignments    CmsAssignment[]
+  importPreviews MembershipImportPreview[]
+  importAliases  MembershipImportAlias[]
+
+  @@unique([commissariatId, label])
+  @@index([label])
+}
+
+model Division {
+  id             String   @id @default(uuid())
+  name           String
+  commissariatId String
+  periodId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  commissariat  Commissariat            @relation(fields: [commissariatId], references: [id], onDelete: Restrict)
+  period        Period                  @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  memberships   Membership[]
+  assignments   CmsAssignment[]
+  importAliases MembershipImportAlias[]
+
+  @@unique([commissariatId, periodId, name])
+  @@index([periodId])
+}
+
+model MembershipImportAlias {
+  id             String    @id @default(uuid())
+  kind           String
+  rawValue       String
+  commissariatId String?
+  periodId       String?
+  divisionId     String?
+  approved       Boolean   @default(false)
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  commissariat Commissariat? @relation(fields: [commissariatId], references: [id], onDelete: Cascade)
+  period       Period?       @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  division     Division?     @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+
+  @@unique([kind, rawValue, commissariatId, periodId])
+  @@index([kind, rawValue, approved])
+}
+
+model Membership {
+  id                String            @id @default(uuid())
+  commissariatId    String
+  periodId          String
+  divisionId        String?
+  name              String
+  position          String
+  studyProgram      String
+  publicationStatus PublicationStatus @default(DRAFT)
+  membershipStatus  MembershipStatus  @default(ACTIVE)
+  rejectionReason   String?           @db.Text
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  commissariat Commissariat          @relation(fields: [commissariatId], references: [id], onDelete: Restrict)
+  period       Period                @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  division     Division?             @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+  importRows   MembershipImportRow[]
+
+  @@index([commissariatId, periodId])
+  @@index([divisionId])
+  @@index([publicationStatus, membershipStatus])
+}
+
+model MembershipImportPreview {
+  id             String              @id @default(uuid())
+  cmsAccountId   String
+  commissariatId String
+  periodId       String
+  sourceFilename String
+  sourceFileHash String
+  status         ImportPreviewStatus @default(PREVIEW_READY)
+  totalRows      Int
+  newCount       Int                 @default(0)
+  updatedCount   Int                 @default(0)
+  unchangedCount Int                 @default(0)
+  invalidCount   Int                 @default(0)
+  ambiguousCount Int                 @default(0)
+  duplicateCount Int                 @default(0)
+  expiresAt      DateTime
+  committedAt    DateTime?
+  finalReport    Json?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  cmsAccount   CmsAccount            @relation(fields: [cmsAccountId], references: [id], onDelete: Restrict)
+  commissariat Commissariat          @relation(fields: [commissariatId], references: [id], onDelete: Restrict)
+  period       Period                @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  rows         MembershipImportRow[]
+
+  @@index([cmsAccountId, status, expiresAt])
+  @@index([commissariatId, periodId, createdAt])
+}
+
+model MembershipImportRow {
+  id                  String                  @id @default(uuid())
+  previewId           String
+  rowNumber           Int
+  rawValues           Json
+  normalizedValues    Json?
+  classification      ImportRowClassification
+  errorCode           String?
+  errorMessage        String?
+  matchedMembershipId String?
+  mappedDivisionId    String?
+  baselineUpdatedAt   DateTime?
+  createdMembershipId String?
+  createdAt           DateTime                @default(now())
+
+  preview           MembershipImportPreview @relation(fields: [previewId], references: [id], onDelete: Cascade)
+  matchedMembership Membership?             @relation(fields: [matchedMembershipId], references: [id], onDelete: SetNull)
+
+  @@unique([previewId, rowNumber])
+  @@index([previewId, classification])
+}
+
+model CmsAssignment {
+  id             String   @id @default(uuid())
+  cmsAccountId   String
+  commissariatId String?
+  periodId       String?
+  divisionId     String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cmsAccount   CmsAccount    @relation(fields: [cmsAccountId], references: [id], onDelete: Cascade)
+  commissariat Commissariat? @relation(fields: [commissariatId], references: [id], onDelete: Restrict)
+  period       Period?       @relation(fields: [periodId], references: [id], onDelete: Restrict)
+  division     Division?     @relation(fields: [divisionId], references: [id], onDelete: Restrict)
+
+  @@index([commissariatId, periodId, divisionId])
+}
+
+model CmsSession {
+  id           String    @id @default(uuid())
+  cmsAccountId String
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  cmsAccount CmsAccount @relation(fields: [cmsAccountId], references: [id], onDelete: Cascade)
+
+  @@index([cmsAccountId, revokedAt, expiresAt])
+}
+
+model AuditEvent {
+  id             String   @id @default(uuid())
+  cmsAccountId   String
+  action         String
+  entity         String
+  entityId       String?
+  oldStatus      String?
+  newStatus      String?
+  commissariatId String?
+  periodId       String?
+  divisionId     String?
+  createdAt      DateTime @default(now())
+
+  cmsAccount CmsAccount @relation(fields: [cmsAccountId], references: [id], onDelete: Restrict)
+
+  @@index([entity, entityId])
+  @@index([cmsAccountId, createdAt])
 }
 
 model Testimonial {
@@ -55,7 +316,13 @@ model Commissariat {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  programKerja ProgramKerja[]
+  programKerja   ProgramKerja[]
+  periods        Period[]
+  divisions      Division[]
+  memberships    Membership[]
+  assignments    CmsAssignment[]
+  importPreviews MembershipImportPreview[]
+  importAliases  MembershipImportAlias[]
 }
 
 model ProgramKerja {
@@ -80,20 +347,95 @@ model ProgramKerja {
   updatedAt         DateTime @updatedAt
 
   commissariatId String
-  commissariat   Commissariat @relation(fields: [commissariatId], references: [id])
+  commissariat   Commissariat @relation(fields: [commissariatId], references: [id], onDelete: Cascade)
 
+  @@index([commissariatId])
+  @@index([tanggalProker])
   @@map("program_kerja")
 }
 
 model News {
-  id        String   @id @default(uuid())
-  title     String
-  slug      String   @unique
-  content   String   @db.Text
-  image     String
-  author    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String            @id @default(uuid())
+  title             String
+  slug              String            @unique
+  content           String            @db.Text
+  image             String
+  author            String
+  excerpt           String            @default("") @db.VarChar(280)
+  category          NewsCategory?
+  publicationStatus PublicationStatus @default(DRAFT)
+  publishedAt       DateTime?
+  authorAccountId   String?
+  rejectionReason   String?           @db.Text
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  authorAccount CmsAccount?      @relation(fields: [authorAccountId], references: [id], onDelete: SetNull)
+  revisions     NewsRevision[]
+  coverAssets   NewsCoverAsset[]
+  slugAliases   NewsSlugAlias[]
 
   @@map("news")
+}
+
+model NewsRevision {
+  id                String            @id @default(uuid())
+  newsId            String
+  title             String
+  slug              String
+  excerpt           String            @db.VarChar(280)
+  content           String            @db.Text
+  category          NewsCategory?
+  publicationStatus PublicationStatus @default(DRAFT)
+  publishedAt       DateTime?
+  rejectionReason   String?           @db.Text
+  cancelledAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  news        News             @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  coverAssets NewsCoverAsset[]
+
+  @@index([newsId, publicationStatus])
+}
+
+model NewsCoverAsset {
+  id               String          @id @default(uuid())
+  newsId           String?
+  revisionId       String?
+  storageKey       String          @unique
+  originalFilename String
+  mimeType         String
+  byteSize         Int
+  visibility       String          @default("STAGED")
+  status           NewsAssetStatus @default(STAGED)
+  createdAt        DateTime        @default(now())
+  supersededAt     DateTime?
+
+  news     News?         @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  revision NewsRevision? @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+
+  @@index([newsId, status])
+  @@index([revisionId, status])
+}
+
+model NewsSlugAlias {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  newsId    String
+  createdAt DateTime @default(now())
+
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
 }
