@@ -36,7 +36,7 @@ const division = period?.divisions?.[0];
 if (!commissariat || !period || !division) throw new Error('E2E seed did not provide commissariat, period, and division masters.');
 console.log('PASS canonical master reads');
 
-const programDraft = expectStatus(await request('/api/v1/programs', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ commissariatId: commissariat.id, periodId: period.id, divisionId: division.id, title: `E2E Program ${Date.now()}`, divisi: division.name, dateIso: '2026-10-01', format: 'Hybrid', description: 'E2E CMS program description' }) }), 200, 'program create');
+const programDraft = expectStatus(await request('/api/v1/programs', { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ commissariatId: commissariat.id, periodId: period.id, divisionId: division.id, title: `E2E Program ${Date.now()}`, divisi: division.name, dateIso: '2026-10-01', format: 'Hybrid', description: 'E2E CMS program description', objectives: ['Validate CMS workflow'] }) }), 200, 'program create');
 expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'SUBMITTED' }) }), 200, 'program submit');
 expectStatus(await request(`/api/v1/programs/${programDraft.id}/transition`, { method: 'POST', headers: { cookie, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'APPROVED' }) }), 200, 'program approve');
 const artifactForm = new FormData();
