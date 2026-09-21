@@ -53,6 +53,7 @@ try {
     await run(process.env.MYSQL_BIN ?? 'mysql', [...mysqlArgs, '-e', `DROP DATABASE IF EXISTS \`${restoreDatabase}\`;`]);
   } catch (error) {
     console.error(`Warning: failed to clean up restore database ${restoreDatabase}.`, error);
+    throw error;
   }
   await rm(dir, { recursive: true, force: true });
 }
