@@ -13,6 +13,7 @@ import { privateStoragePath, publicStoragePath, ensureStorageRoots } from '../li
 
 const privateNewsDir = () => privateStoragePath('news');
 const publicNewsDir = () => publicStoragePath('news');
+const privateStagedNewsPath = (filename: string) => privateStoragePath(path.join('staged', 'news', filename));
 
 const assertImageSignature = (file: Express.Multer.File) => {
   const isJpeg = file.mimetype === 'image/jpeg' && file.buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
@@ -70,7 +71,8 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
     await ensureStorageRoots();
     await fs.mkdir(privateNewsDir(), { recursive: true });
     const storageKey = `staged/news/${crypto.randomUUID()}${path.extname(req.file.originalname).toLowerCase()}`;
-    await fs.writeFile(privateStoragePath(storageKey), req.file.buffer);
+    await fs.mkdir(path.dirname(privateStagedNewsPath(path.basename(storageKey))), { recursive: true });
+    await fs.writeFile(privateStagedNewsPath(path.basename(storageKey)), req.file.buffer);
     cover = { storageKey, originalFilename: req.file.originalname, mimeType: req.file.mimetype, byteSize: req.file.size };
   }
   const created = await prisma.news.create({ data: { title, slug: `${slug}-${Date.now()}`, excerpt: parsed.excerpt ?? '', content: parsed.content ?? '', category: parsed.category ?? null, image: '', author: 'GenBI Jatim', authorAccountId: accountId, publicationStatus: 'DRAFT' } });
@@ -112,7 +114,8 @@ const stageRevisionCover = async (revisionId: string, file: Express.Multer.File)
   await ensureStorageRoots();
   await fs.mkdir(privateNewsDir(), { recursive: true });
   const storageKey = `staged/news/${crypto.randomUUID()}${path.extname(file.originalname).toLowerCase()}`;
-  await fs.writeFile(privateStoragePath(storageKey), file.buffer);
+  await fs.mkdir(path.dirname(privateStagedNewsPath(path.basename(storageKey))), { recursive: true });
+  await fs.writeFile(privateStagedNewsPath(path.basename(storageKey)), file.buffer);
   return prisma.newsCoverAsset.create({ data: { revisionId, storageKey, originalFilename: file.originalname, mimeType: file.mimetype, byteSize: file.size, visibility: 'STAGED', status: 'STAGED' } });
 };
 
@@ -198,7 +201,7 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
     await fs.mkdir(publicNewsDir(), { recursive: true });
     const publicFilename = `${crypto.randomUUID()}${path.extname(activeCover.originalFilename).toLowerCase()}`;
     const publicPath = path.join(publicNewsDir(), publicFilename);
-    await fs.copyFile(privateStoragePath(activeCover.storageKey), publicPath);
+    await fs.copyFile(privateStagedNewsPath(path.basename(activeCover.storageKey)), publicPath);
     try {
       const updated = await prisma.$transaction(async (tx) => {
         await tx.newsCoverAsset.update({ where: { id: activeCover.id }, data: { storageKey: `/uploads/news/${publicFilename}`, visibility: 'PUBLIC', status: 'PUBLIC' } });
