@@ -9,7 +9,8 @@ const router = Router();
 router.get('/latest', getLatestNews);
 
 // Admin Routes (Protected)
-router.get('/', verifyToken, getAllNewsCountAndData);
+// Public read path used by the Web news listing; mutations remain protected.
+router.get('/', getAllNewsCountAndData);
 router.post('/', verifyToken, uploadNewsImage.single('image'), createNews);
 router.put('/:id', verifyToken, uploadNewsImage.single('image'), updateNews);
 router.delete('/:id', verifyToken, deleteNews);
