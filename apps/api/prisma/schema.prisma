@@ -235,6 +235,7 @@ model CmsAssignment {
   periodId       String?
   divisionId     String?
   active         Boolean  @default(true)
+  activeAccountKey String? @unique(map: "CmsAssignment_one_active_account_key") @db.VarChar(191)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
