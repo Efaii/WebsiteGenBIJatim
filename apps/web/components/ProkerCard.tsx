@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 
 export interface ProkerCardProps {
   title: string;
+  commissariat?: string;
   status: "Upcoming" | "On-going" | "Completed" | string;
   date: string;
   description: string;
