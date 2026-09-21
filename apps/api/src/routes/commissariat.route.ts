@@ -3,6 +3,7 @@ import {
   getAllCommissariats,
   getCommissariatBySlug,
   getProgramKerjaById,
+  getAllProgramKerja,
   getCommissariatStats,
 } from '../controllers/commissariat.controller';
 
@@ -13,6 +14,9 @@ router.get('/', getAllCommissariats);
 
 // GET /api/commissariats/stats — Statistik agregat
 router.get('/stats', getCommissariatStats);
+
+// GET /api/commissariats/proker — Semua program kerja
+router.get('/proker', getAllProgramKerja);
 
 // GET /api/commissariats/proker/:id — Detail satu program kerja
 router.get('/proker/:id', getProgramKerjaById);

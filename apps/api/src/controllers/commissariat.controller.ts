@@ -103,6 +103,37 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/commissariats/proker — Daftar semua program kerja
+export const getAllProgramKerja = async (_req: Request, res: Response) => {
+  try {
+    const programs = await prisma.programKerja.findMany({
+      orderBy: [{ tanggalProker: 'desc' }, { programKe: 'asc' }],
+      include: { commissariat: { select: { name: true, slug: true } } },
+    });
+
+    res.json(programs.map((proker) => ({
+      id: proker.id,
+      programKe: proker.programKe,
+      title: proker.namaProker,
+      divisi: proker.divisi,
+      commissariat: proker.commissariat.name,
+      commissariatSlug: proker.commissariat.slug,
+      date: proker.tanggalProker.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+      dateIso: proker.tanggalProker.toISOString().split('T')[0],
+      format: proker.formatPelaksanaan,
+      status: proker.status,
+      description: proker.deskripsiProker,
+      kpiTukTarget: proker.kpiTukTarget,
+      dampak: proker.dampak,
+      evaluasi: proker.evaluasi,
+      gallery: [proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6].filter(Boolean),
+    })));
+  } catch (error) {
+    console.error('Error fetching program kerja list:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // GET /api/commissariats/:slug/proker/:id — Detail satu program kerja
 export const getProgramKerjaById = async (req: Request, res: Response) => {
   try {
