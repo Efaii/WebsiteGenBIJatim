@@ -47,6 +47,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
       where: { slug },
       include: {
         programKerja: {
+          where: { publicationStatus: 'PUBLISHED' },
           orderBy: { programKe: 'asc' },
         },
       },

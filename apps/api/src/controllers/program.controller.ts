@@ -1,4 +1,4 @@
-import { CmsRole, PublicationStatus } from '@prisma/client';
+import { CmsRole, ExecutionStatus, PublicationStatus } from '@prisma/client';
 import { Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
@@ -16,10 +16,11 @@ const fields = (body: Record<string, unknown>) => {
   const divisi = typeof body.divisi === 'string' ? body.divisi.trim() : '';
   const description = typeof body.description === 'string' ? body.description.trim() : '';
   const format = typeof body.format === 'string' ? body.format.trim() : '';
-  const date = typeof body.dateIso === 'string' ? new Date(body.dateIso) : new Date('invalid');
+  const date = typeof body.startDate === 'string' ? new Date(body.startDate) : typeof body.dateIso === 'string' ? new Date(body.dateIso) : new Date('invalid');
+  const endDate = typeof body.endDate === 'string' ? new Date(body.endDate) : date;
   const objectives = Array.isArray(body.objectives) ? body.objectives.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean) : [];
-  if (!title || !divisi || !description || !format || !objectives.length || Number.isNaN(date.getTime())) throw new ApiError('VALIDATION_ERROR', 'Program Kerja fields are invalid.', 400);
-  return { title, divisi, description, format, date, objectives };
+  if (!title || !divisi || !description || !format || !objectives.length || Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime()) || endDate < date) throw new ApiError('VALIDATION_ERROR', 'Program Kerja fields are invalid.', 400);
+  return { title, divisi, description, format, date, endDate, objectives };
 };
 
 const scope = async (req: CmsRequest) => {
@@ -37,7 +38,7 @@ const scope = async (req: CmsRequest) => {
 
 export const createProgram = async (req: CmsRequest, res: Response) => {
   const input = fields(req.body); const target = await scope(req);
-  const program = await prisma.programKerja.create({ data: { programKe: 1, commissariatId: target.commissariatId, periodId: target.periodId, divisionId: target.divisionId, namaProker: input.title, divisi: target.divisionName, tanggalProker: input.date, startDate: input.date, endDate: input.date, objectives: input.objectives, formatPelaksanaan: input.format, status: 'PLANNED', deskripsiProker: input.description, publicationStatus: 'DRAFT', authorAccountId: req.cmsSession!.cmsAccountId } });
+  const program = await prisma.programKerja.create({ data: { programKe: 1, commissariatId: target.commissariatId, periodId: target.periodId, divisionId: target.divisionId, namaProker: input.title, divisi: target.divisionName, tanggalProker: input.date, startDate: input.date, endDate: input.endDate, objectives: input.objectives, formatPelaksanaan: input.format, status: 'PLANNED', deskripsiProker: input.description, publicationStatus: 'DRAFT', authorAccountId: req.cmsSession!.cmsAccountId } });
   return sendSuccess(res, program);
 };
 
@@ -52,7 +53,7 @@ export const updateProgram = async (req: CmsRequest, res: Response) => {
   if (!['DRAFT', 'REJECTED'].includes(program.publicationStatus)) throw new ApiError('CONFLICT', 'Published programs require a revision.', 409);
   assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
   const input = fields(req.body);
-  return sendSuccess(res, await prisma.programKerja.update({ where: { id: program.id }, data: { namaProker: input.title, deskripsiProker: input.description, objectives: input.objectives, tanggalProker: input.date, startDate: input.date, endDate: input.date, formatPelaksanaan: input.format, publicationStatus: 'DRAFT', rejectionReason: null } }));
+  return sendSuccess(res, await prisma.programKerja.update({ where: { id: program.id }, data: { namaProker: input.title, deskripsiProker: input.description, objectives: input.objectives, tanggalProker: input.date, startDate: input.date, endDate: input.endDate, formatPelaksanaan: input.format, publicationStatus: 'DRAFT', rejectionReason: null } }));
 };
 
 export const createProgramRevision = async (req: CmsRequest, res: Response) => {
@@ -96,6 +97,7 @@ export const listCmsPrograms = async (req: CmsRequest, res: Response) => {
     const assignment = req.cmsSession!.cmsAccount.assignments[0];
     if (!assignment?.commissariatId || !assignment.periodId) throw new ApiError('FORBIDDEN', 'No active CMS assignment.', 403);
     where.commissariatId = assignment.commissariatId; where.periodId = assignment.periodId;
+    if (req.cmsSession!.cmsAccount.role === CmsRole.SEKRETARIS_DIVISI) where.divisionId = assignment.divisionId ?? undefined;
   }
   return sendSuccess(res, await prisma.programKerja.findMany({ where, include: { artifacts: true }, orderBy: { updatedAt: 'desc' } }));
 };
@@ -110,6 +112,16 @@ export const transitionProgram = async (req: CmsRequest, res: Response) => {
   assertPublicationTransition(program.publicationStatus, to, req.body.rejectionReason);
   const updated = await prisma.programKerja.update({ where: { id: program.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
   return sendSuccess(res, updated);
+};
+
+export const transitionProgramExecution = async (req: CmsRequest, res: Response) => {
+  const program = await prisma.programKerja.findUnique({ where: { id: req.params.id } });
+  if (!program) throw new ApiError('NOT_FOUND', 'Program Kerja not found.', 404);
+  assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
+  const target = req.body.executionStatus as ExecutionStatus;
+  const allowed: Record<ExecutionStatus, ExecutionStatus[]> = { PLANNED: ['ONGOING', 'CANCELLED'], ONGOING: ['COMPLETED', 'CANCELLED'], COMPLETED: [], CANCELLED: [] };
+  if (!Object.values(ExecutionStatus).includes(target) || !allowed[program.executionStatus].includes(target)) throw new ApiError('CONFLICT', 'Invalid execution status transition.', 409);
+  return sendSuccess(res, await prisma.programKerja.update({ where: { id: program.id }, data: { executionStatus: target } }));
 };
 
 export const uploadProgramArtifact = async (req: CmsRequest, res: Response) => {
@@ -130,6 +142,5 @@ export const downloadProgramArtifact = async (req: CmsRequest, res: Response) =>
   const artifact = await prisma.programArtifact.findFirst({ where: { id: req.params.artifactId, programKerjaId: req.params.id }, include: { programKerja: true } });
   if (!artifact) throw new ApiError('NOT_FOUND', 'Artifact not found.', 404);
   if (artifact.programKerja.publicationStatus !== 'APPROVED' && artifact.programKerja.publicationStatus !== 'PUBLISHED') throw new ApiError('FORBIDDEN', 'Artifact is not available.', 403);
-  assertScopeAccess(req.cmsSession!, { commissariatId: artifact.programKerja.commissariatId, periodId: artifact.programKerja.periodId ?? undefined, divisionId: artifact.programKerja.divisionId ?? undefined }, 'read');
   return res.download(privateStoragePath(artifact.storageKey), artifact.originalFilename);
 };
