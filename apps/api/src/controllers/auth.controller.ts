@@ -3,9 +3,9 @@ import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_123';
-
 export const login = async (req: Request, res: Response) => {
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) return res.status(500).json({ message: 'JWT_SECRET is not configured' });
   const { username, password } = req.body;
 
   if (!username || typeof username !== 'string' || !username.trim()) {
@@ -27,7 +27,7 @@ export const login = async (req: Request, res: Response) => {
 
   const token = jwt.sign(
     { id: user.id, username: user.username, role: user.role },
-    JWT_SECRET,
+    jwtSecret,
     { expiresIn: '1d' }
   );
 

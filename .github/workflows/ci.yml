@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: genbi_jatim_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/genbi_jatim_test
+      ADMIN_USERNAME: ci-admin
+      ADMIN_PASSWORD: ci-password-not-production
+      JWT_SECRET: ci-legacy-secret
+      SESSION_COOKIE_SECRET: ci-session-secret
+      NODE_ENV: test
+      PUBLIC_STORAGE_ROOT: ${{ runner.temp }}/genbi-public
+      PRIVATE_STORAGE_ROOT: ${{ runner.temp }}/genbi-private
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify install is reproducible
+        run: npm ls --depth=0
+      - run: npx prisma generate --schema apps/api/prisma/schema.prisma
+      - run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+      - run: npm run seed:e2e --workspace api
+      - run: npm run build --workspace @repo/types
+      - run: npm run build --workspace api
+      - run: npm run lint
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=high
+      - run: npm run test --workspace api
+      - run: npm run test:integration --workspace api
+      - name: Start API for web build and smoke test
+        shell: bash
+        run: |
+          ADMIN_USERNAME=ci-admin ADMIN_PASSWORD=ci-password-not-production JWT_SECRET=ci-legacy-secret SESSION_COOKIE_SECRET=ci-session-secret NODE_ENV=test PUBLIC_STORAGE_ROOT="$RUNNER_TEMP/genbi-public" PRIVATE_STORAGE_ROOT="$RUNNER_TEMP/genbi-private" npm run start --workspace api > api.log 2>&1 &
+          ready=0
+          for i in {1..30}; do
+            if curl --fail http://127.0.0.1:5000/ready; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then cat api.log; exit 1; fi
+      - run: npm run build --workspace @repo/web
+      - name: Verify isolated database backup and restore
+        id: backup
+        run: npm run verify:backup-restore
+        env:
+          RESTORE_DATABASE: genbi_jatim_restore_${{ github.run_id }}_${{ github.run_attempt }}
+      - run: npm run test:e2e
+        env:
+          API_URL: http://127.0.0.1:5000
+          ADMIN_USERNAME: ci-admin
+          ADMIN_PASSWORD: ci-password-not-production
+          BACKUP_EVIDENCE_ID: ${{ steps.backup.outputs.backup-id }}
+      - run: npm run evidence:readiness
+        env:
+          BACKUP_EVIDENCE_ID: ${{ steps.backup.outputs.backup-id }}
+          READINESS_TESTS: health,ready,api-unit,api-integration,e2e-smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: readiness-evidence
+          path: artifacts/readiness/latest.json

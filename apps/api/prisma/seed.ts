@@ -68,58 +68,90 @@ const MOCK_FAQS = [
 ];
 
 const MOCK_COMMISSARIATS = [
-  { id: "com-1", name: "UPN Veteran Jatim", logo: "/assets/logos/upnvjt.svg" },
-  { id: "com-2", name: "Universitas Airlangga", logo: "/assets/logos/unair.svg" },
-  { id: "com-3", name: "ITS Surabaya", logo: "/assets/logos/its.svg" },
-  { id: "com-4", name: "PENS Surabaya", logo: "/assets/logos/pens.svg" },
-  { id: "com-5", name: "Unesa", logo: "/assets/logos/unesa.svg" },
-  { id: "com-6", name: "UIN Sunan Ampel", logo: "/assets/logos/uinsa.svg" },
-  { id: "com-7", name: "Universitas Trunojoyo", logo: "/assets/logos/utm.svg" },
-  { id: "com-8", name: "IUNUGIRI", logo: "/assets/logos/unugiri.svg" },
-  { id: "com-9", name: "UIN Madura", logo: "/assets/logos/uinMadura.svg" },
+  { id: "com-1", slug: "upnvjt", name: "UPN Veteran Jatim", university: "UPN Veteran Jawa Timur", description: "GenBI UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.svg" },
+  { id: "com-2", slug: "unair", name: "Universitas Airlangga", university: "Universitas Airlangga", description: "GenBI Universitas Airlangga", logo: "/assets/logos/unair.svg" },
+  { id: "com-3", slug: "its", name: "ITS Surabaya", university: "Institut Teknologi Sepuluh Nopember", description: "GenBI ITS", logo: "/assets/logos/its.svg" },
+  { id: "com-4", slug: "pens", name: "PENS Surabaya", university: "Politeknik Elektronika Negeri Surabaya", description: "GenBI PENS", logo: "/assets/logos/pens.svg" },
+  { id: "com-5", slug: "unesa", name: "Unesa", university: "Universitas Negeri Surabaya", description: "GenBI UNESA", logo: "/assets/logos/unesa.svg" },
+  { id: "com-6", slug: "uinsa", name: "UIN Sunan Ampel", university: "UIN Sunan Ampel Surabaya", description: "GenBI UINSA", logo: "/assets/logos/uinsa.svg" },
+  { id: "com-7", slug: "utm", name: "Universitas Trunojoyo", university: "Universitas Trunojoyo Madura", description: "GenBI UTM", logo: "/assets/logos/utm.svg" },
+  { id: "com-8", slug: "unugiri", name: "UNUGIRI", university: "Universitas Nahdlatul Ulama Sunan Giri", description: "GenBI UNUGIRI", logo: "/assets/logos/unugiri.svg" },
+  { id: "com-9", slug: "uin-madura", name: "UIN Madura", university: "UIN Madura", description: "GenBI UIN Madura", logo: "/assets/logos/uinMadura.svg" },
 ];
 
 async function main() {
   console.log('🌱 Seeding Database...');
 
-  // 0. Seed Admin User
-  const hashedPassword = await bcrypt.hash('password123', 10);
-  await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: { password: hashedPassword }, // Ensure password updates if changed in seed
-    create: {
-      username: 'admin',
-      password: hashedPassword,
-      name: 'Super Admin',
-      role: 'ADMIN',
-    },
-  });
-  console.log('👤 Admin user seeded.');
-
-  // 1. Seed Testimonials
-  for (const t of MOCK_TESTIMONIALS) {
-    await prisma.testimonial.upsert({
-      where: { id: t.id },
-      update: {},
-      create: t,
-    });
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const rawPassword = process.env.ADMIN_PASSWORD;
+  const profile = process.env.SEED_PROFILE ?? 'local';
+  if (!adminUsername || !rawPassword || adminUsername.startsWith('replace-with-') || rawPassword === 'password123' || rawPassword.startsWith('replace-with-') || rawPassword.length < 12) {
+    throw new Error('ADMIN_USERNAME and a non-default ADMIN_PASSWORD are required for seed.');
   }
+  if (!['local', 'e2e', 'staging'].includes(profile)) throw new Error(`Unsupported SEED_PROFILE: ${profile}`);
+  console.log(`🌱 Seed profile: ${profile}`);
 
-  // 2. Seed FAQs
-  for (const f of MOCK_FAQS) {
-    await prisma.faq.upsert({
-      where: { id: f.id },
-      update: {},
-      create: f,
+  // 0. Seed Admin User
+  const existingAdmin = await prisma.user.findUnique({ where: { username: adminUsername } });
+  let admin = existingAdmin;
+  if (!admin) {
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+    admin = await prisma.user.create({
+      data: {
+        username: adminUsername,
+        password: hashedPassword,
+        name: 'Super Admin',
+        role: 'ADMIN_GLOBAL',
+      },
     });
+    console.log('👤 Admin user seeded.');
+  } else {
+    console.log('👤 Admin user already exists, skipping creation.');
+  }
+  await prisma.cmsAccount.upsert({
+    where: { userId: admin.id },
+    update: { role: 'ADMIN_GLOBAL', status: 'ACTIVE' },
+    create: { userId: admin.id, role: 'ADMIN_GLOBAL', status: 'ACTIVE', mustChangePassword: true },
+  });
+
+  if (profile !== 'staging') {
+    for (const t of MOCK_TESTIMONIALS) await prisma.testimonial.upsert({ where: { id: t.id }, update: {}, create: t });
+    for (const f of MOCK_FAQS) await prisma.faq.upsert({ where: { id: f.id }, update: {}, create: f });
   }
 
   // 3. Seed Commissariats
   for (const c of MOCK_COMMISSARIATS) {
-    await prisma.commissariat.upsert({
-      where: { id: c.id },
+    const commissariat = await prisma.commissariat.upsert({
+      where: { slug: c.slug },
       update: {},
       create: c,
+    });
+    const period = await prisma.period.upsert({
+      where: { commissariatId_label: { commissariatId: commissariat.id, label: '2025/2026' } },
+      update: {},
+      create: { id: `period-${c.slug}-2025-2026`, commissariatId: commissariat.id, label: '2025/2026' },
+    });
+    for (const divisionName of ['Pendidikan', 'Kewirausahaan', 'Komunikasi']) {
+      await prisma.division.upsert({
+        where: { commissariatId_periodId_name: { commissariatId: commissariat.id, periodId: period.id, name: divisionName } },
+        update: {},
+        create: { commissariatId: commissariat.id, periodId: period.id, name: divisionName },
+      });
+    }
+    if (profile !== 'staging') await prisma.programKerja.upsert({
+      where: { id: `e2e-proker-${c.slug}` },
+      update: {},
+      create: {
+        id: `e2e-proker-${c.slug}`,
+        commissariatId: commissariat.id,
+        programKe: 1,
+        namaProker: `Program Kerja ${c.name}`,
+        divisi: 'Pendidikan',
+        tanggalProker: new Date('2025-10-01T00:00:00.000Z'),
+        formatPelaksanaan: 'Hybrid',
+        status: 'PLANNED',
+        deskripsiProker: `Program kerja seeded untuk smoke test ${c.name}.`,
+      },
     });
   }
 

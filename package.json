@@ -10,11 +10,15 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "test:e2e": "node scripts/e2e-smoke.mjs",
+    "evidence:readiness": "node scripts/write-readiness-evidence.mjs",
+    "guard:staging-reset": "node scripts/guard-staging-reset.mjs",
+    "verify:backup-restore": "node scripts/verify-mysql-backup-restore.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "turbo": "latest",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "turbo": "2.11.2"
   },
   "engines": {
     "node": ">=18"
