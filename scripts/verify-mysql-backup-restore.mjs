@@ -49,5 +49,10 @@ try {
   if (process.env.GITHUB_OUTPUT) await import('node:fs/promises').then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, `backup-id=${backupId}\nrestore-id=${evidence.restoreId}\n`, 'utf8'));
   console.log(JSON.stringify(evidence));
 } finally {
+  try {
+    await run(process.env.MYSQL_BIN ?? 'mysql', [...mysqlArgs, '-e', `DROP DATABASE IF EXISTS \`${restoreDatabase}\`;`]);
+  } catch (error) {
+    console.error(`Warning: failed to clean up restore database ${restoreDatabase}.`, error);
+  }
   await rm(dir, { recursive: true, force: true });
 }
