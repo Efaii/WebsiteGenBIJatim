@@ -88,7 +88,13 @@ export const createMembershipPreview = async (session: CmsSession, buffer: Buffe
     const classification: ImportRowClassification = errors.includes('DUPLICATE_IN_FILE') ? 'DUPLICATE_IN_FILE' : errors.includes('AMBIGUOUS_MATCH') ? 'AMBIGUOUS_MATCH' : errors.length ? 'INVALID' : !matched ? 'NEW' : unchanged ? 'UNCHANGED' : 'UPDATED';
     return { row, errors, classification, matched, division };
   });
-  const counts = results.reduce((acc, item) => { const name = `${item.classification.toLowerCase()}Count` as keyof typeof acc; acc[name]++; return acc; }, { newCount: 0, updatedCount: 0, unchangedCount: 0, invalidCount: 0, ambiguousCount: 0, duplicateCount: 0 });
+  const counts = results.reduce((acc, item) => {
+    const countKey: Record<ImportRowClassification, keyof typeof acc> = {
+      NEW: 'newCount', UPDATED: 'updatedCount', UNCHANGED: 'unchangedCount', INVALID: 'invalidCount', AMBIGUOUS_MATCH: 'ambiguousCount', DUPLICATE_IN_FILE: 'duplicateCount',
+    };
+    acc[countKey[item.classification]]++;
+    return acc;
+  }, { newCount: 0, updatedCount: 0, unchangedCount: 0, invalidCount: 0, ambiguousCount: 0, duplicateCount: 0 });
   const preview = await prisma.membershipImportPreview.create({ data: { cmsAccountId: session.cmsAccount.id, commissariatId, periodId, sourceFilename: path.basename(sourceFilename), sourceFileHash: parsed.hash, status: 'PREVIEW_READY', totalRows: results.length, ...counts, expiresAt: new Date(Date.now() + 30 * 60 * 1000), rows: { create: results.map((item) => ({ rowNumber: item.row.rowNumber, rawValues: item.row.rawValues as object, normalizedValues: item.row.normalized as object, classification: item.classification, errorCode: item.errors[0], errorMessage: item.errors.join(', '), matchedMembershipId: item.matched?.id, mappedDivisionId: item.division?.id, baselineUpdatedAt: item.matched?.updatedAt })) } } });
   return { previewId: preview.id, sourceFileHash: parsed.hash, totalRows: results.length, ...counts, rows: results.map((item) => ({ rowNumber: item.row.rowNumber, classification: item.classification, errors: item.errors, rawValues: item.row.rawValues, normalizedValues: item.row.normalized, matchedMembershipId: item.matched?.id, mappedDivisionId: item.division?.id })) };
 };
