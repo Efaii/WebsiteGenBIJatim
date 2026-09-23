@@ -127,12 +127,9 @@ const rootFromCwd = () => {
     path.resolve(cwd, "data/proker"),
     path.resolve(cwd, "../../data/proker"),
   ];
-  const found = candidates.find((candidate) => fs.existsSync(candidate));
-  if (!found)
-    throw new Error(
-      "Could not find data/proker from the current working directory.",
-    );
-  return found;
+  return (
+    candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]
+  );
 };
 
 const args = process.argv.slice(2);
@@ -972,6 +969,15 @@ const matchPrograms = (
         "Explicit database identifier from normalized workbook.",
       );
     }
+    if (source.explicitId) {
+      return plan(
+        source,
+        "CONFLICT",
+        null,
+        0,
+        "Explicit database identifier was not found in the same commissariat; title matching is intentionally blocked.",
+      );
+    }
     const sameComm = legacy.filter(
       (row) => commissariatKey(row.commissariat) === sourceComm,
     );
@@ -1075,6 +1081,23 @@ const plan = (
       metadataChanges.push("status/executionStatus");
   }
   const cancelled = statusToExecution(source.status) === "CANCELLED";
+  const normalizedStatus = normalizeText(source.status);
+  const knownStatus =
+    !normalizedStatus ||
+    [
+      "cancelled",
+      "canceled",
+      "ongoing",
+      "on progress",
+      "on going",
+      "in progress",
+      "completed",
+      "complete",
+      "done",
+      "selesai",
+      "planned",
+      "plan",
+    ].includes(normalizedStatus);
   const action: ProgramAction =
     matchType === "DATABASE_UNAVAILABLE"
       ? "DATABASE_UNAVAILABLE"
@@ -1091,6 +1114,7 @@ const plan = (
               ? "REVIEW"
               : "ACTIVE_INSERT"
             : "REVIEW";
+  const safeAction = knownStatus ? action : "REVIEW";
   return {
     source,
     matchType,
@@ -1098,10 +1122,10 @@ const plan = (
     confidence,
     reason,
     metadataChanges,
-    action,
+    action: safeAction,
     programId:
       legacy?.id ??
-      (action === "ACTIVE_INSERT" || action === "CANCELLED_SKIP"
+      (safeAction === "ACTIVE_INSERT" || safeAction === "CANCELLED_SKIP"
         ? previewProgramId(source)
         : null),
   };
@@ -1361,10 +1385,10 @@ const renderReport = (
   );
   lines.push("|---|---|---|---|---|---|---:|---:|---|---|---|---|");
   for (const planItem of plans) {
-    const plannedPhotos = planItem.legacy
+    const plannedPhotos = planItem.programId
       ? photos.filter(
           (photo) =>
-            photo.targetProgramIds.includes(planItem.legacy!.id) &&
+            photo.targetProgramIds.includes(planItem.programId!) &&
             ["LEGACY_PHOTO_REGISTRATION", "NEW_WEBP"].includes(photo.action),
         ).length
       : 0;
