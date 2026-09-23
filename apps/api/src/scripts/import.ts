@@ -10,19 +10,30 @@ function assertSchemaReady(): void {
     : [path.resolve(__dirname, "../../../artifacts/migration/schema-readiness.json"), path.resolve(__dirname, "../../../../artifacts/migration/schema-readiness.json")];
   const evidencePath = candidates.find((candidate) => fs.existsSync(candidate));
   if (!evidencePath) throw new Error(`Schema readiness evidence is missing at ${candidates[0]}; data migration is blocked.`);
-  let evidence: { status?: string; database?: string };
+  let evidence: { status?: string; database?: string; expiresAt?: string; planHash?: string };
   try {
     evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8")) as { status?: string };
   } catch {
     throw new Error(`Schema readiness evidence is invalid at ${evidencePath}; data migration is blocked.`);
   }
-  if (evidence.status !== "ready") {
-    throw new Error(`Schema readiness is ${evidence.status ?? "unknown"}; data migration is blocked. Resolve the schema preflight first.`);
-  }
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is required to bind schema readiness evidence; data migration is blocked.");
   const database = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ""));
+  if (evidence.status !== "ready") throw new Error(`Schema readiness is ${evidence.status ?? "unknown"}; data migration is blocked. Resolve the schema preflight first.`);
   if (evidence.database !== database) throw new Error(`Schema readiness targets ${evidence.database ?? "unknown"}, not ${database}; data migration is blocked.`);
+  if (!evidence.expiresAt || Date.parse(evidence.expiresAt) <= Date.now()) throw new Error("Schema readiness evidence is expired or missing an expiry; data migration is blocked.");
+  if (!evidence.planHash || (process.env.SCHEMA_PLAN_HASH && evidence.planHash !== process.env.SCHEMA_PLAN_HASH)) throw new Error("Schema readiness planHash is missing or does not match the approved plan; data migration is blocked.");
+  const restorePath = process.env.RESTORE_EVIDENCE_PATH
+    ? path.resolve(process.env.RESTORE_EVIDENCE_PATH)
+    : [path.resolve(__dirname, "../../../artifacts/migration/restore-verification.json"), path.resolve(__dirname, "../../../../artifacts/migration/restore-verification.json")].find((candidate) => fs.existsSync(candidate));
+  if (!restorePath || !fs.existsSync(restorePath)) throw new Error("Backup restore evidence is missing; data migration is blocked.");
+  let restoreEvidence: { status?: string; sourceDatabase?: string; backupSha256?: string; expiresAt?: string };
+  try {
+    restoreEvidence = JSON.parse(fs.readFileSync(restorePath, "utf8")) as typeof restoreEvidence;
+  } catch {
+    throw new Error("Backup restore evidence is invalid; data migration is blocked.");
+  }
+  if (restoreEvidence.status !== "verified" || restoreEvidence.sourceDatabase !== database || !restoreEvidence.backupSha256 || !/^[a-f0-9]{64}$/i.test(restoreEvidence.backupSha256) || !restoreEvidence.expiresAt || Date.parse(restoreEvidence.expiresAt) <= Date.now()) throw new Error("Backup restore evidence is missing, expired, or targets another database; data migration is blocked.");
   if (process.env.DATA_MIGRATION_APPROVAL !== "SETUJUI DATA MIGRASI") {
     throw new Error('Data migration blocked. Set DATA_MIGRATION_APPROVAL="SETUJUI DATA MIGRASI" after reviewing the data migration plan.');
   }
