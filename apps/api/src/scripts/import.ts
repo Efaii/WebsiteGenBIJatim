@@ -3,6 +3,24 @@ import * as xlsx from "@e965/xlsx";
 import * as fs from "fs";
 import * as path from "path";
 
+function assertSchemaReady(): void {
+  const configuredPath = process.env.SCHEMA_READINESS_PATH;
+  const candidates = configuredPath
+    ? [path.resolve(configuredPath)]
+    : [path.resolve(__dirname, "../../../artifacts/migration/schema-readiness.json"), path.resolve(__dirname, "../../../../artifacts/migration/schema-readiness.json")];
+  const evidencePath = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!evidencePath) throw new Error(`Schema readiness evidence is missing at ${candidates[0]}; data migration is blocked.`);
+  let evidence: { status?: string };
+  try {
+    evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8")) as { status?: string };
+  } catch {
+    throw new Error(`Schema readiness evidence is invalid at ${evidencePath}; data migration is blocked.`);
+  }
+  if (evidence.status !== "ready") {
+    throw new Error(`Schema readiness is ${evidence.status ?? "unknown"}; data migration is blocked. Resolve the schema preflight first.`);
+  }
+}
+
 // Helper untuk merapikan teks (mengubah "1. Teks  2. Teks" menjadi baris baru)
 function formatText(text: unknown): string {
   if (!text) return "";
@@ -35,6 +53,7 @@ interface ParsedProker {
 }
 
 async function main() {
+  assertSchemaReady();
   // Default to ./data/excel if no arg is provided
   const targetDir = process.argv[2] || "./data/excel";
   const absoluteDir = path.resolve(process.cwd(), targetDir);

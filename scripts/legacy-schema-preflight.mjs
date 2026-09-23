@@ -7,6 +7,7 @@ import { spawn } from 'node:child_process';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const requiredTables = ['program_kerja', 'commissariat'];
 const approvalPhrase = 'SETUJUI SCHEMA MIGRASI';
+const readinessPath = () => path.resolve(process.env.SCHEMA_READINESS_PATH ?? path.join(root, 'artifacts/migration/schema-readiness.json'));
 
 export function parseDatabaseUrl(value) {
   const url = new URL(value);
@@ -29,6 +30,7 @@ export function legacyPhotoReferences(row) {
 }
 
 export function buildAdditivePlan({ tables, columns, programIdType = 'VARCHAR(191)' }) {
+  if (!/^[A-Z0-9(), ]+$/.test(programIdType)) throw new Error('Legacy program ID type is not safe for the additive plan; refusing to generate SQL.');
   const tableSet = new Set(tables.map((table) => table.toLowerCase()));
   const findColumns = (tableName) => {
     const key = Object.keys(columns).find((candidate) => candidate.toLowerCase() === tableName);
@@ -63,9 +65,25 @@ export function compareRestore(source, restored) {
   return differences;
 }
 
-function mysqlArgs(connection, extra = []) {
+export function sanitizeBackupSql(sql, sourceDatabase) {
+  const unsafe = /(^|\n)\s*(?:USE\s+|CREATE\s+(?:DATABASE|SCHEMA)\b|DROP\s+(?:DATABASE|SCHEMA)\b|ALTER\s+(?:DATABASE|SCHEMA)\b|RENAME\s+DATABASE\b)/im;
+  if (unsafe.test(sql)) throw new Error('Backup contains database-selection or database-DDL statements; refusing to execute it in an isolated restore. Export table data only and retry.');
+  const qualifiedSource = new RegExp(`(?:\\\\.|\`)${sourceDatabase.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(?:\\\\.|\`)`, 'i');
+  if (qualifiedSource.test(sql)) throw new Error(`Backup contains qualified references to source database ${sourceDatabase}; refusing to restore it.`);
+  return sql;
+}
+
+async function writeReadiness(status, details = {}) {
+  const { mkdir, writeFile } = await import('node:fs/promises');
+  const destination = readinessPath();
+  await mkdir(path.dirname(destination), { recursive: true });
+  await writeFile(destination, `${JSON.stringify({ status, updatedAt: new Date().toISOString(), ...details }, null, 2)}\n`, 'utf8');
+}
+
+function mysqlArgs(connection, extra = [], includeDatabase = false) {
   const args = ['--host', connection.host, '--port', connection.port, '--user', connection.user, ...extra];
   if (connection.password) args.push(`--password=${connection.password}`);
+  if (includeDatabase) args.push(connection.database);
   return args;
 }
 
@@ -118,6 +136,8 @@ async function inspect(connection) {
   const sourceMigrations = (await readdir(path.join(root, 'apps/api/prisma/migrations'), { withFileTypes: true }))
     .filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
   const applied = new Set(history.filter(([, finished, rolledBack]) => finished && !rolledBack).map(([name]) => name));
+  const failed = history.filter(([, finished, rolledBack]) => !finished || rolledBack).map(([name]) => name);
+  const repositorySet = new Set(sourceMigrations);
   return {
     database: connection.database,
     tables,
@@ -128,7 +148,11 @@ async function inspect(connection) {
     legacyPhotoColumns: photoFields,
     migrationTablePresent: historyExists,
     migrationHistory: history.map(([name, finishedAt, rolledBackAt, logs]) => ({ name, finishedAt, rolledBackAt, logs })),
-    migrationDiscrepancies: sourceMigrations.filter((name) => !applied.has(name)),
+    migrationDiscrepancies: {
+      missingFromDatabase: sourceMigrations.filter((name) => !applied.has(name)),
+      appliedButNotInRepository: [...applied].filter((name) => !repositorySet.has(name)),
+      failedOrRolledBack: failed,
+    },
     repositoryMigrations: sourceMigrations,
   };
 }
@@ -138,23 +162,23 @@ async function restoreBackup(connection, dumpFile, restoreDatabase) {
   if (restoreDatabase === connection.database) throw new Error('Restore database must not be the source/production database.');
   const exists = await query({ ...connection, database: 'information_schema' }, `SELECT SCHEMA_NAME FROM SCHEMATA WHERE SCHEMA_NAME='${restoreDatabase}'`);
   if (exists.length) throw new Error(`Restore target ${restoreDatabase} already exists; refusing to overwrite or drop it.`);
-  const dump = await readFile(dumpFile);
+  const dump = sanitizeBackupSql((await readFile(dumpFile)).toString('utf8'), connection.database);
   if (!dump.length) throw new Error('Backup file is empty; refusing to restore it.');
   const sourceReport = await inspect(connection);
   const checksum = createHash('sha256').update(dump).digest('hex');
   await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', `CREATE DATABASE ${quoteIdentifier(restoreDatabase)} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`]), { capture: false });
   let verified = false;
   try {
-    await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs({ ...connection, database: restoreDatabase }), { input: dump, capture: false });
+    await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs({ ...connection, database: restoreDatabase }, [], true), { input: Buffer.from(dump), capture: false });
     const report = await inspect({ ...connection, database: restoreDatabase });
     const differences = compareRestore(sourceReport, report);
     if (differences.length) throw new Error(`Restore verification mismatch: ${differences.join('; ')}.`);
     verified = true;
     console.log(JSON.stringify({ restored: true, backupSha256: checksum, source: sourceReport, restoredDatabase: report }, null, 2));
   } catch (error) {
-    throw new Error(`Backup restore/verification failed. Temporary database ${restoreDatabase} was ${process.env.KEEP_RESTORE_DATABASE ? 'retained for diagnosis' : 'created only for this failed check and is eligible for cleanup'}; it was not marked ready for data migration. ${error.message}`);
+    throw new Error(`Backup restore/verification failed. Temporary database ${restoreDatabase} was ${process.env.KEEP_RESTORE_DATABASE === '1' ? 'retained for diagnosis' : 'created only for this failed check and is eligible for cleanup'}; it was not marked ready for data migration. ${error.message}`);
   } finally {
-    if (verified || !process.env.KEEP_RESTORE_DATABASE) {
+    if (verified || process.env.KEEP_RESTORE_DATABASE !== '1') {
       await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', `DROP DATABASE ${quoteIdentifier(restoreDatabase)}`]), { capture: false });
     }
   }
@@ -184,16 +208,25 @@ async function main() {
     console.log(JSON.stringify({ inspection: report, plan }, null, 2));
     return;
   }
-  if (process.env.SCHEMA_MIGRATION_APPROVAL !== approvalPhrase) throw new Error(`Schema execution blocked. Review the plan, then set SCHEMA_MIGRATION_APPROVAL="${approvalPhrase}" explicitly.`);
-  for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql]), { capture: false });
-  const verified = await inspect(connection);
-  const verifiedProgramTable = verified.tables.find((table) => table.toLowerCase() === 'program_kerja');
-  const remaining = buildAdditivePlan({
-    tables: verified.tables,
-    columns: verified.columns,
-  });
-  if (remaining.length) throw new Error(`Schema execution incomplete; ${remaining.length} approved additive operation(s) remain. Data migration is blocked.`);
-  console.log(JSON.stringify({ schemaReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
+  if (process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'production') {
+    throw new Error('Direct schema apply is blocked for staging/production. Review this plan, add it as a Prisma migration, run check:migration-mode, then use prisma migrate deploy.');
+  }
+  if (process.env.SCHEMA_MIGRATION_APPROVAL !== approvalPhrase) {
+    await writeReadiness('blocked', { reason: 'Explicit schema approval is missing.' });
+    throw new Error(`Schema execution blocked. Review the plan, then set SCHEMA_MIGRATION_APPROVAL="${approvalPhrase}" explicitly.`);
+  }
+  await writeReadiness('blocked', { reason: 'Schema execution is in progress; data migration is blocked.', actions });
+  try {
+    for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql]), { capture: false });
+    const verified = await inspect(connection);
+    const remaining = buildAdditivePlan({ tables: verified.tables, columns: verified.columns });
+    if (remaining.length) throw new Error(`Schema execution incomplete; ${remaining.length} approved additive operation(s) remain. Data migration is blocked.`);
+    await writeReadiness('ready', { applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies });
+    console.log(JSON.stringify({ schemaReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
+  } catch (error) {
+    await writeReadiness('blocked', { reason: error instanceof Error ? error.message : String(error), actions });
+    throw new Error(`Schema execution failed; data migration is blocked. ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

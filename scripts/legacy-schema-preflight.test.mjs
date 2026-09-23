@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildAdditivePlan, compareRestore, legacyPhotoReferences, parseDatabaseUrl } from './legacy-schema-preflight.mjs';
+import { buildAdditivePlan, compareRestore, legacyPhotoReferences, parseDatabaseUrl, sanitizeBackupSql } from './legacy-schema-preflight.mjs';
+import { assertSchemaReady } from './check-schema-readiness.mjs';
 
 test('parses mysql connection details without exposing the password', () => {
   assert.deepEqual(parseDatabaseUrl('mysql://operator:p%40ss@localhost:3307/legacy_db'), {
@@ -31,4 +32,14 @@ test('compares restored counts and required table inventory', () => {
   const source = { tables: ['commissariat', 'program_kerja'], programCount: 148, programsWithLegacyPhotos: 50, legacyPhotoReferenceCount: 224 };
   assert.deepEqual(compareRestore(source, { ...source }), []);
   assert.match(compareRestore(source, { ...source, programCount: 147 })[0], /count differs/);
+});
+
+test('rejects backup directives that could redirect a restore to production', () => {
+  assert.throws(() => sanitizeBackupSql('USE `genbi_jatim`; INSERT INTO program_kerja VALUES (1);', 'genbi_jatim'), /database-selection/);
+  assert.throws(() => sanitizeBackupSql('INSERT INTO `genbi_jatim`.`program_kerja` VALUES (1);', 'genbi_jatim'), /qualified references/);
+  assert.equal(sanitizeBackupSql('INSERT INTO program_kerja VALUES (1);', 'genbi_jatim'), 'INSERT INTO program_kerja VALUES (1);');
+});
+
+test('fails closed when schema readiness evidence is absent', async () => {
+  await assert.rejects(() => assertSchemaReady(), /Schema readiness evidence is missing|Schema readiness is/);
 });
