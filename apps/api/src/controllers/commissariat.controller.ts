@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
+import { isPublicProgram, programDate, programGallery } from '../domain/public-program';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,15 @@ export const getAllCommissariats = async (req: Request, res: Response) => {
       orderBy: { name: 'asc' },
       include: {
         _count: {
-          select: { programKerja: true },
+          select: {
+            programKerja: {
+              where: {
+                publicationStatus: 'PUBLISHED',
+                executionStatus: { not: 'CANCELLED' },
+                status: { notIn: ['cancelled', 'canceled'] },
+              },
+            },
+          },
         },
       },
     });
@@ -47,8 +56,9 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
       where: { slug },
       include: {
         programKerja: {
-          where: { publicationStatus: 'PUBLISHED' },
+          where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
           orderBy: { programKe: 'asc' },
+          include: { photos: { orderBy: { createdAt: 'asc' } } },
         },
       },
     });
@@ -71,24 +81,19 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
         email: commissariat.email || '',
       },
       memberCount: commissariat.memberCount,
-      proker: commissariat.programKerja.map((p) => ({
+      proker: commissariat.programKerja.filter((p) => isPublicProgram(p)).map((p) => ({
         id: p.id,
         programKe: p.programKe,
         title: p.namaProker,
         divisi: p.divisi,
-        date: p.tanggalProker.toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        }),
-        dateIso: p.tanggalProker.toISOString().split('T')[0],
+        ...programDate(p.tanggalProker, p.dateLabel),
         format: p.formatPelaksanaan,
         status: p.status,
         description: p.deskripsiProker,
         kpiTukTarget: p.kpiTukTarget,
         dampak: p.dampak,
         evaluasi: p.evaluasi,
-        gallery: [p.foto1, p.foto2, p.foto3, p.foto4, p.foto5, p.foto6].filter(Boolean),
+        gallery: programGallery([p.foto1, p.foto2, p.foto3, p.foto4, p.foto5, p.foto6], p.photos),
       })),
       // BPH, awardees, documents → tetap dari mock untuk sekarang
       bph: [],
@@ -108,27 +113,26 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
 export const getAllProgramKerja = async (_req: Request, res: Response) => {
   try {
     const programs = await prisma.programKerja.findMany({
-      where: { publicationStatus: 'PUBLISHED' },
+      where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
       orderBy: [{ tanggalProker: 'desc' }, { programKe: 'asc' }],
-      include: { commissariat: { select: { name: true, slug: true } } },
+      include: { commissariat: { select: { name: true, slug: true } }, photos: { orderBy: { createdAt: 'asc' } } },
     });
 
-    res.json(programs.map((proker) => ({
+    res.json(programs.filter((proker) => isPublicProgram(proker)).map((proker) => ({
       id: proker.id,
       programKe: proker.programKe,
       title: proker.namaProker,
       divisi: proker.divisi,
       commissariat: proker.commissariat.name,
       commissariatSlug: proker.commissariat.slug,
-      date: proker.tanggalProker.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
-      dateIso: proker.tanggalProker.toISOString().split('T')[0],
+      ...programDate(proker.tanggalProker, proker.dateLabel),
       format: proker.formatPelaksanaan,
       status: proker.status,
       description: proker.deskripsiProker,
       kpiTukTarget: proker.kpiTukTarget,
       dampak: proker.dampak,
       evaluasi: proker.evaluasi,
-      gallery: [proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6].filter(Boolean),
+      gallery: programGallery([proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6], proker.photos),
     })));
   } catch (error) {
     console.error('Error fetching program kerja list:', error);
@@ -142,15 +146,20 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const proker = await prisma.programKerja.findUnique({
-      where: { id, publicationStatus: 'PUBLISHED' },
+      where: { id, publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
       include: {
         commissariat: {
           select: { name: true, slug: true },
         },
+        photos: { orderBy: { createdAt: 'asc' } },
       },
     });
 
     if (!proker) {
+      return res.status(404).json({ message: 'Program kerja tidak ditemukan' });
+    }
+
+    if (!isPublicProgram(proker)) {
       return res.status(404).json({ message: 'Program kerja tidak ditemukan' });
     }
 
@@ -161,19 +170,14 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
       divisi: proker.divisi,
       commissariat: proker.commissariat.name,
       commissariatSlug: proker.commissariat.slug,
-      date: proker.tanggalProker.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
-      dateIso: proker.tanggalProker.toISOString().split('T')[0],
+      ...programDate(proker.tanggalProker, proker.dateLabel),
       format: proker.formatPelaksanaan,
       status: proker.status,
       description: proker.deskripsiProker,
       kpiTukTarget: proker.kpiTukTarget,
       dampak: proker.dampak,
       evaluasi: proker.evaluasi,
-      gallery: [proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6].filter(Boolean),
+      gallery: programGallery([proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6], proker.photos),
     };
 
     res.json(result);
