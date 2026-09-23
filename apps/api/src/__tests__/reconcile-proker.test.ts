@@ -10,8 +10,19 @@ assert.equal(
   "psdm",
 );
 assert.equal(reconciliationRules.normalizeDivision("Public Relation"), "hublu");
+assert.equal(reconciliationRules.normalizeCommissariat("UIN"), "uin-madura");
 assert.equal(reconciliationRules.statusToExecution("cancelled"), "CANCELLED");
+assert.equal(reconciliationRules.statusToExecution("Cancel"), "CANCELLED");
 assert.equal(reconciliationRules.statusToExecution("On Progress"), "ONGOING");
+assert.equal(
+  reconciliationRules.photoActionFor("UPDATE", false),
+  "LEGACY_PHOTO_REGISTRATION",
+);
+assert.equal(
+  reconciliationRules.photoActionFor("ACTIVE_INSERT", false),
+  "NEW_WEBP",
+);
+assert.equal(reconciliationRules.photoActionFor("UPDATE", true), "DUPLICATE");
 
 assert.equal(reconciliationRules.photoMayTarget("CANCELLED_SKIP"), false);
 assert.equal(

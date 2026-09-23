@@ -1,6 +1,7 @@
 import "dotenv/config";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { prisma } from "../lib/prisma";
 import * as xlsx from "@e965/xlsx";
@@ -49,6 +50,7 @@ interface SourceProgram {
   sourceRow: number;
   commissariat: string;
   division: string;
+  programKe: number;
   title: string;
   slug: string;
   status: string;
@@ -111,6 +113,12 @@ interface PhotoPlan {
   bytes: number;
   sha256: string | null;
   destinationWebpPath: string | null;
+  destinationWebpPaths: string[];
+  targetActions: Array<{
+    programId: string;
+    action: PhotoAction;
+    destinationWebpPath: string | null;
+  }>;
   action: PhotoAction;
   reason: string;
 }
@@ -198,7 +206,11 @@ const sameProgramTitle = (sourceTitle: string, legacyTitle: string) => {
 
 const commissariatKey = (value: unknown) => {
   const compact = normalizeCompact(value);
-  if (compact.includes("uinmadura") || compact.includes("iainmadura"))
+  if (
+    compact === "uin" ||
+    compact.includes("uinmadura") ||
+    compact.includes("iainmadura")
+  )
     return "uin-madura";
   if (compact.includes("upnvjt") || compact.includes("upnveteranjatim"))
     return "upnvjt";
@@ -276,9 +288,21 @@ const displayStatus = (status: string) => {
         : "Planned";
 };
 
+const photoActionFor = (
+  programAction: ProgramAction,
+  duplicate: boolean,
+): PhotoAction =>
+  duplicate
+    ? "DUPLICATE"
+    : programAction === "ACTIVE_INSERT"
+      ? "NEW_WEBP"
+      : "LEGACY_PHOTO_REGISTRATION";
+
 export const reconciliationRules = {
+  normalizeCommissariat: commissariatKey,
   normalizeDivision,
   statusToExecution,
+  photoActionFor,
   photoMayTarget(action: ProgramAction) {
     return (
       action !== "CANCELLED_SKIP" &&
@@ -709,6 +733,9 @@ const readSourcePrograms = (): SourceProgram[] => {
           sourceRow: index + 2,
           commissariat,
           division: clean(row.division || row.Divisi),
+          programKe: Number(
+            row.programKe || row.program_ke || row.no || index + 1,
+          ),
           title,
           slug: clean(row.slug),
           status: clean(
@@ -722,7 +749,7 @@ const readSourcePrograms = (): SourceProgram[] => {
           format: clean(row.format) || "Offline",
           dateLabel: excelDate(row.date, row.date_iso)
             ? null
-            : clean(row.date) || "Periode 2025/2026",
+            : "Periode 2025/2026",
           description: clean(row.description),
           kpi: clean(row.kpi),
           impact: clean(row.impact),
@@ -758,13 +785,20 @@ const readSourcePrograms = (): SourceProgram[] => {
           row["Kegiatan kolaborasi"] || row["Kegiatan Kolaborasi"],
         );
         if (!group) continue;
-        const titles = [row["Record 1"], row["Record 2"]]
-          .map(clean)
-          .filter(Boolean);
+        const targets = [
+          { title: clean(row["Record 1"]), division: clean(row["Divisi 1"]) },
+          { title: clean(row["Record 2"]), division: clean(row["Divisi 2"]) },
+        ].filter((target) => target.title);
         for (const program of programs.filter(
           (item) =>
             item.sourceFile === fileName &&
-            titles.some((title) => sameProgramTitle(title, item.title)),
+            targets.some(
+              (target) =>
+                sameProgramTitle(target.title, item.title) &&
+                (!target.division ||
+                  normalizeDivision(target.division) ===
+                    normalizeDivision(item.division)),
+            ),
         )) {
           program.collaborationGroup = group;
         }
@@ -836,6 +870,25 @@ const readLegacyDatabase = async () => {
       FROM program_kerja p
       LEFT JOIN commissariat c ON c.id = p.commissariatId
       ORDER BY c.name, p.programKe, p.id`);
+    let childPhotoRows: Array<{ programKerjaId: string; filePath: string }> =
+      [];
+    if (
+      result.tables.some(
+        (table) => table.toLowerCase() === "program_kerja_photo",
+      )
+    ) {
+      childPhotoRows = await prisma.$queryRawUnsafe<
+        Array<{ programKerjaId: string; filePath: string }>
+      >(
+        "SELECT programKerjaId, filePath FROM program_kerja_photo ORDER BY programKerjaId, createdAt, id",
+      );
+    }
+    const childPhotos = new Map<string, string[]>();
+    for (const photo of childPhotoRows) {
+      const values = childPhotos.get(photo.programKerjaId) ?? [];
+      values.push(String(photo.filePath));
+      childPhotos.set(photo.programKerjaId, values);
+    }
     result.rows = rows.map((row) => ({
       id: String(row.id),
       commissariatId: String(row.commissariatId ?? ""),
@@ -853,11 +906,9 @@ const readLegacyDatabase = async () => {
       evaluation: row.evaluasi == null ? null : String(row.evaluasi),
       photos: [row.foto1, row.foto2, row.foto3, row.foto4, row.foto5, row.foto6]
         .filter(Boolean)
-        .map(String),
+        .map(String)
+        .concat(childPhotos.get(String(row.id)) ?? []),
     }));
-    result.foreignKeys = await prisma.$queryRawUnsafe(
-      "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_NAME='program_kerja'",
-    );
     result.connected = true;
   };
   try {
@@ -1085,6 +1136,7 @@ const plan = (
   const knownStatus =
     !normalizedStatus ||
     [
+      "cancel",
       "cancelled",
       "canceled",
       "ongoing",
@@ -1175,6 +1227,31 @@ const buildPhotoPlans = async (
     ? await legacyHashMap(legacy)
     : new Map<string, Set<string>>();
   const plannedHashes = new Set<string>();
+
+  const buildSkippedPlan = (
+    folder: SourcePhotoFolder,
+    file: string,
+    relative: string,
+    extension: string,
+    bytes: number,
+    action: PhotoAction,
+    reason: string,
+  ): PhotoPlan => ({
+    sourceFolder: relative,
+    commissariat: folder.commissariatFolder,
+    prokerFolder: folder.prokerFolder,
+    targetProgramIds: [],
+    file: path.basename(file),
+    extension,
+    bytes,
+    sha256: null,
+    destinationWebpPath: null,
+    destinationWebpPaths: [],
+    targetActions: [],
+    action,
+    reason,
+  });
+
   for (const folder of folders) {
     const sourceMatches = chooseSourcePrograms(folder, sources);
     for (const file of folder.files) {
@@ -1191,101 +1268,110 @@ const buildPhotoPlans = async (
           reconciliationRules.photoMayTarget(item.action) && !!item.programId,
       );
       if (!SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
-        plans.push({
-          sourceFolder: relative,
-          commissariat: folder.commissariatFolder,
-          prokerFolder: folder.prokerFolder,
-          targetProgramIds: [],
-          file: path.basename(file),
-          extension,
-          bytes: fs.statSync(file).size,
-          sha256: null,
-          destinationWebpPath: null,
-          action: "ORPHAN",
-          reason: "Unsupported image extension; no valid photo target.",
-        });
+        plans.push(
+          buildSkippedPlan(
+            folder,
+            file,
+            relative,
+            extension,
+            fs.statSync(file).size,
+            "ORPHAN",
+            "Unsupported image extension; no valid photo target.",
+          ),
+        );
+        continue;
+      }
+      const sourceBytes = fs.statSync(file).size;
+      const hasCancelledTarget = matchedPlans.some(
+        (item) =>
+          item.action === "CANCELLED_SKIP" ||
+          item.action === "CANCELLED_EXISTING_DELETE",
+      );
+      const hasReviewTarget = matchedPlans.some(
+        (item) =>
+          item.action === "REVIEW" || item.matchType === "POSSIBLE_MATCH",
+      );
+      if (!dbConnected || !validTargets.length) {
+        const action: PhotoAction =
+          !dbConnected || (!hasCancelledTarget && !hasReviewTarget)
+            ? "ORPHAN"
+            : "SKIPPED_PHOTO";
+        plans.push(
+          buildSkippedPlan(
+            folder,
+            file,
+            relative,
+            extension,
+            sourceBytes,
+            action,
+            !dbConnected
+              ? "Database unavailable; no valid program target can be confirmed."
+              : hasCancelledTarget
+                ? "Cancelled program has no photo migration plan; source was not converted."
+                : "Photo mapping is unresolved or review-only; source was not converted.",
+          ),
+        );
         continue;
       }
       try {
         const webp = await convertToWebp(file);
         const sha256 = crypto.createHash("sha256").update(webp).digest("hex");
-        if (!dbConnected || !validTargets.length) {
-          const hasCancelledTarget = matchedPlans.some(
-            (item) =>
-              item.action === "CANCELLED_SKIP" ||
-              item.action === "CANCELLED_EXISTING_DELETE",
-          );
-          const hasReviewTarget = matchedPlans.some(
-            (item) =>
-              item.action === "REVIEW" || item.matchType === "POSSIBLE_MATCH",
-          );
-          const action: PhotoAction =
-            !dbConnected || (!hasCancelledTarget && !hasReviewTarget)
-              ? "ORPHAN"
-              : "SKIPPED_PHOTO";
-          plans.push({
-            sourceFolder: relative,
-            commissariat: folder.commissariatFolder,
-            prokerFolder: folder.prokerFolder,
-            targetProgramIds: [],
-            file: path.basename(file),
-            extension,
-            bytes: fs.statSync(file).size,
-            sha256,
-            destinationWebpPath: null,
-            action,
-            reason: !dbConnected
-              ? "Database unavailable; no valid program target can be confirmed."
-              : hasCancelledTarget
-                ? "Cancelled program has no photo migration plan."
-                : "Photo mapping is unresolved or review-only; no target is planned.",
-          });
-          continue;
-        }
         const targetLabels = validTargets
           .map((item) => item.source.title)
           .join(", ");
+        const targetActions: PhotoPlan["targetActions"] = [];
         for (const item of validTargets) {
           const id = item.programId!;
-          const destinationWebpPath = `/uploads/proker/${item.legacy?.commissariatSlug || commissariatKey(item.source.commissariat)}/${id}/${path.basename(file, extension)}.webp`;
+          const destinationWebpPath = `/uploads/proker/${item.legacy?.commissariatSlug || commissariatKey(item.source.commissariat)}/${id}/${sha256}.webp`;
           const duplicate = item.legacy
             ? existingHashes.get(sha256)?.has(item.legacy.id) ||
               plannedHashes.has(`${item.programId}:${sha256}`)
             : false;
-          const action: PhotoAction = duplicate
-            ? "DUPLICATE"
-            : item.action === "ACTIVE_INSERT"
-              ? "NEW_WEBP"
-              : "LEGACY_PHOTO_REGISTRATION";
+          const action = photoActionFor(item.action, duplicate);
           if (!duplicate) plannedHashes.add(`${item.programId}:${sha256}`);
-          plans.push({
-            sourceFolder: relative,
-            commissariat: folder.commissariatFolder,
-            prokerFolder: folder.prokerFolder,
-            targetProgramIds: [item.programId!],
-            file: path.basename(file),
-            extension,
-            bytes: fs.statSync(file).size,
-            sha256,
-            destinationWebpPath,
+          targetActions.push({
+            programId: id,
             action,
-            reason: `${duplicate ? "Final WebP SHA-256 already exists" : action === "NEW_WEBP" ? "New active program photo; WebP bytes hashed in memory only" : "Register photo for existing program without copying during preview"}. Confirmed target: ${targetLabels}.`,
+            destinationWebpPath,
           });
         }
-      } catch (error) {
+        const distinctActions = [
+          ...new Set(targetActions.map((target) => target.action)),
+        ];
+        const overallAction =
+          distinctActions.length === 1 ? distinctActions[0] : "NEW_WEBP";
         plans.push({
           sourceFolder: relative,
           commissariat: folder.commissariatFolder,
           prokerFolder: folder.prokerFolder,
-          targetProgramIds: [],
+          targetProgramIds: targetActions.map((target) => target.programId),
           file: path.basename(file),
           extension,
-          bytes: fs.statSync(file).size,
-          sha256: null,
-          destinationWebpPath: null,
-          action: "ORPHAN",
-          reason: error instanceof Error ? error.message : String(error),
+          bytes: sourceBytes,
+          sha256,
+          destinationWebpPath:
+            targetActions.length === 1
+              ? targetActions[0].destinationWebpPath
+              : null,
+          destinationWebpPaths: targetActions
+            .map((target) => target.destinationWebpPath)
+            .filter((value): value is string => !!value),
+          targetActions,
+          action: overallAction,
+          reason: `${distinctActions.length === 1 && distinctActions[0] === "DUPLICATE" ? "Final WebP SHA-256 already exists" : "Final WebP bytes hashed in memory only; no source or destination file was written"}. Confirmed targets: ${targetLabels}. Per-target actions: ${targetActions.map((target) => `${target.programId}=${target.action}`).join(", ")}.`,
         });
+      } catch (error) {
+        plans.push(
+          buildSkippedPlan(
+            folder,
+            file,
+            relative,
+            extension,
+            sourceBytes,
+            "ORPHAN",
+            error instanceof Error ? error.message : String(error),
+          ),
+        );
       }
     }
   }
@@ -1328,7 +1414,17 @@ const summarize = (plans: ProgramPlan[], photos: PhotoPlan[]) => ({
       "ORPHAN",
     ].map((key) => [
       key,
-      photos.filter((photo) => photo.action === key).length,
+      photos.reduce(
+        (count, photo) =>
+          count +
+          (photo.targetActions.length
+            ? photo.targetActions.filter((target) => target.action === key)
+                .length
+            : photo.action === key
+              ? 1
+              : 0),
+        0,
+      ),
     ]),
   ),
 });
@@ -1346,7 +1442,7 @@ const renderReport = (
   lines.push("# Dry-Run Rekonsiliasi Program Kerja dan Dokumentasi Foto");
   lines.push("");
   lines.push(
-    "> Laporan ini read-only. Tidak ada INSERT, UPDATE, DELETE, pemindahan file, overwrite foto, atau perubahan schema production.",
+    "> Laporan ini read-only. Tidak ada INSERT, UPDATE, DELETE, pemindahan file, overwrite foto, atau perubahan schema production. Untuk menghitung SHA-256 final WebP, gambar aktif yang memiliki target valid hanya di-encode di memory; tidak ada hasil conversion yang ditulis ke disk.",
   );
   lines.push("");
   lines.push(`- **Dibuat:** ${new Date().toISOString()}`);
@@ -1386,11 +1482,18 @@ const renderReport = (
   lines.push("|---|---|---|---|---|---|---:|---:|---|---|---|---|");
   for (const planItem of plans) {
     const plannedPhotos = planItem.programId
-      ? photos.filter(
-          (photo) =>
-            photo.targetProgramIds.includes(planItem.programId!) &&
-            ["LEGACY_PHOTO_REGISTRATION", "NEW_WEBP"].includes(photo.action),
-        ).length
+      ? photos.reduce(
+          (count, photo) =>
+            count +
+            photo.targetActions.filter(
+              (target) =>
+                target.programId === planItem.programId &&
+                ["LEGACY_PHOTO_REGISTRATION", "NEW_WEBP"].includes(
+                  target.action,
+                ),
+            ).length,
+          0,
+        )
       : 0;
     const reason = `${planItem.reason}${planItem.metadataChanges.length ? `; fields: ${planItem.metadataChanges.join(", ")}` : ""}`;
     lines.push(
@@ -1420,7 +1523,7 @@ const renderReport = (
       ),
     );
     lines.push(
-      `| ${markdown(folder.commissariatFolder)} | ${markdown(folder.prokerFolder)} | ${folder.files.length} | ${markdown([...new Set(rows.flatMap((row) => row.targetProgramIds))].join(", ") || "-")} | ${markdown([...new Set(rows.map((row) => row.destinationWebpPath).filter(Boolean))].join(", ") || "-")} | ${[...new Set(rows.map((row) => row.action))].join(", ") || "-"} | ${markdown([...new Set(rows.map((row) => row.reason))].join("; ") || "-")} |`,
+      `| ${markdown(folder.commissariatFolder)} | ${markdown(folder.prokerFolder)} | ${folder.files.length} | ${markdown([...new Set(rows.flatMap((row) => row.targetProgramIds))].join(", ") || "-")} | ${markdown([...new Set(rows.flatMap((row) => row.destinationWebpPaths))].join(", ") || "-")} | ${markdown([...new Set(rows.flatMap((row) => row.targetActions.map((target) => `${target.programId}=${target.action}`)).concat(rows.filter((row) => !row.targetActions.length).map((row) => row.action)))].join(", ") || "-")} | ${markdown([...new Set(rows.map((row) => row.reason))].join("; ") || "-")} |`,
     );
   }
   lines.push("");
@@ -1432,7 +1535,7 @@ const renderReport = (
   lines.push("|---|---|---|---|---:|---|---|");
   for (const photo of photos)
     lines.push(
-      `| \`${markdown(photo.sourceFolder)}\` | \`${markdown(photo.destinationWebpPath ?? "-")}\` | \`${photo.sha256 ?? "-"}\` | ${markdown(photo.targetProgramIds.join(", ") || "-")} | ${photo.bytes} | ${photo.action} | ${markdown(photo.reason)} |`,
+      `| \`${markdown(photo.sourceFolder)}\` | \`${markdown(photo.destinationWebpPaths.join(", ") || photo.destinationWebpPath || "-")}\` | \`${photo.sha256 ?? "-"}\` | ${markdown(photo.targetProgramIds.join(", ") || "-")} | ${photo.bytes} | ${markdown(photo.targetActions.map((target) => `${target.programId}=${target.action}`).join(", ") || photo.action)} | ${markdown(photo.reason)} |`,
     );
   lines.push("");
   lines.push("## Database dan Schema yang Diaudit");
@@ -1463,7 +1566,7 @@ const renderReport = (
     "5. Foto disimpan sebagai child records berbasis SHA-256; kolom foto lama tetap dipertahankan. Foto proker baru berstatus pending insert sampai ID program dibuat.",
   );
   lines.push(
-    "6. Tidak ada operasi mass delete, truncate, overwrite, atau pemindahan file sumber.",
+    "6. Tidak ada operasi mass delete, truncate, overwrite, pemindahan file sumber, atau penulisan hasil conversion. Encoding WebP hanya dilakukan di memory untuk evidence hash.",
   );
   lines.push(
     "7. Apply production hanya boleh dilakukan setelah approval eksplisit: `SETUJUI MIGRASI`.",
@@ -1516,6 +1619,7 @@ const main = async () => {
           sourceRow: 0,
           commissariat: legacy.commissariat,
           division: legacy.division,
+          programKe: legacy.programKe,
           title: legacy.title,
           slug: "",
           status: legacy.status,
