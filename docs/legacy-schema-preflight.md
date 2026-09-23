@@ -20,6 +20,8 @@ The command compares the source and restored database for:
 
 The backup SHA-256 and both inspection reports are printed as JSON. The temporary database is removed after a successful verification. Set `KEEP_RESTORE_DATABASE=1` only when a failed verification must be investigated; a failed restore is never considered ready for data migration. Dumps containing `USE`, database DDL, or qualified source-database references are rejected so the restore cannot redirect writes to the source database.
 
+Successful verification writes `artifacts/migration/restore-verification.json` with the backup SHA-256, source/restored reports, source-after-restore check, target database, and an expiry. A new restore attempt first replaces older evidence with `status: "blocked"`, so stale successful evidence cannot authorize a later schema apply.
+
 The restore connects to the configured server but imports into the isolated temporary database only. It does not write to the source database.
 
 ## 2. Inspect the active schema and migration history
@@ -29,7 +31,7 @@ npm run preflight:legacy-schema -- inspect
 npm run preflight:legacy-schema -- plan > .\docs\legacy-schema-plan.json
 ```
 
-`inspect` reports the actual tables, columns, legacy photo counts, `_prisma_migrations` history when present, and migration discrepancies in both directions: repository migrations missing from the database, applied database migrations absent from the repository, and failed/rolled-back history rows. `plan` includes the full inspection and the additive operations still required.
+`inspect` reports the actual tables, columns, indexes, foreign keys, legacy photo counts, `_prisma_migrations` history when present, and migration discrepancies in both directions: repository migrations missing from the database, applied database migrations absent from the repository, failed/rolled-back history rows, and structural differences such as the legacy non-null `tanggalProker` versus the repository's nullable expectation. `plan` includes the full inspection and the additive operations still required. Structural conflicts are reported for review; they are not silently modified.
 
 If a required legacy table or `program_kerja.id` is missing, the tool stops instead of guessing. Existing but incompatible photo-table shapes also require manual review rather than an unsafe alteration.
 
@@ -41,6 +43,8 @@ Review the plan and obtain an explicit approval. The exact phrase is required in
 $env:SCHEMA_MIGRATION_APPROVAL = "SETUJUI SCHEMA MIGRASI"
 npm run preflight:legacy-schema -- apply
 ```
+
+Schema apply also requires a current successful `restore-verification.json` for the same database. Apply is refused when restore evidence is missing, expired, invalid, or targeted at another database.
 
 The apply path can only add the nullable `dateLabel` column and the additive `program_kerja_photo` child table. It contains no `DROP`, `TRUNCATE`, `DELETE`, table recreation, or production-data reset operation. The schema is inspected again afterward; if any approved operation is incomplete or fails, the command writes a blocked readiness record to `artifacts/migration/schema-readiness.json` and data migration remains blocked. A successful run writes `status: "ready"`; operators must check that record before starting data migration.
 
