@@ -15,6 +15,7 @@
     "guard:staging-reset": "node scripts/guard-staging-reset.mjs",
     "verify:backup-restore": "node scripts/verify-mysql-backup-restore.mjs",
     "preflight:legacy-schema": "node scripts/legacy-schema-preflight.mjs",
+    "check:schema-readiness": "node scripts/check-schema-readiness.mjs",
     "test:legacy-schema-preflight": "node --test scripts/legacy-schema-preflight.test.mjs",
     "check:migration-mode": "node scripts/check-migration-mode.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
