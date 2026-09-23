@@ -52,4 +52,10 @@ npm run check:schema-readiness
 
 The command fails closed when evidence is missing, invalid, or blocked. The preflight deliberately refuses direct schema execution under `NODE_ENV=staging` or `production`; those environments must use a reviewed Prisma migration through the repository's `check:migration-mode` and `prisma migrate deploy` flow.
 
+The destructive legacy importer has a second independent gate. It requires both readiness evidence for the same database and:
+
+```powershell
+$env:DATA_MIGRATION_APPROVAL = "SETUJUI DATA MIGRASI"
+```
+
 This approval is deliberately separate from the later `SETUJUI DATA MIGRASI` gate. A schema preflight or schema approval is not permission to reconcile Program Kerja rows or files.

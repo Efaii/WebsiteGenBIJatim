@@ -43,6 +43,7 @@ interface SourceProgram {
   docsLink: string | null;
   lpjLink: string | null;
   explicitId: string | null;
+  collaborationGroup: string | null;
 }
 
 interface LegacyProgram {
@@ -102,7 +103,7 @@ interface PhotoAlias {
 
 const rootFromCwd = () => {
   const cwd = process.cwd();
-  const candidates = [path.resolve(cwd, "data/proker"), path.resolve(cwd, "../../data/proker")];
+  const candidates = [path.resolve(cwd, "data/proker"), path.resolve(cwd, "../../data/proker"), path.resolve(cwd, "../../data/proker")];
   const found = candidates.find((candidate) => fs.existsSync(candidate));
   if (!found) throw new Error("Could not find data/proker from the current working directory.");
   return found;
@@ -118,7 +119,7 @@ const argument = (name: string) => {
 const SOURCE_ROOT = path.resolve(argument("--source-dir") || rootFromCwd());
 const EXCEL_ROOT = path.join(SOURCE_ROOT, "Data Program Kerja Updated");
 const PHOTO_ROOT = path.join(SOURCE_ROOT, "Dokumentasi Proker");
-const PROJECT_ROOT = path.resolve(SOURCE_ROOT, "../..");
+const PROJECT_ROOT = fs.existsSync(path.join(SOURCE_ROOT, "../../apps/web")) ? path.resolve(SOURCE_ROOT, "../..") : path.resolve(SOURCE_ROOT, "../../..");
 const PUBLIC_ROOT = path.join(PROJECT_ROOT, "apps/web/public");
 const REPORT_PATH = path.resolve(argument("--report") || path.join(PROJECT_ROOT, "docs/proker-reconciliation-dry-run.md"));
 const JSON_REPORT_PATH = REPORT_PATH.replace(/\.md$/i, ".json");
@@ -286,24 +287,23 @@ const readSourcePrograms = (): SourceProgram[] => {
   const programs: SourceProgram[] = [];
   for (const fileName of fs.readdirSync(EXCEL_ROOT).filter((name) => /\.xlsx?$/i.test(name)).sort()) {
     const workbook = xlsx.readFile(path.join(EXCEL_ROOT, fileName));
+    const defaultCommissariat = fileName.replace(/_.*$/, "").replace(/_/g, " ").trim();
     const worksheet = workbook.Sheets.proker;
-    if (!worksheet) continue;
-    const rows = xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: null });
-    rows.forEach((row, index) => {
-      const title = clean(row.title);
-      const commissariat = clean(row.commissariat);
+    const appendRows = (rows: Record<string, unknown>[], sheetName: string) => rows.forEach((row, index) => {
+      const title = clean(row.title || row["Nama Proker"] || row.Proker || row["Program Kerja"] || row["Nama/Status"]);
+      const commissariat = clean(row.commissariat || row.komisariat || row.Komisariat) || defaultCommissariat;
       if (!title || !commissariat) return;
       programs.push({
         sourceFile: fileName,
         sourceRow: index + 2,
         commissariat,
-        division: clean(row.division),
+        division: clean(row.division || row.Divisi),
         title,
         slug: clean(row.slug),
-        status: clean(row.status),
+        status: clean(row.status || row.status_source_excel || row.status_asli || row.original_status || row.Status),
         date: excelDate(row.date, row.date_iso),
-         format: clean(row.format) || "Offline",
-         dateLabel: excelDate(row.date, row.date_iso) ? null : "Periode 2025/2026",
+        format: clean(row.format) || "Offline",
+        dateLabel: excelDate(row.date, row.date_iso) ? null : clean(row.date) || "Periode 2025/2026",
         description: clean(row.description),
         kpi: clean(row.kpi),
         impact: clean(row.impact),
@@ -312,8 +312,24 @@ const readSourcePrograms = (): SourceProgram[] => {
         docsLink: clean(row.docs_link) || null,
         lpjLink: clean(row.lpj_link) || null,
         explicitId: clean(row.db_id || row.db_documentation_id) || null,
+        collaborationGroup: clean(row.collaboration_group || row.event_group) || null,
       });
     });
+    if (worksheet) appendRows(xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: null }), "proker");
+    const excludedSheet = workbook.Sheets.Dikeluarkan;
+    if (excludedSheet) appendRows(xlsx.utils.sheet_to_json<Record<string, unknown>>(excludedSheet, { defval: null }), "Dikeluarkan");
+    const collaborationSheet = workbook.Sheets.Kolaborasi;
+    if (collaborationSheet) {
+      const collaborationRows = xlsx.utils.sheet_to_json<Record<string, unknown>>(collaborationSheet, { defval: null });
+      for (const row of collaborationRows) {
+        const group = clean(row["Kegiatan kolaborasi"] || row["Kegiatan Kolaborasi"]);
+        if (!group) continue;
+        const titles = [row["Record 1"], row["Record 2"]].map(clean).filter(Boolean);
+        for (const program of programs.filter((item) => item.sourceFile === fileName && titles.some((title) => sameProgramTitle(title, item.title)))) {
+          program.collaborationGroup = group;
+        }
+      }
+    }
   }
   return programs;
 };
@@ -330,7 +346,7 @@ const readPhotoFolders = (): SourcePhotoFolder[] => {
         for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
           const fullPath = path.join(directory, entry.name);
           if (entry.isDirectory()) visit(fullPath);
-          else if (SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) files.push(fullPath);
+          else files.push(fullPath);
         }
       };
       visit(prokerPath);
@@ -400,6 +416,8 @@ const chooseSourcePrograms = (folder: SourcePhotoFolder, programs: SourceProgram
     });
   }
   const candidates = programs.filter((program) => commissariatKey(program.commissariat) === commissariatKey(folder.commissariatFolder));
+  const collaborationMatches = candidates.filter((program) => program.collaborationGroup && normalizeText(program.collaborationGroup) === normalizeText(folder.prokerFolder));
+  if (collaborationMatches.length) return collaborationMatches.map((program) => ({ program, type: "EXACT_MATCH" as const, score: 1 }));
   const exact = candidates.filter((program) => sameProgramTitle(program.title, folder.prokerFolder));
   if (exact.length) return exact.map((program) => ({ program, type: "EXACT_MATCH" as const, score: 1 }));
   return [{ program: null, type: "UNMATCHED" as const, score: 0 }];
@@ -647,7 +665,7 @@ const main = async () => {
   const database = await readLegacyDatabase();
   const plans = matchPrograms(sources, database.rows, database.connected);
   const matchedLegacyIds = new Set(plans.filter((item) => item.legacy && item.matchType !== "NEW_PROGRAM").map((item) => item.legacy!.id));
-   if (database.connected) for (const legacy of database.rows.filter((row) => !matchedLegacyIds.has(row.id))) plans.push({ source: { sourceFile: "-", sourceRow: 0, commissariat: legacy.commissariat, division: legacy.division, title: legacy.title, slug: "", status: legacy.status, date: legacy.date, dateLabel: legacy.date ? null : "Periode 2025/2026", format: legacy.format || "Offline", description: legacy.description, kpi: legacy.kpi ?? "", impact: legacy.impact ?? "", evaluation: legacy.evaluation ?? "", proposalLink: null, docsLink: null, lpjLink: null, explicitId: legacy.id }, matchType: "LEGACY_ONLY", legacy, confidence: 0, reason: legacy.photos.length ? "Database-only row has legacy documentation paths; archive it after review." : "Database-only row has no documentation evidence; delete only after explicit review.", action: legacy.photos.length ? "DOCUMENTED_DATABASE_ONLY_ARCHIVE" : "UNDOCUMENTED_DATABASE_ONLY_DELETE", metadataChanges: [], programId: legacy.id });
+    if (database.connected) for (const legacy of database.rows.filter((row) => !matchedLegacyIds.has(row.id))) plans.push({ source: { sourceFile: "-", sourceRow: 0, commissariat: legacy.commissariat, division: legacy.division, title: legacy.title, slug: "", status: legacy.status, date: legacy.date, dateLabel: legacy.date ? null : "Periode 2025/2026", format: legacy.format || "Offline", description: legacy.description, kpi: legacy.kpi ?? "", impact: legacy.impact ?? "", evaluation: legacy.evaluation ?? "", proposalLink: null, docsLink: null, lpjLink: null, explicitId: legacy.id, collaborationGroup: null }, matchType: "LEGACY_ONLY", legacy, confidence: 0, reason: legacy.photos.length ? "Database-only row has legacy documentation paths; archive it after review." : "Database-only row has no documentation evidence; delete only after explicit review.", action: legacy.photos.length ? "DOCUMENTED_DATABASE_ONLY_ARCHIVE" : "UNDOCUMENTED_DATABASE_ONLY_DELETE", metadataChanges: [], programId: legacy.id });
   const photos = await buildPhotoPlans(folders, sources, plans.filter((item) => item.source.sourceFile !== "-"), database.rows, database.connected);
   const report = renderReport(SOURCE_ROOT, database, sources, folders, plans, photos);
   fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
