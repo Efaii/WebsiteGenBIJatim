@@ -30,7 +30,8 @@ export interface ProkerData {
   audience: "Internal" | "External";
   status: "Completed" | "On-going" | "Upcoming" | "Recurring";
   date: string;
-  dateIso: string;
+  dateIso: string | null;
+  dateLabel?: string | null;
   time?: string;
   location?: string;
   format?: "Offline" | "Online" | "Hybrid";
