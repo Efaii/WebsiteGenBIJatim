@@ -68,7 +68,8 @@ export function compareRestore(source, restored) {
 export function sanitizeBackupSql(sql, sourceDatabase) {
   const unsafe = /(^|\n)\s*(?:USE\s+|CREATE\s+(?:DATABASE|SCHEMA)\b|DROP\s+(?:DATABASE|SCHEMA)\b|ALTER\s+(?:DATABASE|SCHEMA)\b|RENAME\s+DATABASE\b)/im;
   if (unsafe.test(sql)) throw new Error('Backup contains database-selection or database-DDL statements; refusing to execute it in an isolated restore. Export table data only and retry.');
-  const qualifiedSource = new RegExp(`(?:\\\\.|\`)${sourceDatabase.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(?:\\\\.|\`)`, 'i');
+  const escapedDatabase = sourceDatabase.replace(/[.*+?^${}()|[\[\]\\]/g, '\\$&');
+  const qualifiedSource = new RegExp('(?:`?' + escapedDatabase + '`?)\\s*\\.', 'i');
   if (qualifiedSource.test(sql)) throw new Error(`Backup contains qualified references to source database ${sourceDatabase}; refusing to restore it.`);
   return sql;
 }
@@ -77,7 +78,7 @@ async function writeReadiness(status, details = {}) {
   const { mkdir, writeFile } = await import('node:fs/promises');
   const destination = readinessPath();
   await mkdir(path.dirname(destination), { recursive: true });
-  await writeFile(destination, `${JSON.stringify({ status, updatedAt: new Date().toISOString(), ...details }, null, 2)}\n`, 'utf8');
+  await writeFile(destination, `${JSON.stringify({ status, updatedAt: new Date().toISOString(), database: details.database ?? null, ...details }, null, 2)}\n`, 'utf8');
 }
 
 function mysqlArgs(connection, extra = [], includeDatabase = false) {
@@ -194,6 +195,7 @@ async function main() {
     return;
   }
   if (command !== 'inspect' && command !== 'plan' && command !== 'apply') throw new Error('Usage: node scripts/legacy-schema-preflight.mjs <restore|inspect|plan|apply> ...');
+  if (command === 'apply') await writeReadiness('blocked', { database: connection.database, reason: 'Schema apply has not completed.' });
   const report = await inspect(connection);
   if (command === 'inspect') {
     console.log(JSON.stringify(report, null, 2));
@@ -208,23 +210,23 @@ async function main() {
     console.log(JSON.stringify({ inspection: report, plan }, null, 2));
     return;
   }
-  if (process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'production') {
+  if (!['development', 'test'].includes(process.env.NODE_ENV ?? '')) {
     throw new Error('Direct schema apply is blocked for staging/production. Review this plan, add it as a Prisma migration, run check:migration-mode, then use prisma migrate deploy.');
   }
   if (process.env.SCHEMA_MIGRATION_APPROVAL !== approvalPhrase) {
-    await writeReadiness('blocked', { reason: 'Explicit schema approval is missing.' });
+    await writeReadiness('blocked', { database: connection.database, reason: 'Explicit schema approval is missing.' });
     throw new Error(`Schema execution blocked. Review the plan, then set SCHEMA_MIGRATION_APPROVAL="${approvalPhrase}" explicitly.`);
   }
-  await writeReadiness('blocked', { reason: 'Schema execution is in progress; data migration is blocked.', actions });
+  await writeReadiness('blocked', { database: connection.database, reason: 'Schema execution is in progress; data migration is blocked.', actions });
   try {
     for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql]), { capture: false });
     const verified = await inspect(connection);
     const remaining = buildAdditivePlan({ tables: verified.tables, columns: verified.columns });
     if (remaining.length) throw new Error(`Schema execution incomplete; ${remaining.length} approved additive operation(s) remain. Data migration is blocked.`);
-    await writeReadiness('ready', { applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies });
+    await writeReadiness('ready', { database: connection.database, applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies });
     console.log(JSON.stringify({ schemaReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
   } catch (error) {
-    await writeReadiness('blocked', { reason: error instanceof Error ? error.message : String(error), actions });
+    await writeReadiness('blocked', { database: connection.database, reason: error instanceof Error ? error.message : String(error), actions });
     throw new Error(`Schema execution failed; data migration is blocked. ${error instanceof Error ? error.message : String(error)}`);
   }
 }

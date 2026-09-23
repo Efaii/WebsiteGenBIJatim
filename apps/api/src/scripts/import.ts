@@ -10,7 +10,7 @@ function assertSchemaReady(): void {
     : [path.resolve(__dirname, "../../../artifacts/migration/schema-readiness.json"), path.resolve(__dirname, "../../../../artifacts/migration/schema-readiness.json")];
   const evidencePath = candidates.find((candidate) => fs.existsSync(candidate));
   if (!evidencePath) throw new Error(`Schema readiness evidence is missing at ${candidates[0]}; data migration is blocked.`);
-  let evidence: { status?: string };
+  let evidence: { status?: string; database?: string };
   try {
     evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8")) as { status?: string };
   } catch {
@@ -18,6 +18,13 @@ function assertSchemaReady(): void {
   }
   if (evidence.status !== "ready") {
     throw new Error(`Schema readiness is ${evidence.status ?? "unknown"}; data migration is blocked. Resolve the schema preflight first.`);
+  }
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is required to bind schema readiness evidence; data migration is blocked.");
+  const database = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ""));
+  if (evidence.database !== database) throw new Error(`Schema readiness targets ${evidence.database ?? "unknown"}, not ${database}; data migration is blocked.`);
+  if (process.env.DATA_MIGRATION_APPROVAL !== "SETUJUI DATA MIGRASI") {
+    throw new Error('Data migration blocked. Set DATA_MIGRATION_APPROVAL="SETUJUI DATA MIGRASI" after reviewing the data migration plan.');
   }
 }
 

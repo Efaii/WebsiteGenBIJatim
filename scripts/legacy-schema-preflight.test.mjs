@@ -37,6 +37,8 @@ test('compares restored counts and required table inventory', () => {
 test('rejects backup directives that could redirect a restore to production', () => {
   assert.throws(() => sanitizeBackupSql('USE `genbi_jatim`; INSERT INTO program_kerja VALUES (1);', 'genbi_jatim'), /database-selection/);
   assert.throws(() => sanitizeBackupSql('INSERT INTO `genbi_jatim`.`program_kerja` VALUES (1);', 'genbi_jatim'), /qualified references/);
+  assert.throws(() => sanitizeBackupSql('INSERT INTO genbi_jatim.program_kerja VALUES (1);', 'genbi_jatim'), /qualified references/);
+  assert.throws(() => sanitizeBackupSql('INSERT INTO genbi_jatim . program_kerja VALUES (1);', 'genbi_jatim'), /qualified references/);
   assert.equal(sanitizeBackupSql('INSERT INTO program_kerja VALUES (1);', 'genbi_jatim'), 'INSERT INTO program_kerja VALUES (1);');
 });
 

@@ -16,6 +16,10 @@ export async function readSchemaReadiness() {
 export async function assertSchemaReady() {
   const readiness = await readSchemaReadiness();
   if (readiness.status !== 'ready') throw new Error(`Schema readiness is ${String(readiness.status ?? 'unknown')}; data migration is blocked. Resolve the schema preflight first.`);
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error('DATABASE_URL is required to bind schema readiness evidence; data migration is blocked.');
+  const database = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ''));
+  if (readiness.database !== database) throw new Error(`Schema readiness targets ${String(readiness.database ?? 'unknown')}, not ${database}; data migration is blocked.`);
   return readiness;
 }
 
