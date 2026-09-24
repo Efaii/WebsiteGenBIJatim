@@ -23,6 +23,7 @@ import {
   getAllProgramIds,
 } from "@/lib/services/program.service";
 import { SlideUp, FadeIn } from "@/components/MotionWrapper";
+import { isPublicProgramItem, programDateLabel, programGalleryItems } from "@/lib/program-presentation.mjs";
 
 export async function generateStaticParams() {
   return getAllProgramIds();
@@ -89,11 +90,13 @@ export default async function ProgramDetailPage({
   const { id } = await params;
   const data = await getProgramById(id);
 
-  if (!data) {
+  if (!data || !isPublicProgramItem(data)) {
     notFound();
   }
 
   const status = getStatusPresentation(data.status);
+  const gallery = programGalleryItems(data);
+  const dateLabel = programDateLabel(data);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 selection:bg-blue-200 selection:text-blue-900 relative overflow-x-hidden">
@@ -125,9 +128,9 @@ export default async function ProgramDetailPage({
                 className="relative h-[300px] md:h-[420px] w-full"
               >
                 {/* Hero Image */}
-                {data.gallery && data.gallery.length > 0 ? (
+                {gallery.length > 0 ? (
                   <Image
-                    src={normalizeAssetUrl(data.gallery[0])}
+                    src={normalizeAssetUrl(gallery[0])}
                     alt={data.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -160,7 +163,7 @@ export default async function ProgramDetailPage({
                         variant="outline"
                       >
                         <Calendar className="w-3.5 h-3.5 mr-1.5 inline-block -mt-0.5" />
-                        {data.date}
+                        {dateLabel}
                       </Badge>
                     </div>
 
@@ -196,9 +199,9 @@ export default async function ProgramDetailPage({
                       Galeri Kegiatan
                     </h2>
                     
-                    {data.gallery && data.gallery.length > 0 ? (
+                    {gallery.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
-                        {data.gallery.slice(0, 6).map((img, idx) => (
+                        {gallery.map((img, idx) => (
                           <div
                             key={idx}
                             className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200/80 bg-slate-50 hover:border-blue-300/80 transition-all shadow-2xs"

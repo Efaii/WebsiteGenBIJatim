@@ -4,7 +4,7 @@ import { SHARED_EVENTS } from "@/content/sharedEvents";
 
 // Helper to convert ProkerData to EventItem
 const mapProkerToEventItem = (proker: ProkerData): EventItem => {
-  const dateObj = new Date(proker.dateIso);
+  const dateObj = new Date(proker.dateIso ?? 0);
   const day = dateObj.toLocaleDateString("id-ID", { weekday: "long" });
   const dateStr = dateObj.getDate().toString().padStart(2, "0");
   
@@ -21,7 +21,7 @@ const mapProkerToEventItem = (proker: ProkerData): EventItem => {
     location: proker.location || (proker.format === "Online" ? "Online" : "TBA"),
     audience: proker.audience,
     link: proker.link,
-    dateIso: proker.dateIso, // Required for filtering
+    dateIso: proker.dateIso ?? "", // Required for filtering
   };
 };
 
@@ -39,13 +39,13 @@ const generateCalendarData = (): Event[] => {
   
   // Sort by Date
   const sortedEvents = allEvents.sort((a, b) => 
-    new Date(a.dateIso).getTime() - new Date(b.dateIso).getTime()
+    new Date(a.dateIso ?? 0).getTime() - new Date(b.dateIso ?? 0).getTime()
   );
 
   const groups: Record<string, EventItem[]> = {};
 
   sortedEvents.forEach((proker) => {
-    const dateObj = new Date(proker.dateIso);
+    const dateObj = new Date(proker.dateIso ?? 0);
     const key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`; // YYYY-MM
     
     if (!groups[key]) {

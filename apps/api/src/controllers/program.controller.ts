@@ -9,6 +9,7 @@ import { CmsRequest } from '../middlewares/cms-session.middleware';
 import { sendSuccess } from '../middlewares/request-context.middleware';
 import { assertScopeAccess } from '../services/cms-scope.service';
 import { assertPublicationTransition } from '../domain/status-transitions';
+import { cmsPublicationStatus } from '../domain/cms-program-status';
 import { ensureStorageRoots, privateStoragePath } from '../lib/storage';
 
 const fields = (body: Record<string, unknown>) => {
@@ -61,7 +62,7 @@ export const createProgramRevision = async (req: CmsRequest, res: Response) => {
   if (!program) throw new ApiError('NOT_FOUND', 'Program Kerja not found.', 404);
   if (program.publicationStatus !== 'PUBLISHED' || program.revisions.length) throw new ApiError('CONFLICT', 'An active revision already exists or program is not published.', 409);
   assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
-  const input = fields({ title: req.body.title ?? program.namaProker, divisi: program.divisi, description: req.body.description ?? program.deskripsiProker, objectives: req.body.objectives ?? program.objectives, format: req.body.format ?? program.formatPelaksanaan, dateIso: req.body.dateIso ?? program.tanggalProker.toISOString() });
+  const input = fields({ title: req.body.title ?? program.namaProker, divisi: program.divisi, description: req.body.description ?? program.deskripsiProker, objectives: req.body.objectives ?? program.objectives, format: req.body.format ?? program.formatPelaksanaan, dateIso: req.body.dateIso ?? program.tanggalProker?.toISOString() });
   return sendSuccess(res, await prisma.programKerjaRevision.create({ data: { programKerjaId: program.id, namaProker: input.title, divisi: program.divisi, deskripsiProker: input.description, objectives: input.objectives, tanggalProker: input.date, startDate: input.date, endDate: input.date, formatPelaksanaan: input.format } }));
 };
 
@@ -69,7 +70,7 @@ export const previewProgramRevision = async (req: CmsRequest, res: Response) => 
   const revision = await prisma.programKerjaRevision.findUnique({ where: { id: req.params.revisionId }, include: { programKerja: true } });
   if (!revision) throw new ApiError('NOT_FOUND', 'Program revision not found.', 404);
   assertScopeAccess(req.cmsSession!, { commissariatId: revision.programKerja.commissariatId, periodId: revision.programKerja.periodId ?? undefined, divisionId: revision.programKerja.divisionId ?? undefined }, 'read');
-  return sendSuccess(res, { title: revision.namaProker, description: revision.deskripsiProker, objectives: revision.objectives, dateIso: revision.tanggalProker.toISOString().slice(0, 10), format: revision.formatPelaksanaan, divisi: revision.divisi, isPreview: true });
+  return sendSuccess(res, { title: revision.namaProker, description: revision.deskripsiProker, objectives: revision.objectives, dateIso: revision.tanggalProker?.toISOString().slice(0, 10) ?? null, dateLabel: revision.dateLabel, format: revision.formatPelaksanaan, divisi: revision.divisi, isPreview: true });
 };
 
 export const transitionProgramRevision = async (req: CmsRequest, res: Response) => {
@@ -83,7 +84,7 @@ export const transitionProgramRevision = async (req: CmsRequest, res: Response) 
   const updated = await prisma.$transaction(async (tx) => {
     const next = await tx.programKerjaRevision.update({ where: { id: revision.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
     if (to === 'PUBLISHED') {
-      await tx.programKerja.update({ where: { id: revision.programKerjaId }, data: { namaProker: revision.namaProker, divisi: revision.divisi, tanggalProker: revision.tanggalProker, startDate: revision.startDate, endDate: revision.endDate, objectives: revision.objectives ?? undefined, formatPelaksanaan: revision.formatPelaksanaan, deskripsiProker: revision.deskripsiProker, publicationStatus: 'PUBLISHED' } });
+      await tx.programKerja.update({ where: { id: revision.programKerjaId }, data: { namaProker: revision.namaProker, divisi: revision.divisi, tanggalProker: revision.tanggalProker, dateLabel: revision.dateLabel, startDate: revision.startDate, endDate: revision.endDate, objectives: revision.objectives ?? undefined, formatPelaksanaan: revision.formatPelaksanaan, deskripsiProker: revision.deskripsiProker, publicationStatus: 'PUBLISHED' } });
     }
     return next;
   });
@@ -92,7 +93,8 @@ export const transitionProgramRevision = async (req: CmsRequest, res: Response) 
 
 export const listCmsPrograms = async (req: CmsRequest, res: Response) => {
   const where: { publicationStatus?: PublicationStatus; commissariatId?: string; periodId?: string; divisionId?: string } = {};
-  if (typeof req.query.status === 'string' && Object.values(PublicationStatus).includes(req.query.status as PublicationStatus)) where.publicationStatus = req.query.status as PublicationStatus;
+  const requestedStatus = cmsPublicationStatus(req.query.status);
+  if (requestedStatus) where.publicationStatus = requestedStatus;
   if (req.cmsSession!.cmsAccount.role !== CmsRole.ADMIN_GLOBAL) {
     const assignment = req.cmsSession!.cmsAccount.assignments[0];
     if (!assignment?.commissariatId || !assignment.periodId) throw new ApiError('FORBIDDEN', 'No active CMS assignment.', 403);

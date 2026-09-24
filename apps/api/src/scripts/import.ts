@@ -10,7 +10,7 @@ function assertSchemaReady(): void {
     : [path.resolve(__dirname, "../../../artifacts/migration/schema-readiness.json"), path.resolve(__dirname, "../../../../artifacts/migration/schema-readiness.json")];
   const evidencePath = candidates.find((candidate) => fs.existsSync(candidate));
   if (!evidencePath) throw new Error(`Schema readiness evidence is missing at ${candidates[0]}; data migration is blocked.`);
-  let evidence: { status?: string; database?: string; expiresAt?: string; planHash?: string };
+  let evidence: { status?: string; database?: string; expiresAt?: string; planHash?: string; dataMigrationReady?: boolean; migrationApplied?: boolean; schemaApproval?: string };
   try {
     evidence = JSON.parse(fs.readFileSync(evidencePath, "utf8")) as { status?: string };
   } catch {
@@ -20,6 +20,8 @@ function assertSchemaReady(): void {
   if (!databaseUrl) throw new Error("DATABASE_URL is required to bind schema readiness evidence; data migration is blocked.");
   const database = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ""));
   if (evidence.status !== "ready") throw new Error(`Schema readiness is ${evidence.status ?? "unknown"}; data migration is blocked. Resolve the schema preflight first.`);
+  if (evidence.dataMigrationReady !== true || evidence.migrationApplied !== true) throw new Error("Schema readiness does not confirm deployed Prisma migration history; data migration is blocked.");
+  if (evidence.schemaApproval !== "SETUJUI SCHEMA MIGRASI") throw new Error("Schema readiness is missing exact schema approval evidence; data migration is blocked.");
   if (evidence.database !== database) throw new Error(`Schema readiness targets ${evidence.database ?? "unknown"}, not ${database}; data migration is blocked.`);
   if (!evidence.expiresAt || Date.parse(evidence.expiresAt) <= Date.now()) throw new Error("Schema readiness evidence is expired or missing an expiry; data migration is blocked.");
   if (!evidence.planHash || (process.env.SCHEMA_PLAN_HASH && evidence.planHash !== process.env.SCHEMA_PLAN_HASH)) throw new Error("Schema readiness planHash is missing or does not match the approved plan; data migration is blocked.");
@@ -55,7 +57,8 @@ interface ParsedProker {
   divisi: string;
   programKe: number;
   namaProker: string;
-  tanggalProker: Date;
+  tanggalProker: Date | null;
+  dateLabel: string | null;
   formatPelaksanaan: string;
   status: string;
   deskripsiProker: string;
@@ -138,7 +141,7 @@ async function main() {
       const foto6 = typeof row["foto6"] === "string" ? row["foto6"] : null;
 
       // Konversi format tanggal otomatis dari Excel Serial Number atau String biasa
-      let parsedDate = new Date();
+      let parsedDate: Date | null = null;
       if (tanggal_proker) {
         if (typeof tanggal_proker === "number") {
           // Konversi dari base 1900 format Excel ke format JS Date
@@ -147,9 +150,7 @@ async function main() {
           parsedDate = new Date(tanggal_proker);
         }
       }
-      if (isNaN(parsedDate.getTime())) {
-        parsedDate = new Date(); // Fallback untuk tanggal teks seperti "Kondisional"
-      }
+      if (parsedDate && isNaN(parsedDate.getTime())) parsedDate = null;
 
       parsedRecords.push({
         fileName,
@@ -159,6 +160,7 @@ async function main() {
         programKe: program_ke ? parseInt(String(program_ke)) : 1,
         namaProker: nama_proker || "Tanpa Nama",
         tanggalProker: parsedDate,
+        dateLabel: parsedDate ? null : "Periode 2025/2026",
         formatPelaksanaan: format_pelaksanaan || "Offline",
         status: status || "Completed",
         deskripsiProker: formatText(deskripsi_proker),
@@ -214,6 +216,7 @@ async function main() {
           programKe: record.programKe,
           namaProker: record.namaProker,
           tanggalProker: record.tanggalProker,
+          dateLabel: record.dateLabel,
           formatPelaksanaan: record.formatPelaksanaan,
           status: record.status,
           deskripsiProker: record.deskripsiProker,
