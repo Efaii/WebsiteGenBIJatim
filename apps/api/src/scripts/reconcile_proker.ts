@@ -1,9 +1,9 @@
 import "dotenv/config";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { prisma } from "../lib/prisma";
+import { isPublicProgram as isPublicProgramProjection } from "../domain/public-program";
 import * as xlsx from "@e965/xlsx";
 import stringSimilarity from "string-similarity";
 import sharp from "sharp";
@@ -11,16 +11,13 @@ import sharp from "sharp";
 /**
  * Safe reconciliation tool for the normalized Program Kerja source.
  *
- * The default mode is read-only. `--apply` is intentionally guarded by:
- * - an explicit approval phrase;
- * - a verified mysqldump file; and
- * - a canonical/additive schema already being present.
+ * The default mode is read-only. Data writes remain blocked until review-only
+ * matches are resolved and the separate data migration workflow is approved.
  *
  * This script never deletes Program Kerja records or existing photo files.
  */
 
 const SUPPORTED_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
-const APPROVAL_PHRASE = "SETUJUI MIGRASI";
 type MatchType =
   | "EXACT_MATCH"
   | "POSSIBLE_MATCH"
@@ -32,9 +29,10 @@ type ProgramAction =
   | "UPDATE"
   | "ACTIVE_INSERT"
   | "CANCELLED_SKIP"
-  | "CANCELLED_EXISTING_DELETE"
+  | "CANCELLED_EXISTING_ARCHIVE"
   | "DOCUMENTED_DATABASE_ONLY_ARCHIVE"
-  | "UNDOCUMENTED_DATABASE_ONLY_DELETE"
+  | "UNDOCUMENTED_DATABASE_ONLY_ARCHIVE"
+  | "SOURCE_EXCLUDED_ARCHIVE"
   | "REVIEW"
   | "DATABASE_UNAVAILABLE"
   | "UNCHANGED";
@@ -66,6 +64,7 @@ interface SourceProgram {
   lpjLink: string | null;
   explicitId: string | null;
   collaborationGroup: string | null;
+  sourceExcluded: boolean;
 }
 
 interface LegacyProgram {
@@ -84,6 +83,8 @@ interface LegacyProgram {
   impact: string | null;
   evaluation: string | null;
   photos: string[];
+  validPhotos: Array<{ filePath: string; fileHash: string }>;
+  documentationEvidence: boolean;
 }
 
 interface SourcePhotoFolder {
@@ -160,6 +161,20 @@ const REPORT_PATH = path.resolve(
 );
 const JSON_REPORT_PATH = REPORT_PATH.replace(/\.md$/i, ".json");
 const DATABASE_TIMEOUT_MS = 10_000;
+const DATA_APPROVAL = "SETUJUI DATA MIGRASI";
+const SCHEMA_APPROVAL = "SETUJUI SCHEMA MIGRASI";
+const preparedWebpBuffers = new Map<string, Buffer>();
+
+type PhotoWork = {
+  folder: SourcePhotoFolder;
+  file: string;
+  extension: string;
+  relative: string;
+  sourceBytes: number;
+  validTargets: ProgramPlan[];
+  hasCancelledTarget: boolean;
+  hasReviewTarget: boolean;
+};
 
 const normalizeText = (value: unknown) =>
   String(value ?? "")
@@ -189,6 +204,10 @@ const TITLE_IDENTITY_ALIASES: Array<[string, string]> = [
   [
     "aksi sehat berbagi makanan bergizi genbi baso",
     "aksi sehat berbagi makanan bergizi",
+  ],
+  [
+    "aksi sehat check up kesehatan genbi mancing",
+    "aksi sehat check up kesehatan",
   ],
   ["pelita bucket bunga x psdm", "bucket bunga x psdm"],
 ];
@@ -224,6 +243,17 @@ const clean = (value: unknown) =>
       ? ""
       : String(value).trim();
 
+const firstNonEmpty = (row: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = row[key];
+    if (value != null && clean(value) !== "") return value;
+  }
+  return null;
+};
+
+const firstValue = (row: Record<string, unknown>, keys: string[]) =>
+  clean(firstNonEmpty(row, keys));
+
 const previewProgramId = (source: SourceProgram) => {
   const digest = crypto
     .createHash("sha256")
@@ -236,7 +266,8 @@ const previewProgramId = (source: SourceProgram) => {
 
 const excelDate = (value: unknown, isoValue: unknown): string | null => {
   const iso = clean(isoValue);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso) && !Number.isNaN(Date.parse(iso)))
+    return iso;
   if (value instanceof Date && !Number.isNaN(value.getTime()))
     return value.toISOString().slice(0, 10);
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -245,10 +276,78 @@ const excelDate = (value: unknown, isoValue: unknown): string | null => {
       ? null
       : date.toISOString().slice(0, 10);
   }
-  const parsed = Date.parse(clean(value));
-  return Number.isNaN(parsed)
-    ? null
-    : new Date(parsed).toISOString().slice(0, 10);
+  const text = clean(value);
+  const dayFirst = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (dayFirst) {
+    const [, day, month, year] = dayFirst;
+    return validIsoDate(Number(year), Number(month), Number(day));
+  }
+  const monthName = text.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/i);
+  if (monthName) {
+    const monthIndex = MONTH_NAMES[normalizeText(monthName[2])];
+    if (monthIndex !== undefined)
+      return validIsoDate(
+        Number(monthName[3]),
+        monthIndex + 1,
+        Number(monthName[1]),
+      );
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text) && !Number.isNaN(Date.parse(text)))
+    return text;
+  return null;
+};
+
+const MONTH_NAMES: Record<string, number> = {
+  januari: 0,
+  january: 0,
+  jan: 0,
+  februari: 1,
+  february: 1,
+  feb: 1,
+  maret: 2,
+  march: 2,
+  mar: 2,
+  april: 3,
+  apr: 3,
+  mei: 4,
+  may: 4,
+  juni: 5,
+  june: 5,
+  jun: 5,
+  juli: 6,
+  july: 6,
+  jul: 6,
+  agustus: 7,
+  august: 7,
+  agu: 7,
+  aug: 7,
+  september: 8,
+  sep: 8,
+  oktober: 9,
+  october: 9,
+  okt: 9,
+  oct: 9,
+  november: 10,
+  nov: 10,
+  desember: 11,
+  december: 11,
+  des: 11,
+  dec: 11,
+};
+
+const validIsoDate = (
+  year: number,
+  month: number,
+  day: number,
+): string | null => {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  )
+    return null;
+  return date.toISOString().slice(0, 10);
 };
 
 const legacyDate = (value: unknown): string | null => {
@@ -277,6 +376,28 @@ const statusToExecution = (status: string) => {
   return "PLANNED";
 };
 
+const statusFromExcludedSheet = (row: Record<string, unknown>) => {
+  const original = firstValue(row, [
+    "status_excel",
+    "original_status",
+    "status_asli",
+    "status_source_excel",
+    "original_status_excel",
+    "status",
+    "Status",
+    "Status Excel",
+  ]);
+  const final = firstValue(row, ["status_final", "Status Final"]);
+  const decision = firstValue(row, ["keputusan", "reason", "alasan", "note"]);
+  if (
+    statusToExecution(original) === "CANCELLED" ||
+    statusToExecution(decision) === "CANCELLED"
+  )
+    return "cancelled";
+  if (statusToExecution(original) === "ONGOING") return "ongoing";
+  return final || original || decision;
+};
+
 const displayStatus = (status: string) => {
   const execution = statusToExecution(status);
   return execution === "COMPLETED"
@@ -291,22 +412,36 @@ const displayStatus = (status: string) => {
 const photoActionFor = (
   programAction: ProgramAction,
   duplicate: boolean,
+  sourceFile = false,
 ): PhotoAction =>
   duplicate
     ? "DUPLICATE"
-    : programAction === "ACTIVE_INSERT"
+    : sourceFile || programAction === "ACTIVE_INSERT"
       ? "NEW_WEBP"
       : "LEGACY_PHOTO_REGISTRATION";
 
 export const reconciliationRules = {
   normalizeCommissariat: commissariatKey,
   normalizeDivision,
+  sameProgramTitle,
   statusToExecution,
+  statusFromExcludedSheet,
+  isPublicProgram: isPublicProgramProjection,
   photoActionFor,
+  excelDate,
+  legacyOnlyAction(hasDocumentation: boolean): ProgramAction {
+    return hasDocumentation
+      ? "DOCUMENTED_DATABASE_ONLY_ARCHIVE"
+      : "UNDOCUMENTED_DATABASE_ONLY_ARCHIVE";
+  },
+  cancelledAction(hasExistingRecord: boolean): ProgramAction {
+    return hasExistingRecord ? "CANCELLED_EXISTING_ARCHIVE" : "CANCELLED_SKIP";
+  },
   photoMayTarget(action: ProgramAction) {
     return (
       action !== "CANCELLED_SKIP" &&
-      action !== "CANCELLED_EXISTING_DELETE" &&
+      action !== "CANCELLED_EXISTING_ARCHIVE" &&
+      action !== "SOURCE_EXCLUDED_ARCHIVE" &&
       action !== "REVIEW" &&
       action !== "DATABASE_UNAVAILABLE"
     );
@@ -715,7 +850,10 @@ const readSourcePrograms = (): SourceProgram[] => {
       .replace(/_/g, " ")
       .trim();
     const worksheet = workbook.Sheets.proker;
-    const appendRows = (rows: Record<string, unknown>[]) =>
+    const appendRows = (
+      rows: Record<string, unknown>[],
+      sourceExcluded = false,
+    ) =>
       rows.forEach((row, index) => {
         const title = clean(
           row.title ||
@@ -738,28 +876,68 @@ const readSourcePrograms = (): SourceProgram[] => {
           ),
           title,
           slug: clean(row.slug),
-          status: clean(
-            row.status ||
-              row.status_source_excel ||
-              row.status_asli ||
-              row.original_status ||
-              row.Status,
+          status: firstValue(row, [
+            "status",
+            "status_source_excel",
+            "status_asli",
+            "original_status",
+            "status_excel",
+            "status_final",
+            "original_status_excel",
+            "Status",
+            "Status Asli",
+            "Status Excel",
+            "original status",
+          ]),
+          date: excelDate(
+            firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
+            firstNonEmpty(row, ["date_iso", "tanggal_iso"]),
           ),
-          date: excelDate(row.date, row.date_iso),
           format: clean(row.format) || "Offline",
-          dateLabel: excelDate(row.date, row.date_iso)
+          dateLabel: excelDate(
+            firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
+            firstNonEmpty(row, ["date_iso", "tanggal_iso"]),
+          )
             ? null
-            : "Periode 2025/2026",
+            : clean(firstNonEmpty(row, ["date", "tanggal", "Tanggal"])) ||
+              "Periode 2025/2026",
           description: clean(row.description),
           kpi: clean(row.kpi),
           impact: clean(row.impact),
           evaluation: clean(row.evaluation),
-          proposalLink: clean(row.proposal_link) || null,
-          docsLink: clean(row.docs_link) || null,
-          lpjLink: clean(row.lpj_link) || null,
-          explicitId: clean(row.db_id || row.db_documentation_id) || null,
+          proposalLink:
+            clean(
+              firstNonEmpty(row, [
+                "proposal_link",
+                "proposal",
+                "proposal_reference",
+              ]),
+            ) || null,
+          docsLink:
+            clean(
+              firstNonEmpty(row, [
+                "docs_link",
+                "docs_reference",
+                "excel_documentation_reference",
+                "referensi_dokumentasi_excel",
+                "docs_link_excel",
+                "link dokumentasi",
+              ]),
+            ) || null,
+          lpjLink:
+            clean(firstNonEmpty(row, ["lpj_link", "lpj_reference"])) || null,
+          explicitId:
+            clean(
+              firstNonEmpty(row, [
+                "db_id",
+                "db_documentation_id",
+                "database_id",
+                "id",
+              ]),
+            ) || null,
           collaborationGroup:
             clean(row.collaboration_group || row.event_group) || null,
+          sourceExcluded,
         });
       });
     if (worksheet)
@@ -769,12 +947,19 @@ const readSourcePrograms = (): SourceProgram[] => {
         }),
       );
     const excludedSheet = workbook.Sheets.Dikeluarkan;
-    if (excludedSheet)
-      appendRows(
-        xlsx.utils.sheet_to_json<Record<string, unknown>>(excludedSheet, {
-          defval: null,
-        }),
+    if (excludedSheet) {
+      const excludedRows = xlsx.utils.sheet_to_json<Record<string, unknown>>(
+        excludedSheet,
+        { defval: null },
       );
+      appendRows(
+        excludedRows.map((row) => ({
+          ...row,
+          status: statusFromExcludedSheet(row),
+        })),
+        true,
+      );
+    }
     const collaborationSheet = workbook.Sheets.Kolaborasi;
     if (collaborationSheet) {
       const collaborationRows = xlsx.utils.sheet_to_json<
@@ -854,6 +1039,9 @@ const readLegacyDatabase = async () => {
       "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME",
     );
     result.tables = tables.map((table) => table.TABLE_NAME);
+    const programPhotoTableAvailable = result.tables.some(
+      (table) => table.toLowerCase() === "program_kerja_photo",
+    );
     const columns = await prisma.$queryRawUnsafe<
       Array<{ COLUMN_NAME: string }>
     >(
@@ -872,11 +1060,7 @@ const readLegacyDatabase = async () => {
       ORDER BY c.name, p.programKe, p.id`);
     let childPhotoRows: Array<{ programKerjaId: string; filePath: string }> =
       [];
-    if (
-      result.tables.some(
-        (table) => table.toLowerCase() === "program_kerja_photo",
-      )
-    ) {
+    if (programPhotoTableAvailable) {
       childPhotoRows = await prisma.$queryRawUnsafe<
         Array<{ programKerjaId: string; filePath: string }>
       >(
@@ -908,7 +1092,15 @@ const readLegacyDatabase = async () => {
         .filter(Boolean)
         .map(String)
         .concat(childPhotos.get(String(row.id)) ?? []),
+      validPhotos: [],
+      documentationEvidence:
+        [row.foto1, row.foto2, row.foto3, row.foto4, row.foto5, row.foto6].some(
+          Boolean,
+        ) || (childPhotos.get(String(row.id)) ?? []).length > 0,
     }));
+    result.foreignKeys = await prisma.$queryRawUnsafe(
+      "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_NAME='program_kerja'",
+    );
     result.connected = true;
   };
   try {
@@ -1153,9 +1345,15 @@ const plan = (
   const action: ProgramAction =
     matchType === "DATABASE_UNAVAILABLE"
       ? "DATABASE_UNAVAILABLE"
+      : matchType === "POSSIBLE_MATCH" || matchType === "CONFLICT"
+        ? "REVIEW"
+      : source.sourceExcluded
+        ? legacy
+          ? "SOURCE_EXCLUDED_ARCHIVE"
+          : "CANCELLED_SKIP"
       : cancelled
         ? legacy
-          ? "CANCELLED_EXISTING_DELETE"
+          ? "CANCELLED_EXISTING_ARCHIVE"
           : "CANCELLED_SKIP"
         : matchType === "EXACT_MATCH"
           ? metadataChanges.length
@@ -1200,19 +1398,67 @@ const hashFile = async (filePath: string) => {
 const convertToWebp = async (filePath: string) =>
   sharp(filePath).rotate().webp().toBuffer();
 
+const mapConcurrent = async <T, R>(
+  values: T[],
+  concurrency: number,
+  mapper: (value: T, index: number) => Promise<R>,
+) => {
+  const result = new Array<R>(values.length);
+  let nextIndex = 0;
+  const worker = async () => {
+    while (true) {
+      const index = nextIndex++;
+      if (index >= values.length) return;
+      result[index] = await mapper(values[index], index);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, values.length) }, () =>
+      worker(),
+    ),
+  );
+  return result;
+};
+
 const legacyHashMap = async (legacy: LegacyProgram[]) => {
   const hashes = new Map<string, Set<string>>();
-  for (const row of legacy) {
+  const paths = new Map<string, string>();
+  const references = legacy.flatMap((row) =>
+    row.photos.map((storedPath) => ({ rowId: row.id, storedPath })),
+  );
+  const results = await mapConcurrent(references, 8, async (reference) => {
+    const diskPath = path.join(
+      PUBLIC_ROOT,
+      reference.storedPath.replace(/^\/+/, ""),
+    );
+    if (!fs.existsSync(diskPath)) return null;
+    return { ...reference, hash: await hashFile(diskPath) };
+  });
+  for (const result of results) {
+    if (!result) continue;
+    const ids = hashes.get(result.hash) ?? new Set<string>();
+    ids.add(result.rowId);
+    hashes.set(result.hash, ids);
+    paths.set(`${result.rowId}:${result.hash}`, result.storedPath);
+  }
+  return { hashes, paths };
+};
+
+const populateLegacyPhotoHashes = async (legacy: LegacyProgram[]) => {
+  await mapConcurrent(legacy, 8, async (row) => {
+    const validPhotos: Array<{ filePath: string; fileHash: string }> = [];
     for (const storedPath of row.photos) {
       const diskPath = path.join(PUBLIC_ROOT, storedPath.replace(/^\/+/, ""));
       if (!fs.existsSync(diskPath)) continue;
-      const hash = await hashFile(diskPath);
-      const ids = hashes.get(hash) ?? new Set<string>();
-      ids.add(row.id);
-      hashes.set(hash, ids);
+      try {
+        validPhotos.push({ filePath: storedPath, fileHash: await hashFile(diskPath) });
+      } catch {
+        // Broken legacy files remain untouched and are not registered.
+      }
     }
-  }
-  return hashes;
+    row.validPhotos = validPhotos;
+    row.documentationEvidence = validPhotos.length > 0;
+  });
 };
 
 const buildPhotoPlans = async (
@@ -1223,9 +1469,10 @@ const buildPhotoPlans = async (
   dbConnected: boolean,
 ) => {
   const plans: PhotoPlan[] = [];
-  const existingHashes = dbConnected
+  const existing = dbConnected
     ? await legacyHashMap(legacy)
-    : new Map<string, Set<string>>();
+    : { hashes: new Map<string, Set<string>>(), paths: new Map<string, string>() };
+  const existingHashes = existing.hashes;
   const plannedHashes = new Set<string>();
 
   const buildSkippedPlan = (
@@ -1252,6 +1499,7 @@ const buildPhotoPlans = async (
     reason,
   });
 
+  const work: PhotoWork[] = [];
   for (const folder of folders) {
     const sourceMatches = chooseSourcePrograms(folder, sources);
     for (const file of folder.files) {
@@ -1285,7 +1533,7 @@ const buildPhotoPlans = async (
       const hasCancelledTarget = matchedPlans.some(
         (item) =>
           item.action === "CANCELLED_SKIP" ||
-          item.action === "CANCELLED_EXISTING_DELETE",
+          item.action === "CANCELLED_EXISTING_ARCHIVE",
       );
       const hasReviewTarget = matchedPlans.some(
         (item) =>
@@ -1313,67 +1561,89 @@ const buildPhotoPlans = async (
         );
         continue;
       }
-      try {
-        const webp = await convertToWebp(file);
-        const sha256 = crypto.createHash("sha256").update(webp).digest("hex");
-        const targetLabels = validTargets
-          .map((item) => item.source.title)
-          .join(", ");
-        const targetActions: PhotoPlan["targetActions"] = [];
-        for (const item of validTargets) {
-          const id = item.programId!;
-          const destinationWebpPath = `/uploads/proker/${item.legacy?.commissariatSlug || commissariatKey(item.source.commissariat)}/${id}/${sha256}.webp`;
-          const duplicate = item.legacy
-            ? existingHashes.get(sha256)?.has(item.legacy.id) ||
-              plannedHashes.has(`${item.programId}:${sha256}`)
-            : false;
-          const action = photoActionFor(item.action, duplicate);
-          if (!duplicate) plannedHashes.add(`${item.programId}:${sha256}`);
-          targetActions.push({
-            programId: id,
-            action,
-            destinationWebpPath,
-          });
-        }
-        const distinctActions = [
-          ...new Set(targetActions.map((target) => target.action)),
-        ];
-        const overallAction =
-          distinctActions.length === 1 ? distinctActions[0] : "NEW_WEBP";
-        plans.push({
-          sourceFolder: relative,
-          commissariat: folder.commissariatFolder,
-          prokerFolder: folder.prokerFolder,
-          targetProgramIds: targetActions.map((target) => target.programId),
-          file: path.basename(file),
-          extension,
-          bytes: sourceBytes,
-          sha256,
-          destinationWebpPath:
-            targetActions.length === 1
-              ? targetActions[0].destinationWebpPath
-              : null,
-          destinationWebpPaths: targetActions
-            .map((target) => target.destinationWebpPath)
-            .filter((value): value is string => !!value),
-          targetActions,
-          action: overallAction,
-          reason: `${distinctActions.length === 1 && distinctActions[0] === "DUPLICATE" ? "Final WebP SHA-256 already exists" : "Final WebP bytes hashed in memory only; no source or destination file was written"}. Confirmed targets: ${targetLabels}. Per-target actions: ${targetActions.map((target) => `${target.programId}=${target.action}`).join(", ")}.`,
-        });
-      } catch (error) {
-        plans.push(
-          buildSkippedPlan(
-            folder,
-            file,
-            relative,
-            extension,
-            sourceBytes,
-            "ORPHAN",
-            error instanceof Error ? error.message : String(error),
-          ),
-        );
-      }
+      work.push({
+        folder,
+        file,
+        extension,
+        relative,
+        sourceBytes,
+        validTargets,
+        hasCancelledTarget,
+        hasReviewTarget,
+      });
     }
+  }
+  const converted = await mapConcurrent(work, 4, async (item) => {
+    try {
+      const webp = await convertToWebp(item.file);
+      const sha256 = crypto.createHash("sha256").update(webp).digest("hex");
+      preparedWebpBuffers.set(item.relative, webp);
+      return { item, sha256, error: null as string | null };
+    } catch (error) {
+      return {
+        item,
+        sha256: null,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  });
+  for (const result of converted) {
+    const { item, sha256, error } = result;
+    if (!sha256) {
+      plans.push(
+        buildSkippedPlan(
+          item.folder,
+          item.file,
+          item.relative,
+          item.extension,
+          item.sourceBytes,
+          "ORPHAN",
+          error ?? "WebP conversion failed.",
+        ),
+      );
+      continue;
+    }
+    const targetLabels = item.validTargets
+      .map((target) => target.source.title)
+      .join(", ");
+    const targetActions: PhotoPlan["targetActions"] = [];
+    for (const target of item.validTargets) {
+      const id = target.programId!;
+      const destinationWebpPath =
+        (target.legacy && existing.paths.get(`${id}:${sha256}`)) ||
+        `/uploads/proker/${target.legacy?.commissariatSlug || commissariatKey(target.source.commissariat)}/${id}/${sha256}.webp`;
+      const duplicate =
+        (target.legacy && existingHashes.get(sha256)?.has(target.legacy.id)) ||
+        plannedHashes.has(`${id}:${sha256}`);
+      const action = photoActionFor(target.action, Boolean(duplicate), true);
+      plannedHashes.add(`${id}:${sha256}`);
+      targetActions.push({ programId: id, action, destinationWebpPath });
+    }
+    const distinctActions = [
+      ...new Set(targetActions.map((target) => target.action)),
+    ];
+    const overallAction =
+      distinctActions.length === 1 ? distinctActions[0] : "NEW_WEBP";
+    plans.push({
+      sourceFolder: item.relative,
+      commissariat: item.folder.commissariatFolder,
+      prokerFolder: item.folder.prokerFolder,
+      targetProgramIds: targetActions.map((target) => target.programId),
+      file: path.basename(item.file),
+      extension: item.extension,
+      bytes: item.sourceBytes,
+      sha256,
+      destinationWebpPath:
+        targetActions.length === 1
+          ? targetActions[0].destinationWebpPath
+          : null,
+      destinationWebpPaths: targetActions
+        .map((target) => target.destinationWebpPath)
+        .filter((value): value is string => !!value),
+      targetActions,
+      action: overallAction,
+      reason: `${distinctActions.length === 1 && distinctActions[0] === "DUPLICATE" ? "Final WebP SHA-256 already exists" : "Final WebP bytes hashed in memory only; no source or destination file was written"}. Confirmed targets: ${targetLabels}. Per-target actions: ${targetActions.map((target) => `${target.programId}=${target.action}`).join(", ")}.`,
+    });
   }
   return plans;
 };
@@ -1397,9 +1667,10 @@ const summarize = (plans: ProgramPlan[], photos: PhotoPlan[]) => ({
       "UPDATE",
       "ACTIVE_INSERT",
       "CANCELLED_SKIP",
-      "CANCELLED_EXISTING_DELETE",
+      "CANCELLED_EXISTING_ARCHIVE",
       "DOCUMENTED_DATABASE_ONLY_ARCHIVE",
-      "UNDOCUMENTED_DATABASE_ONLY_DELETE",
+      "UNDOCUMENTED_DATABASE_ONLY_ARCHIVE",
+      "SOURCE_EXCLUDED_ARCHIVE",
       "REVIEW",
       "DATABASE_UNAVAILABLE",
       "UNCHANGED",
@@ -1560,7 +1831,7 @@ const renderReport = (
   lines.push("2. Semua `POSSIBLE_MATCH` dan `CONFLICT` ditahan untuk review.");
   lines.push("3. `EXACT_MATCH` mempertahankan ID, createdAt, dan foto lama.");
   lines.push(
-    "4. Semua 148 record database tetap diperlakukan sebagai bagian periode 2025/2026; `LEGACY_ONLY` hanya berarti tidak muncul di Excel terbaru dan tidak dihapus atau diarsipkan otomatis.",
+    "4. Program cancelled dari sheet Dikeluarkan diklasifikasikan untuk archive; kandidat fuzzy/conflict ditahan sebagai REVIEW dan tidak digandakan sebagai legacy-only.",
   );
   lines.push(
     "5. Foto disimpan sebagai child records berbasis SHA-256; kolom foto lama tetap dipertahankan. Foto proker baru berstatus pending insert sampai ID program dibuat.",
@@ -1569,44 +1840,155 @@ const renderReport = (
     "6. Tidak ada operasi mass delete, truncate, overwrite, pemindahan file sumber, atau penulisan hasil conversion. Encoding WebP hanya dilakukan di memory untuk evidence hash.",
   );
   lines.push(
-    "7. Apply production hanya boleh dilakukan setelah approval eksplisit: `SETUJUI MIGRASI`.",
+    "7. Tidak ada operasi data dalam mode preview. Data migration memerlukan approval terpisah `SETUJUI DATA MIGRASI` setelah report direview; baris REVIEW tetap memblokir apply.",
   );
   lines.push("");
   lines.push("## Approval Gate");
   lines.push("");
   lines.push(
-    "Belum ada migration production yang dijalankan. Review laporan ini terlebih dahulu.",
+    "Mode preview: tidak ada perubahan database atau filesystem yang dilakukan.",
   );
   return lines.join("\n") + "\n";
 };
 
-const main = async () => {
-  if (hasFlag("--apply")) {
-    const approval = argument("--approval");
-    const backup = argument("--backup");
-    if (approval !== APPROVAL_PHRASE)
-      throw new Error(
-        `Production apply requires --approval \"${APPROVAL_PHRASE}\".`,
-      );
-    if (
-      !backup ||
-      !fs.existsSync(path.resolve(backup)) ||
-      fs.statSync(path.resolve(backup)).size < 1024
-    )
-      throw new Error(
-        "Production apply requires a verified non-empty --backup file.",
-      );
-    throw new Error(
-      "Production apply is intentionally not enabled in this audit pass. Review the generated report and request the approved apply pass separately.",
-    );
+const readJson = <T>(filePath: string): T =>
+  JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+
+const assertDataMigrationReady = (backupPath: string) => {
+  if (process.env.DATA_MIGRATION_APPROVAL !== DATA_APPROVAL)
+    throw new Error(`Data migration requires DATA_MIGRATION_APPROVAL="${DATA_APPROVAL}".`);
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is required for data migration.");
+  const database = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ""));
+  const readinessPath = path.resolve(process.env.SCHEMA_READINESS_PATH || path.join(PROJECT_ROOT, "artifacts/migration/schema-readiness.json"));
+  const restorePath = path.resolve(process.env.RESTORE_EVIDENCE_PATH || path.join(PROJECT_ROOT, "artifacts/migration/restore-verification.json"));
+  const readiness = readJson<{ status: string; database: string; dataMigrationReady: boolean; migrationApplied: boolean; schemaApproval: string; expiresAt: string; planHash: string }>(readinessPath);
+  const restore = readJson<{ status: string; sourceDatabase: string; backupSha256: string; expiresAt: string }>(restorePath);
+  const backupHash = crypto.createHash("sha256").update(fs.readFileSync(path.resolve(backupPath))).digest("hex");
+  const now = Date.now();
+  if (readiness.status !== "ready" || readiness.database !== database || !readiness.dataMigrationReady || !readiness.migrationApplied || readiness.schemaApproval !== SCHEMA_APPROVAL || Date.parse(readiness.expiresAt) <= now)
+    throw new Error("Schema readiness is not valid for data migration.");
+  if (restore.status !== "verified" || restore.sourceDatabase !== database || restore.backupSha256 !== backupHash || Date.parse(restore.expiresAt) <= now)
+    throw new Error("Backup does not match verified restore evidence.");
+  return readiness.planHash;
+};
+
+const stageWebpFiles = async (photos: PhotoPlan[]) => {
+  const stageRoot = fs.mkdtempSync(path.join(PROJECT_ROOT, ".proker-stage-"));
+  const staged = new Map<string, string>();
+  let stageIndex = 0;
+  for (const photo of photos) {
+    if (!photo.sha256) continue;
+    for (const target of photo.targetActions.filter((item) => item.action === "NEW_WEBP")) {
+      if (staged.has(photo.sourceFolder)) continue;
+      const buffer = preparedWebpBuffers.get(photo.sourceFolder);
+      if (!buffer) throw new Error(`Missing staged WebP buffer for ${photo.sourceFolder}`);
+      const stagedPath = path.join(stageRoot, `${stageIndex++}-${photo.sha256}.webp`);
+      fs.writeFileSync(stagedPath, buffer, { flag: "wx" });
+      staged.set(photo.sourceFolder, stagedPath);
+    }
   }
+  return { stageRoot, staged };
+};
+
+const applyDataMigration = async (plans: ProgramPlan[], photos: PhotoPlan[], backupPath: string) => {
+  assertDataMigrationReady(backupPath);
+  const unresolved = plans.filter((item) => item.action === "REVIEW" || item.matchType === "POSSIBLE_MATCH" || item.matchType === "CONFLICT");
+  if (unresolved.length) throw new Error(`Data migration blocked by ${unresolved.length} unresolved program match(es).`);
+  const { stageRoot, staged } = await stageWebpFiles(photos);
+  const finalFiles: string[] = [];
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const item of plans) {
+        const source = item.source;
+        const date = source.date ? new Date(`${source.date}T00:00:00.000Z`) : null;
+        if (
+          ["SOURCE_EXCLUDED_ARCHIVE", "CANCELLED_EXISTING_ARCHIVE"].includes(
+            item.action,
+          ) &&
+          item.legacy?.id
+        ) {
+          await tx.programKerja.update({ where: { id: item.legacy.id }, data: { publicationStatus: "ARCHIVED", executionStatus: "CANCELLED", status: "Cancelled" } });
+          continue;
+        }
+        if (item.action === "CANCELLED_SKIP") continue;
+        if (item.action === "DOCUMENTED_DATABASE_ONLY_ARCHIVE" && item.legacy?.id) {
+          await tx.programKerja.update({ where: { id: item.legacy.id }, data: { publicationStatus: "ARCHIVED" } });
+          continue;
+        }
+        if (item.action === "UNDOCUMENTED_DATABASE_ONLY_ARCHIVE" && item.legacy?.id) {
+          await tx.programKerja.update({
+            where: { id: item.legacy.id },
+            data: { publicationStatus: "ARCHIVED" },
+          });
+          continue;
+        }
+        if (!["UPDATE", "ACTIVE_INSERT", "UNCHANGED"].includes(item.action)) continue;
+        const data = {
+          programKe: source.programKe,
+          namaProker: source.title,
+          divisi: source.division || "BPH",
+          tanggalProker: date,
+          dateLabel: date ? null : source.dateLabel || "Periode 2025/2026",
+          formatPelaksanaan: source.format || "Offline",
+          status: displayStatus(source.status),
+          executionStatus: statusToExecution(source.status) as "PLANNED" | "ONGOING" | "COMPLETED" | "CANCELLED",
+          publicationStatus: "PUBLISHED" as const,
+          deskripsiProker: source.description,
+          kpiTukTarget: source.kpi || null,
+          dampak: source.impact || null,
+          evaluasi: source.evaluation || null,
+        };
+        if (item.action === "ACTIVE_INSERT") {
+          const commissariat = await tx.commissariat.findFirst({ where: { name: { contains: source.commissariat } } });
+          if (!commissariat) throw new Error(`Commissariat not found for ${source.commissariat}`);
+          await tx.programKerja.create({ data: { id: item.programId!, commissariatId: commissariat.id, ...data } });
+        } else if (item.legacy?.id) {
+          await tx.programKerja.update({ where: { id: item.legacy.id }, data });
+        }
+      }
+      for (const row of plans.map((item) => item.legacy).filter((item): item is LegacyProgram => !!item)) {
+        for (const photo of row.validPhotos) {
+          await tx.programKerjaPhoto.upsert({ where: { programKerjaId_fileHash: { programKerjaId: row.id, fileHash: photo.fileHash } }, create: { programKerjaId: row.id, filePath: photo.filePath, fileHash: photo.fileHash }, update: { filePath: photo.filePath } });
+        }
+      }
+      for (const photo of photos) {
+        if (!photo.sha256) continue;
+        for (const target of photo.targetActions) {
+          await tx.programKerjaPhoto.upsert({ where: { programKerjaId_fileHash: { programKerjaId: target.programId, fileHash: photo.sha256 } }, create: { programKerjaId: target.programId, filePath: target.destinationWebpPath!, fileHash: photo.sha256 }, update: { filePath: target.destinationWebpPath! } });
+        }
+      }
+    }, { maxWait: 30000, timeout: 120000 });
+    for (const photo of photos) {
+      if (!photo.sha256) continue;
+      for (const target of photo.targetActions.filter((item) => item.action === "NEW_WEBP")) {
+        const destination = path.join(PUBLIC_ROOT, target.destinationWebpPath!.replace(/^\/+/, ""));
+        if (fs.existsSync(destination)) continue;
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        const stagedPath = staged.get(photo.sourceFolder);
+        if (!stagedPath) throw new Error(`Staged file missing for ${photo.sourceFolder}`);
+        fs.copyFileSync(stagedPath, destination, fs.constants.COPYFILE_EXCL);
+        finalFiles.push(destination);
+      }
+    }
+  } catch (error) {
+    for (const file of finalFiles) try { fs.unlinkSync(file); } catch { /* leave unknown files untouched */ }
+    throw error;
+  } finally {
+    fs.rmSync(stageRoot, { recursive: true, force: true });
+  }
+  return { programs: plans.length, photos: photos.filter((photo) => photo.sha256).length, files: finalFiles.length };
+};
+
+const main = async () => {
   const sources = readSourcePrograms();
   const folders = readPhotoFolders();
   const database = await readLegacyDatabase();
+  if (database.connected) await populateLegacyPhotoHashes(database.rows);
   const plans = matchPrograms(sources, database.rows, database.connected);
   const matchedLegacyIds = new Set(
     plans
-      .filter((item) => item.legacy && item.matchType !== "NEW_PROGRAM")
+      .filter((item) => item.legacy)
       .map((item) => item.legacy!.id),
   );
   if (database.connected)
@@ -1635,16 +2017,17 @@ const main = async () => {
           lpjLink: null,
           explicitId: legacy.id,
           collaborationGroup: null,
+          sourceExcluded: false,
         },
         matchType: "LEGACY_ONLY",
         legacy,
         confidence: 0,
-        reason: legacy.photos.length
-          ? "Database-only row has legacy documentation paths; archive it after review."
-          : "Database-only row has no documentation evidence; delete only after explicit review.",
-        action: legacy.photos.length
-          ? "DOCUMENTED_DATABASE_ONLY_ARCHIVE"
-          : "UNDOCUMENTED_DATABASE_ONLY_DELETE",
+        reason: legacy.documentationEvidence
+          ? "Database-only row has photo or link evidence; retain the legacy record. Archive classification is informational only in this read-only preview."
+           : "Database-only row has no documentation evidence; retain as an archived record for CMS review.",
+        action: reconciliationRules.legacyOnlyAction(
+          legacy.documentationEvidence,
+        ),
         metadataChanges: [],
         programId: legacy.id,
       });
@@ -1655,6 +2038,12 @@ const main = async () => {
     database.rows,
     database.connected,
   );
+  if (hasFlag("--apply")) {
+    const backup = argument("--backup");
+    if (!backup) throw new Error("Data migration requires --backup <verified-dump-file>.");
+    const result = await applyDataMigration(plans, photos, backup);
+    console.log(JSON.stringify({ applied: true, ...result }, null, 2));
+  }
   const report = renderReport(
     SOURCE_ROOT,
     database,

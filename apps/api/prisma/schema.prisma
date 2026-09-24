@@ -341,7 +341,8 @@ model ProgramKerja {
   programKe         Int
   namaProker        String
   divisi            String
-  tanggalProker     DateTime
+  tanggalProker     DateTime?
+  dateLabel         String?
   formatPelaksanaan String
   status            String
   deskripsiProker   String            @db.Text
@@ -373,6 +374,7 @@ model ProgramKerja {
   authorAccount  CmsAccount?            @relation("ProgramAuthor", fields: [authorAccountId], references: [id], onDelete: SetNull)
   revisions      ProgramKerjaRevision[]
   artifacts      ProgramArtifact[]
+  photos         ProgramKerjaPhoto[]
 
   @@index([commissariatId])
   @@index([tanggalProker])
@@ -384,7 +386,8 @@ model ProgramKerjaRevision {
   programKerjaId    String
   namaProker        String
   divisi            String
-  tanggalProker     DateTime
+  tanggalProker     DateTime?
+  dateLabel         String?
   formatPelaksanaan String
   deskripsiProker   String            @db.Text
   publicationStatus PublicationStatus @default(DRAFT)
@@ -413,6 +416,20 @@ model ProgramArtifact {
   programKerja     ProgramKerja @relation(fields: [programKerjaId], references: [id], onDelete: Cascade)
 
   @@index([programKerjaId, kind])
+}
+
+model ProgramKerjaPhoto {
+  id             String   @id @default(uuid())
+  programKerjaId String
+  filePath       String
+  fileHash       String   @db.VarChar(64)
+  createdAt      DateTime @default(now())
+
+  programKerja ProgramKerja @relation(fields: [programKerjaId], references: [id], onDelete: Cascade)
+
+  @@unique([programKerjaId, fileHash])
+  @@index([programKerjaId, createdAt])
+  @@map("program_kerja_photo")
 }
 
 model News {

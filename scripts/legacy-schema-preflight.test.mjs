@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildAdditivePlan, compareRestore, legacyPhotoReferences, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql } from './legacy-schema-preflight.mjs';
+import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
 import { assertSchemaReady, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
-import { compareSchemaCompatibility, repositorySchemaDiscrepancies } from './legacy-schema-preflight.mjs';
+import { repositorySchemaDiscrepancies } from './legacy-schema-preflight.mjs';
 
 test('parses mysql connection details without exposing the password', () => {
   assert.deepEqual(parseDatabaseUrl('mysql://operator:p%40ss@localhost:3307/legacy_db'), {
@@ -15,9 +15,9 @@ test('counts populated legacy photo references', () => {
 });
 
 test('enforces the explicit required legacy table set', () => {
-  assert.deepEqual(requiredLegacyTables, ['program_kerja', 'commissariat']);
-  assert.deepEqual(missingRequiredTables(['program_kerja']), ['commissariat']);
-  assert.deepEqual(missingRequiredTables(['program_kerja', 'commissariat']), []);
+  assert.equal(requiredLegacyTables.length, 20);
+  assert.deepEqual(missingRequiredTables(['program_kerja']), requiredLegacyTables.filter((table) => table !== 'program_kerja'));
+  assert.deepEqual(missingRequiredTables(requiredLegacyTables), []);
 });
 
 test('prepares only additive operations and never destructive SQL', () => {
@@ -69,10 +69,14 @@ test('fails closed when schema readiness evidence is absent', async () => {
 
 test('rejects expired or mismatched readiness and restore evidence', () => {
   const now = Date.parse('2026-09-23T00:00:00.000Z');
-  assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
-  assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'other', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /targets/);
+  const validReadiness = { status: 'ready', planHash: 'abc', migrationApplied: true, dataMigrationReady: true, schemaApproval: 'SETUJUI SCHEMA MIGRASI', restoreEvidence: { status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-24T00:00:00.000Z' } };
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'other', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /targets/);
   assert.throws(() => validateRestoreEvidence({ status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
   assert.doesNotThrow(() => validateRestoreEvidence({ status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }));
+  assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /does not confirm deployed migration history/);
+  assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z', migrationApplied: true, dataMigrationReady: true }, { database: 'db', now }), /missing exact schema approval/);
+  assert.doesNotThrow(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }));
 });
 
 test('reports nullable-date migration discrepancies without auto-modifying legacy columns', () => {
@@ -82,4 +86,32 @@ test('reports nullable-date migration discrepancies without auto-modifying legac
     repositoryMigrations: ['20260923120000_program_kerja_photos'],
   });
   assert.ok(discrepancies.some((item) => item.includes('tanggalProker is NOT NULL')));
+});
+
+test('keeps Program Kerja preflight scoped to legacy-compatible additive changes', () => {
+  const actions = buildProgramSchemaPlan({
+    tables: requiredLegacyTables,
+    columns: {
+      program_kerja: [
+        { name: 'id', type: 'varchar(191)', nullable: 'NO' },
+        { name: 'tanggalProker', type: 'datetime(3)', nullable: 'NO' },
+      ],
+      cmsassignment: [{ name: 'active', type: 'tinyint(1)', nullable: 'NO' }],
+    },
+    indexes: [],
+    foreignKeys: [],
+    triggers: [],
+  });
+  assert.ok(!actions.some(({ sql }) => sql.includes('MODIFY `tanggalProker` DATETIME(3) NULL')));
+  assert.ok(actions.some(({ sql }) => sql.includes('CREATE TABLE `program_kerja_photo`')));
+  assert.ok(!actions.some(({ sql }) => sql.includes('ProgramKerjaRevision')));
+  assert.ok(!actions.some(({ sql }) => sql.includes('CmsAssignment')));
+  assert.ok(actions.every(({ sql }) => !/^\s*(DROP|TRUNCATE|DELETE|RENAME)\b/i.test(sql)));
+});
+
+test('blocks schema verification when Prisma migration history is absent or incomplete', () => {
+  assert.equal(migrationHistoryReady({ migrationTablePresent: false, migrationDiscrepancies: {} }), false);
+  assert.equal(migrationHistoryReady({ migrationTablePresent: true, migrationDiscrepancies: { missingFromDatabase: ['pending'], appliedButNotInRepository: [], failedOrRolledBack: [] } }), false);
+  assert.equal(migrationHistoryReady({ migrationTablePresent: true, migrationDiscrepancies: { missingFromDatabase: [], appliedButNotInRepository: [], failedOrRolledBack: [] } }), true);
+  assert.deepEqual(structuralSchemaDiscrepancies(['Active schema conflicts: incompatible date', 'Repository migration expects a nullable field']), ['Active schema conflicts: incompatible date']);
 });

@@ -6,12 +6,35 @@ import { spawn } from 'node:child_process';
 import { readRestoreEvidence, validateRestoreEvidence } from './check-schema-readiness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const requiredLegacyTables = ['program_kerja', 'commissariat'];
+export const requiredLegacyTables = [
+  'auditevent',
+  'cmsaccount',
+  'cmsassignment',
+  'cmssession',
+  'commissariat',
+  'contact_messages',
+  'division',
+  'faq',
+  'membership',
+  'membershipimportalias',
+  'membershipimportpreview',
+  'membershipimportrow',
+  'news',
+  'newscoverasset',
+  'newsrevision',
+  'newsslugalias',
+  'period',
+  'program_kerja',
+  'testimonial',
+  'user',
+];
 const approvalPhrase = 'SETUJUI SCHEMA MIGRASI';
+const programPhotoMigration = '20260923120000_program_kerja_photos';
 const defaultReadinessTtlMs = 24 * 60 * 60 * 1000;
 const defaultRestoreEvidenceTtlMs = 7 * 24 * 60 * 60 * 1000;
 const readinessPath = () => path.resolve(process.env.SCHEMA_READINESS_PATH ?? path.join(root, 'artifacts/migration/schema-readiness.json'));
 const restoreEvidencePath = () => path.resolve(process.env.RESTORE_EVIDENCE_PATH ?? path.join(root, 'artifacts/migration/restore-verification.json'));
+const baselinePath = () => path.resolve(process.env.BASELINE_REPORT_PATH ?? path.join(root, 'artifacts/migration/legacy-schema-baseline.json'));
 
 export function parseDatabaseUrl(value) {
   const url = new URL(value);
@@ -116,7 +139,7 @@ const columnExists = (columns, tableName, columnName) => Object.hasOwn(normalize
 const indexExists = (indexes, tableName, indexName) => indexSignature(indexes, tableName, indexName).length > 0;
 const foreignKeyExists = (foreignKeys, tableName, constraintName) => (foreignKeys ?? []).some((foreignKey) => foreignKey.tableName.toLowerCase() === tableName.toLowerCase() && foreignKey.constraintName.toLowerCase() === constraintName.toLowerCase());
 
-export function buildProgramSchemaPlan({ tables, columns, indexes = [], foreignKeys = [], programIdType = 'VARCHAR(191)' }) {
+export function buildProgramSchemaPlan({ tables, columns, indexes = [], foreignKeys = [], triggers = [], programIdType = 'VARCHAR(191)' }) {
   if (!/^[A-Z0-9(), ]+$/.test(programIdType)) throw new Error('Legacy program ID type is not safe for the additive plan; refusing to generate SQL.');
   const tableSet = new Set(tables.map((table) => table.toLowerCase()));
   if (!tableSet.has('program_kerja')) throw new Error('Required legacy table program_kerja is missing; refusing to prepare schema changes.');
@@ -126,54 +149,14 @@ export function buildProgramSchemaPlan({ tables, columns, indexes = [], foreignK
     if (!columnExists(columns, table, column)) actions.push({ description: `Add ${table}.${column}`, sql });
   };
 
-  addColumn('program_kerja', 'periodId', 'ALTER TABLE `program_kerja` ADD COLUMN `periodId` VARCHAR(191) NULL');
-  addColumn('program_kerja', 'divisionId', 'ALTER TABLE `program_kerja` ADD COLUMN `divisionId` VARCHAR(191) NULL');
-  addColumn('program_kerja', 'publicationStatus', "ALTER TABLE `program_kerja` ADD COLUMN `publicationStatus` ENUM('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED') NOT NULL DEFAULT 'PUBLISHED'");
-  addColumn('program_kerja', 'rejectionReason', 'ALTER TABLE `program_kerja` ADD COLUMN `rejectionReason` TEXT NULL');
-  addColumn('program_kerja', 'authorAccountId', 'ALTER TABLE `program_kerja` ADD COLUMN `authorAccountId` VARCHAR(191) NULL');
-  addColumn('program_kerja', 'objectives', 'ALTER TABLE `program_kerja` ADD COLUMN `objectives` JSON NULL');
-  addColumn('program_kerja', 'startDate', 'ALTER TABLE `program_kerja` ADD COLUMN `startDate` DATETIME(3) NULL');
-  addColumn('program_kerja', 'endDate', 'ALTER TABLE `program_kerja` ADD COLUMN `endDate` DATETIME(3) NULL');
-  addColumn('program_kerja', 'executionStatus', "ALTER TABLE `program_kerja` ADD COLUMN `executionStatus` ENUM('PLANNED','ONGOING','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PLANNED'");
+  // This preflight owns only the two #17 compatibility fields; CMS migrations remain separate.
+  if (!columnExists(columns, 'program_kerja', 'tanggalProker')) throw new Error('program_kerja.tanggalProker is missing; refusing to infer legacy dates.');
   addColumn('program_kerja', 'dateLabel', 'ALTER TABLE `program_kerja` ADD COLUMN `dateLabel` VARCHAR(191) NULL');
 
-  if (!columnExists(columns, 'program_kerja', 'tanggalProker')) throw new Error('program_kerja.tanggalProker is missing; refusing to infer legacy dates.');
-  if (!tableSet.has('ProgramKerjaRevision'.toLowerCase())) {
-    actions.push({
-      description: 'Create nullable ProgramKerjaRevision table for CMS archive/revision access',
-      sql: `CREATE TABLE \`ProgramKerjaRevision\` (\`id\` VARCHAR(191) NOT NULL, \`programKerjaId\` VARCHAR(191) NOT NULL, \`namaProker\` VARCHAR(191) NOT NULL, \`divisi\` VARCHAR(191) NOT NULL, \`tanggalProker\` DATETIME(3) NULL, \`dateLabel\` VARCHAR(191) NULL, \`formatPelaksanaan\` VARCHAR(191) NOT NULL, \`deskripsiProker\` TEXT NOT NULL, \`publicationStatus\` ENUM('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED') NOT NULL DEFAULT 'DRAFT', \`rejectionReason\` TEXT NULL, \`cancelledAt\` DATETIME(3) NULL, \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3), \`updatedAt\` DATETIME(3) NOT NULL, \`objectives\` JSON NULL, \`startDate\` DATETIME(3) NULL, \`endDate\` DATETIME(3) NULL, \`executionStatus\` ENUM('PLANNED','ONGOING','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PLANNED', PRIMARY KEY (\`id\`), INDEX \`ProgramKerjaRevision_programKerjaId_publicationStatus_idx\` (\`programKerjaId\`, \`publicationStatus\`), CONSTRAINT \`ProgramKerjaRevision_programKerjaId_fkey\` FOREIGN KEY (\`programKerjaId\`) REFERENCES \`program_kerja\`(\`id\`) ON DELETE CASCADE ON UPDATE CASCADE) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
-    });
-  } else {
-    addColumn('ProgramKerjaRevision', 'dateLabel', 'ALTER TABLE `ProgramKerjaRevision` ADD COLUMN `dateLabel` VARCHAR(191) NULL');
-    const revisionDate = normalizeColumns(columns, 'ProgramKerjaRevision').tanggalproker;
-    if (revisionDate && String(revisionDate.nullable).toUpperCase() !== 'YES') actions.push({ description: 'Make ProgramKerjaRevision.tanggalProker nullable', sql: 'ALTER TABLE `ProgramKerjaRevision` MODIFY `tanggalProker` DATETIME(3) NULL' });
-  }
-  if (!tableSet.has('ProgramArtifact'.toLowerCase())) actions.push({
-    description: 'Create ProgramArtifact table for CMS documents',
-    sql: 'CREATE TABLE `ProgramArtifact` (`id` VARCHAR(191) NOT NULL, `programKerjaId` VARCHAR(191) NOT NULL, `kind` VARCHAR(191) NOT NULL, `storageKey` VARCHAR(191) NOT NULL, `originalFilename` VARCHAR(191) NOT NULL, `mimeType` VARCHAR(191) NOT NULL, `byteSize` INTEGER NOT NULL, `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3), PRIMARY KEY (`id`), UNIQUE INDEX `ProgramArtifact_storageKey_key` (`storageKey`), INDEX `ProgramArtifact_programKerjaId_kind_idx` (`programKerjaId`,`kind`), CONSTRAINT `ProgramArtifact_programKerjaId_fkey` FOREIGN KEY (`programKerjaId`) REFERENCES `program_kerja`(`id`) ON DELETE CASCADE ON UPDATE CASCADE) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
-  });
-
-  if (!indexExists(indexes, 'program_kerja', 'program_kerja_periodId_idx')) actions.push({ description: 'Add ProgramKerja period index', sql: 'CREATE INDEX `program_kerja_periodId_idx` ON `program_kerja`(`periodId`)' });
-  if (!indexExists(indexes, 'program_kerja', 'program_kerja_divisionId_idx')) actions.push({ description: 'Add ProgramKerja division index', sql: 'CREATE INDEX `program_kerja_divisionId_idx` ON `program_kerja`(`divisionId`)' });
-  if (columnExists(columns, 'program_kerja', 'periodId') && tableSet.has('period') && !foreignKeyExists(foreignKeys, 'program_kerja', 'program_kerja_periodId_fkey')) actions.push({ description: 'Add ProgramKerja period foreign key', sql: 'ALTER TABLE `program_kerja` ADD CONSTRAINT `program_kerja_periodId_fkey` FOREIGN KEY (`periodId`) REFERENCES `period`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE' });
-  if (columnExists(columns, 'program_kerja', 'divisionId') && tableSet.has('division') && !foreignKeyExists(foreignKeys, 'program_kerja', 'program_kerja_divisionId_fkey')) actions.push({ description: 'Add ProgramKerja division foreign key', sql: 'ALTER TABLE `program_kerja` ADD CONSTRAINT `program_kerja_divisionId_fkey` FOREIGN KEY (`divisionId`) REFERENCES `division`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE' });
-  if (columnExists(columns, 'program_kerja', 'authorAccountId') && tableSet.has('cmsaccount') && !foreignKeyExists(foreignKeys, 'program_kerja', 'program_kerja_authorAccountId_fkey')) actions.push({ description: 'Add ProgramKerja author foreign key', sql: 'ALTER TABLE `program_kerja` ADD CONSTRAINT `program_kerja_authorAccountId_fkey` FOREIGN KEY (`authorAccountId`) REFERENCES `cmsaccount`(`id`) ON DELETE SET NULL ON UPDATE CASCADE' });
-
-  if (!columnExists(columns, 'cmsassignment', 'activeAccountKey')) {
-    actions.push({ description: 'Add active CMS assignment guard column', sql: 'ALTER TABLE `CmsAssignment` ADD COLUMN `activeAccountKey` VARCHAR(191) NULL' });
-    actions.push({ description: 'Backfill active CMS assignment guard values', sql: 'UPDATE `CmsAssignment` SET `activeAccountKey` = `cmsAccountId` WHERE `active` = true' });
-    actions.push({ description: 'Add unique active CMS assignment guard', sql: 'CREATE UNIQUE INDEX `CmsAssignment_one_active_account_key` ON `CmsAssignment` (`activeAccountKey`)' });
-    actions.push({ description: 'Add active CMS assignment insert trigger', sql: 'CREATE TRIGGER `CmsAssignment_set_active_key_insert` BEFORE INSERT ON `CmsAssignment` FOR EACH ROW SET NEW.`activeAccountKey` = IF(NEW.`active`, NEW.`cmsAccountId`, NULL)' });
-    actions.push({ description: 'Add active CMS assignment update trigger', sql: 'CREATE TRIGGER `CmsAssignment_set_active_key_update` BEFORE UPDATE ON `CmsAssignment` FOR EACH ROW SET NEW.`activeAccountKey` = IF(NEW.`active`, NEW.`cmsAccountId`, NULL)' });
-  }
   if (!tableSet.has('program_kerja_photo')) actions.push({
     description: 'Create child ProgramKerja photo gallery table',
     sql: `CREATE TABLE \`program_kerja_photo\` (\`id\` VARCHAR(191) NOT NULL, \`programKerjaId\` ${programIdType} NOT NULL, \`filePath\` VARCHAR(191) NOT NULL, \`fileHash\` VARCHAR(64) NOT NULL, \`createdAt\` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3), PRIMARY KEY (\`id\`), UNIQUE INDEX \`program_kerja_photo_programKerjaId_fileHash_key\` (\`programKerjaId\`, \`fileHash\`), INDEX \`program_kerja_photo_programKerjaId_createdAt_idx\` (\`programKerjaId\`, \`createdAt\`), CONSTRAINT \`program_kerja_photo_programKerjaId_fkey\` FOREIGN KEY (\`programKerjaId\`) REFERENCES \`program_kerja\`(\`id\`) ON DELETE CASCADE ON UPDATE CASCADE) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`,
   });
-  if (columnExists(columns, 'program_kerja', 'tanggalProker')) {
-    const dateColumn = normalizeColumns(columns, 'program_kerja').tanggalproker;
-    if (dateColumn && String(dateColumn.nullable).toUpperCase() !== 'YES') actions.push({ description: 'Make ProgramKerja.tanggalProker nullable', sql: 'ALTER TABLE `program_kerja` MODIFY `tanggalProker` DATETIME(3) NULL' });
-  }
   return actions;
 }
 
@@ -184,13 +167,37 @@ export function schemaFingerprint({ tables, columns, indexes, foreignKeys }) {
 
 export function repositorySchemaDiscrepancies({ tables, columns, indexes = [], foreignKeys = [], repositoryMigrations }) {
   const discrepancies = [];
-  if (!repositoryMigrations.includes('20260923120000_program_kerja_photos')) return discrepancies;
+  if (!repositoryMigrations.includes(programPhotoMigration)) return discrepancies;
   const compatibility = compareSchemaCompatibility({ tables, columns, indexes, foreignKeys });
   const programColumns = normalizeColumns(columns, 'program_kerja');
   if (programColumns.tanggalproker && String(programColumns.tanggalproker.nullable).toUpperCase() !== 'YES') discrepancies.push('Active schema conflicts with repository migration: program_kerja.tanggalProker is NOT NULL but the additive migration expects it to be nullable.');
+  if (!tableExists(tables, 'ProgramKerjaRevision')) discrepancies.push('Active schema is missing ProgramKerjaRevision required before the repository photo migration can be deployed; review 20260922180000_program_cms_artifacts first.');
+  if (tables.some((table) => table.toLowerCase() === 'programkerjarevision')) {
+    const revisionColumns = normalizeColumns(columns, 'ProgramKerjaRevision');
+    if (!revisionColumns.datelabel) discrepancies.push('Active schema is missing ProgramKerjaRevision.dateLabel required by the repository migration.');
+    else if (normalizeSqlType(revisionColumns.datelabel.type) !== 'varchar(191)' || String(revisionColumns.datelabel.nullable).toUpperCase() !== 'YES') discrepancies.push('ProgramKerjaRevision.dateLabel has an incompatible type or nullability.');
+    if (revisionColumns.tanggalproker && String(revisionColumns.tanggalproker.nullable).toUpperCase() !== 'YES') discrepancies.push('ProgramKerjaRevision.tanggalProker is NOT NULL but the repository schema expects it nullable.');
+  }
+  const photoTableName = tables.find((table) => table.toLowerCase() === 'program_kerja_photo');
+  if (photoTableName && normalizeColumns(columns, photoTableName).programkerjaid && programColumns.id) {
+    const photoProgramId = normalizeColumns(columns, photoTableName).programkerjaid;
+    if (normalizeSqlType(photoProgramId.type) !== normalizeSqlType(programColumns.id.type)) discrepancies.push('program_kerja_photo.programKerjaId does not match program_kerja.id type.');
+  }
   discrepancies.push(...compatibility.additive.map((item) => `Repository migration expects change not present in active schema: ${item}`));
   discrepancies.push(...compatibility.incompatible.map((item) => `Active schema conflicts with repository migration: ${item}`));
   return discrepancies;
+}
+
+export function structuralSchemaDiscrepancies(discrepancies) {
+  return discrepancies.filter((item) => /Active schema conflicts|is missing ProgramKerjaRevision|has an incompatible|is NOT NULL|does not match/.test(item));
+}
+
+export function migrationHistoryReady(report) {
+  const discrepancies = report.migrationDiscrepancies ?? {};
+  return report.migrationTablePresent === true
+    && (discrepancies.missingFromDatabase ?? []).length === 0
+    && (discrepancies.appliedButNotInRepository ?? []).length === 0
+    && (discrepancies.failedOrRolledBack ?? []).length === 0;
 }
 
 export function migrationPlanHash({ database, actions, schemaFingerprint: fingerprint, migrationDiscrepancies }) {
@@ -217,6 +224,53 @@ export function sanitizeBackupSql(sql, sourceDatabase) {
   const qualifiedSource = new RegExp('(?:`?' + escapedDatabase + '`?)\\s*\\.', 'i');
   if (qualifiedSource.test(sanitized)) throw new Error(`Backup contains qualified references to source database ${sourceDatabase}; refusing to restore it.`);
   return sanitized;
+}
+
+async function writeBaselineReport(report, plan) {
+  const { mkdir, writeFile } = await import('node:fs/promises');
+  const destination = baselinePath();
+  const baseline = {
+    status: 'review_required',
+    generatedAt: new Date().toISOString(),
+    database: report.database,
+    schemaFingerprint: report.schemaFingerprint,
+    requiredLegacyTables,
+    missingRequiredTables: report.missingRequiredTables,
+    programCount: report.programCount,
+    programsWithLegacyPhotos: report.programsWithLegacyPhotos,
+    legacyPhotoReferenceCount: report.legacyPhotoReferenceCount,
+    migrationHistory: report.migrationHistory,
+    migrationDiscrepancies: report.migrationDiscrepancies,
+    repositorySchemaDiscrepancies: report.repositorySchemaDiscrepancies,
+    structuralSchemaDiscrepancies: structuralSchemaDiscrepancies(report.repositorySchemaDiscrepancies),
+    repositoryMigrations: report.repositoryMigrations,
+    planHash: plan.planHash,
+    autoResolveAppliedMigrations: [],
+    forwardMigrationScope: [
+      'make program_kerja.tanggalProker nullable in the reviewed Prisma forward migration after structural owner approval',
+      'add program_kerja.dateLabel',
+      'create program_kerja_photo with its unique hash key and foreign key',
+    ],
+    migrationPrerequisites: [
+      ...(report.migrationDiscrepancies.missingFromDatabase.includes('20260922180000_program_cms_artifacts')
+        ? ['The active legacy schema lacks ProgramKerjaRevision and ProgramArtifact. Review and apply their existing program_cms_artifacts migration before treating the latest repository photo migration as deployable.']
+        : []),
+      ...(report.migrationDiscrepancies.missingFromDatabase.includes('20260922170000_enforce_active_cms_assignment')
+        ? ['The active legacy schema lacks CmsAssignment.activeAccountKey and its uniqueness triggers. Review and apply the existing active-assignment migration separately.']
+        : []),
+    ],
+    stagingAcceptance: 'not_run',
+    destructiveOperations: 0,
+    operatorActions: [
+      'Database owner reviews schema and migration discrepancies.',
+      'Database owner explicitly approves any schema-equivalent migration baseline decisions.',
+      'Run prisma migrate resolve manually only for reviewed schema-equivalent migrations.',
+      'Apply the reviewed forward-only migration sequence only after all structural discrepancies are resolved.',
+    ],
+  };
+  await mkdir(path.dirname(destination), { recursive: true });
+  await writeFile(destination, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
+  return baseline;
 }
 async function writeReadiness(status, details = {}) {
   const { mkdir, writeFile } = await import('node:fs/promises');
@@ -279,9 +333,11 @@ export async function inspect(connection) {
     .map(([tableName, indexName, nonUnique, seqInIndex, columnName]) => ({ tableName, indexName, nonUnique: Number(nonUnique), seqInIndex: Number(seqInIndex), columnName }));
   const foreignKeys = (await query(connection, `SELECT k.table_name, k.constraint_name, k.column_name, k.referenced_table_name, k.referenced_column_name, r.delete_rule, r.update_rule FROM information_schema.key_column_usage k LEFT JOIN information_schema.referential_constraints r ON r.constraint_schema = k.constraint_schema AND r.constraint_name = k.constraint_name AND r.table_name = k.table_name WHERE k.table_schema='${connection.database}' AND k.referenced_table_name IS NOT NULL ORDER BY k.table_name, k.constraint_name, k.ordinal_position`))
     .map(([tableName, constraintName, columnName, referencedTableName, referencedColumnName, deleteRule, updateRule]) => ({ tableName, constraintName, columnName, referencedTableName, referencedColumnName, deleteRule, updateRule }));
-  const historyExists = tables.some((table) => table.toLowerCase() === '_prisma_migrations');
+  const triggers = (await query(connection, `SELECT trigger_name, event_object_table FROM information_schema.triggers WHERE trigger_schema='${connection.database}' ORDER BY trigger_name`))
+    .map(([triggerName, tableName]) => ({ triggerName, tableName }));
+  const historyExists = (await query(connection, `SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${connection.database}' AND table_name='_prisma_migrations'`))[0]?.[0] === '1';
   const history = historyExists
-    ? await query(connection, `SELECT migration_name, finished_at, rolled_back_at, logs FROM ${quoteIdentifier(connection.database)}.${quoteIdentifier('_prisma_migrations')} ORDER BY started_at`)
+    ? await query(connection, `SELECT migration_name, finished_at, COALESCE(rolled_back_at, ''), COALESCE(logs, '') FROM ${quoteIdentifier(connection.database)}.${quoteIdentifier('_prisma_migrations')} ORDER BY started_at`)
     : [];
   const programTable = tables.find((table) => table.toLowerCase() === 'program_kerja');
   const programColumns = new Set((columns[programTable] ?? []).map(({ name }) => name.toLowerCase()));
@@ -310,6 +366,7 @@ export async function inspect(connection) {
     migrationHistory: history.map(([name, finishedAt, rolledBackAt, logs]) => ({ name, finishedAt, rolledBackAt, logs })),
     indexes,
     foreignKeys,
+    triggers,
     schemaFingerprint: schemaFingerprint({ tables, columns, indexes, foreignKeys }),
     migrationDiscrepancies: {
       missingFromDatabase: sourceMigrations.filter((name) => !applied.has(name)),
@@ -375,8 +432,8 @@ async function main() {
     await restoreBackup(connection, path.resolve(dumpFile), restoreDatabase);
     return;
   }
-  if (command !== 'inspect' && command !== 'plan' && command !== 'apply') throw new Error('Usage: node scripts/legacy-schema-preflight.mjs <restore|inspect|plan|apply> ...');
-  if (command === 'apply') {
+  if (command !== 'inspect' && command !== 'plan' && command !== 'baseline' && command !== 'verify' && command !== 'apply') throw new Error('Usage: node scripts/legacy-schema-preflight.mjs <restore|inspect|plan|baseline|verify|apply> ...');
+  if (command === 'baseline' || command === 'apply') {
     await writeReadiness('blocked', { database: connection.database, reason: 'Schema apply has not completed.' });
     await assertRestoreEvidenceForApply(connection.database).catch(async (error) => {
       await writeReadiness('blocked', { database: connection.database, reason: error instanceof Error ? error.message : String(error) });
@@ -391,15 +448,60 @@ async function main() {
   const program = report.tables.find((table) => table.toLowerCase() === 'program_kerja');
   const idColumn = report.columns[program].find(({ name }) => name.toLowerCase() === 'id');
   if (!idColumn) throw new Error('Legacy program_kerja.id is missing; refusing automatic schema changes.');
-  const actions = buildProgramSchemaPlan({ tables: report.tables, columns: report.columns, indexes: report.indexes, foreignKeys: report.foreignKeys, programIdType: idColumn.type.toUpperCase() });
+  const actions = buildProgramSchemaPlan({ tables: report.tables, columns: report.columns, indexes: report.indexes, foreignKeys: report.foreignKeys, triggers: report.triggers, programIdType: idColumn.type.toUpperCase() });
   const planHash = migrationPlanHash({ database: report.database, actions, schemaFingerprint: report.schemaFingerprint, migrationDiscrepancies: report.migrationDiscrepancies });
   const plan = { generatedAt: new Date().toISOString(), database: report.database, schemaFingerprint: report.schemaFingerprint, planHash, destructiveOperations: 0, actions, migrationDiscrepancies: report.migrationDiscrepancies, repositorySchemaDiscrepancies: report.repositorySchemaDiscrepancies };
   if (command === 'plan') {
     console.log(JSON.stringify({ inspection: report, plan }, null, 2));
     return;
   }
-  if (!['development', 'test'].includes(process.env.NODE_ENV ?? '')) {
+  if (command === 'baseline') {
+    const baseline = await writeBaselineReport(report, plan);
+    console.log(JSON.stringify({ baselineReport: baselinePath(), ...baseline }, null, 2));
+    return;
+  }
+  if (command === 'verify') {
+    const structural = structuralSchemaDiscrepancies(report.repositorySchemaDiscrepancies);
+    const remaining = buildProgramSchemaPlan({ tables: report.tables, columns: report.columns, indexes: report.indexes, foreignKeys: report.foreignKeys, triggers: report.triggers, programIdType: idColumn.type.toUpperCase() });
+    try {
+      if (structural.length) throw new Error(`Schema verification blocked by structural discrepancies requiring database-owner review: ${structural.join(' ')}`);
+      if (remaining.length) throw new Error(`Schema verification blocked; ${remaining.length} approved additive operation(s) remain. Deploy the reviewed migration first.`);
+      if (!migrationHistoryReady(report)) throw new Error('Schema verification blocked; Prisma migration history is missing, incomplete, unknown, or contains failed migrations. Review and reconcile migration history manually before data migration.');
+      if (process.env.SCHEMA_PLAN_HASH !== planHash) throw new Error(`Schema verification blocked. Set SCHEMA_PLAN_HASH to the reviewed planHash ${planHash}.`);
+      if (process.env.SCHEMA_MIGRATION_APPROVAL !== approvalPhrase) throw new Error(`Schema verification blocked. Set SCHEMA_MIGRATION_APPROVAL="${approvalPhrase}" explicitly.`);
+      const readinessTtlMs = Number(process.env.SCHEMA_READINESS_TTL_MS ?? defaultReadinessTtlMs);
+      const readinessExpiresAt = new Date(Date.now() + (Number.isFinite(readinessTtlMs) && readinessTtlMs > 0 ? readinessTtlMs : defaultReadinessTtlMs)).toISOString();
+      const restoreEvidence = await readRestoreEvidence();
+      validateRestoreEvidence(restoreEvidence, { database: connection.database });
+      const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt };
+      await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: [], migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence, migrationDiscrepancies: report.migrationDiscrepancies, planHash, schemaFingerprint: report.schemaFingerprint, verifiedAt: new Date().toISOString() });
+      console.log(JSON.stringify({ schemaReady: true, dataMigrationReady: true, verifiedAt: new Date().toISOString(), planHash }, null, 2));
+      return;
+    } catch (error) {
+      await writeReadiness('blocked', { database: connection.database, reason: error instanceof Error ? error.message : String(error), planHash, schemaFingerprint: report.schemaFingerprint });
+      throw error;
+    }
+  }
+  if (process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'production' || process.env.USE_DB_PUSH === 'true') {
     throw new Error('Direct schema apply is blocked for staging/production. Review this plan, add it as a Prisma migration, run check:migration-mode, then use prisma migrate deploy.');
+  }
+  const structural = structuralSchemaDiscrepancies(report.repositorySchemaDiscrepancies);
+  if (structural.length) {
+    await writeReadiness('blocked', { database: connection.database, reason: 'Active schema has structural discrepancies against repository migrations; database-owner review is required.', repositorySchemaDiscrepancies: report.repositorySchemaDiscrepancies, structuralSchemaDiscrepancies: structural, planHash, schemaFingerprint: report.schemaFingerprint });
+    throw new Error(`Schema apply blocked by structural discrepancies requiring database-owner review: ${structural.join(' ')}`);
+  }
+  const unexpectedDestructiveActions = actions.filter(({ sql }) => /^\s*(?:DROP|TRUNCATE|DELETE|RENAME)\b/i.test(sql) || /^\s*ALTER\s+TABLE\b[\s\S]*\b(?:DROP|RENAME)\b/i.test(sql));
+  if (unexpectedDestructiveActions.length) {
+    await writeReadiness('blocked', { database: connection.database, reason: 'Prepared schema plan contains an operation outside the additive-only policy.', actions: unexpectedDestructiveActions, planHash, schemaFingerprint: report.schemaFingerprint });
+    throw new Error('Schema apply blocked: prepared plan contains an operation outside the additive-only policy.');
+  }
+  if (process.env.SCHEMA_PLAN_HASH !== planHash) {
+    await writeReadiness('blocked', { database: connection.database, reason: 'Exact plan hash approval is missing or stale.', planHash, schemaFingerprint: report.schemaFingerprint });
+    throw new Error(`Schema execution blocked. Review planHash ${planHash}, then set SCHEMA_PLAN_HASH to that exact hash and SCHEMA_MIGRATION_APPROVAL="${approvalPhrase}" explicitly.`);
+  }
+  if (actions.length === 0) {
+    await writeReadiness('blocked', { database: connection.database, reason: 'No schema statements were executed. Reconcile repository migration history with Prisma deploy and run verify instead.', actions: [], planHash, schemaFingerprint: report.schemaFingerprint });
+    throw new Error('Schema apply refused because there are no additive schema actions. Deploy the reviewed Prisma migration history and run verify; do not use migrate resolve automatically.');
   }
   if (process.env.SCHEMA_MIGRATION_APPROVAL !== approvalPhrase) {
     await writeReadiness('blocked', { database: connection.database, reason: 'Explicit schema approval is missing.' });
@@ -407,12 +509,21 @@ async function main() {
   }
   await writeReadiness('blocked', { database: connection.database, reason: 'Schema execution is in progress; data migration is blocked.', actions, planHash, schemaFingerprint: report.schemaFingerprint });
   try {
-    for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql]), { capture: false });
+    for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql], true), { capture: false });
     const verified = await inspect(connection);
-    const remaining = buildProgramSchemaPlan({ tables: verified.tables, columns: verified.columns, indexes: verified.indexes, foreignKeys: verified.foreignKeys, programIdType: idColumn.type.toUpperCase() });
+    const remaining = buildProgramSchemaPlan({ tables: verified.tables, columns: verified.columns, indexes: verified.indexes, foreignKeys: verified.foreignKeys, triggers: verified.triggers, programIdType: idColumn.type.toUpperCase() });
     if (remaining.length) throw new Error(`Schema execution incomplete; ${remaining.length} approved additive operation(s) remain. Data migration is blocked.`);
-    await writeReadiness('ready', { database: connection.database, applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies, planHash, schemaFingerprint: verified.schemaFingerprint });
-    console.log(JSON.stringify({ schemaReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
+    if (!migrationHistoryReady(verified)) {
+      await writeReadiness('blocked', { database: connection.database, applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies, planHash, schemaFingerprint: verified.schemaFingerprint, migrationApplied: false, dataMigrationReady: false, reason: 'The additive schema is present, but repository migration history is unresolved; data migration remains blocked until the reviewed Prisma migrations are deployed and verified.' });
+      throw new Error('Schema execution completed, but migration history is unresolved; data migration remains blocked until the reviewed Prisma migrations are deployed and verified.');
+    }
+    const readinessTtlMs = Number(process.env.SCHEMA_READINESS_TTL_MS ?? defaultReadinessTtlMs);
+    const readinessExpiresAt = new Date(Date.now() + (Number.isFinite(readinessTtlMs) && readinessTtlMs > 0 ? readinessTtlMs : defaultReadinessTtlMs)).toISOString();
+    const restoreEvidence = await readRestoreEvidence();
+    validateRestoreEvidence(restoreEvidence, { database: connection.database });
+    const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt };
+    await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies, planHash, schemaFingerprint: verified.schemaFingerprint, migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence });
+    console.log(JSON.stringify({ schemaReady: true, dataMigrationReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
   } catch (error) {
     await writeReadiness('blocked', { database: connection.database, reason: error instanceof Error ? error.message : String(error), actions, planHash, schemaFingerprint: report.schemaFingerprint });
     throw new Error(`Schema execution failed; data migration is blocked. ${error instanceof Error ? error.message : String(error)}`);

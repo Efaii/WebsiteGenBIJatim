@@ -29,3 +29,7 @@ ts-debug.log*
 
 # Turbo
 .turbo
+
+# Migration evidence is generated locally and stored in secure artifact storage.
+artifacts/migration/
+artifacts/promotion/

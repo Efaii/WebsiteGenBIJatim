@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
-import { isPublicProgram, programDate, programGallery } from '../domain/public-program';
+import { isPublicProgram, projectPublicProgram } from '../domain/public-program';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +17,7 @@ export const getAllCommissariats = async (req: Request, res: Response) => {
               where: {
                 publicationStatus: 'PUBLISHED',
                 executionStatus: { not: 'CANCELLED' },
-                status: { notIn: ['cancelled', 'canceled'] },
+                status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] },
               },
             },
           },
@@ -56,7 +56,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
       where: { slug },
       include: {
         programKerja: {
-          where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
+          where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
           orderBy: { programKe: 'asc' },
           include: { photos: { orderBy: { createdAt: 'asc' } } },
         },
@@ -81,20 +81,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
         email: commissariat.email || '',
       },
       memberCount: commissariat.memberCount,
-      proker: commissariat.programKerja.filter((p) => isPublicProgram(p)).map((p) => ({
-        id: p.id,
-        programKe: p.programKe,
-        title: p.namaProker,
-        divisi: p.divisi,
-        ...programDate(p.tanggalProker, p.dateLabel),
-        format: p.formatPelaksanaan,
-        status: p.status,
-        description: p.deskripsiProker,
-        kpiTukTarget: p.kpiTukTarget,
-        dampak: p.dampak,
-        evaluasi: p.evaluasi,
-        gallery: programGallery([p.foto1, p.foto2, p.foto3, p.foto4, p.foto5, p.foto6], p.photos),
-      })),
+      proker: commissariat.programKerja.filter((p) => isPublicProgram(p)).map(projectPublicProgram),
       // BPH, awardees, documents → tetap dari mock untuk sekarang
       bph: [],
       divisions: [],
@@ -113,27 +100,12 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
 export const getAllProgramKerja = async (_req: Request, res: Response) => {
   try {
     const programs = await prisma.programKerja.findMany({
-      where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
+      where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
       orderBy: [{ tanggalProker: 'desc' }, { programKe: 'asc' }],
       include: { commissariat: { select: { name: true, slug: true } }, photos: { orderBy: { createdAt: 'asc' } } },
     });
 
-    res.json(programs.filter((proker) => isPublicProgram(proker)).map((proker) => ({
-      id: proker.id,
-      programKe: proker.programKe,
-      title: proker.namaProker,
-      divisi: proker.divisi,
-      commissariat: proker.commissariat.name,
-      commissariatSlug: proker.commissariat.slug,
-      ...programDate(proker.tanggalProker, proker.dateLabel),
-      format: proker.formatPelaksanaan,
-      status: proker.status,
-      description: proker.deskripsiProker,
-      kpiTukTarget: proker.kpiTukTarget,
-      dampak: proker.dampak,
-      evaluasi: proker.evaluasi,
-      gallery: programGallery([proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6], proker.photos),
-    })));
+    res.json(programs.filter((proker) => isPublicProgram(proker)).map(projectPublicProgram));
   } catch (error) {
     console.error('Error fetching program kerja list:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -146,7 +118,7 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const proker = await prisma.programKerja.findUnique({
-      where: { id, publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled'] } },
+      where: { id, publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
       include: {
         commissariat: {
           select: { name: true, slug: true },
@@ -163,24 +135,7 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Program kerja tidak ditemukan' });
     }
 
-    const result = {
-      id: proker.id,
-      programKe: proker.programKe,
-      title: proker.namaProker,
-      divisi: proker.divisi,
-      commissariat: proker.commissariat.name,
-      commissariatSlug: proker.commissariat.slug,
-      ...programDate(proker.tanggalProker, proker.dateLabel),
-      format: proker.formatPelaksanaan,
-      status: proker.status,
-      description: proker.deskripsiProker,
-      kpiTukTarget: proker.kpiTukTarget,
-      dampak: proker.dampak,
-      evaluasi: proker.evaluasi,
-      gallery: programGallery([proker.foto1, proker.foto2, proker.foto3, proker.foto4, proker.foto5, proker.foto6], proker.photos),
-    };
-
-    res.json(result);
+    res.json(projectPublicProgram(proker));
   } catch (error) {
     console.error('Error fetching program kerja:', error);
     res.status(500).json({ message: 'Internal server error' });

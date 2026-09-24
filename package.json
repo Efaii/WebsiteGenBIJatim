@@ -17,6 +17,8 @@
     "preflight:legacy-schema": "node scripts/legacy-schema-preflight.mjs",
     "check:schema-readiness": "node scripts/check-schema-readiness.mjs",
     "test:legacy-schema-preflight": "node --test scripts/legacy-schema-preflight.test.mjs",
+    "test:proker-promotion": "node --test scripts/proker-promotion.test.mjs",
+    "proker-promotion": "node scripts/proker-promotion.mjs",
     "check:migration-mode": "node scripts/check-migration-mode.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
