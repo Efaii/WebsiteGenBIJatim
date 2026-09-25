@@ -17,6 +17,18 @@ export const MEMBERSHIP_EXPECTED_COUNTS = Object.fromEntries(
   MEMBERSHIP_RELEASE_COMMISSARIATS.map((item) => [item.slug, item.expectedCount]),
 ) as Record<string, number>;
 
+export const MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS: Record<string, number> = {
+  its: 46,
+  pens: 2,
+  'uin-madura': 1,
+  uinsa: 34,
+  unair: 30,
+  unesa: 0,
+  unugiri: 0,
+  upnvjt: 0,
+  utm: 14,
+};
+
 export const MEMBERSHIP_RELEASE_DIVISIONS: Record<string, readonly string[]> = {
   its: ['Hubungan Masyarakat', 'Sosial dan Lingkungan', 'Media dan Publikasi', 'Pengembangan Organisasi', 'BPH'],
   pens: ['Media Informasi & Komunikasi', 'Lingkungan Hidup & Sosial', 'Kesehatan Masyarakat', 'Pengembangan Sumber Daya Mahasiswa', 'BPH', 'Ekonomi Kreatif', 'Pendidikan & Kreativitas'],
