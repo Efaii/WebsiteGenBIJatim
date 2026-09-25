@@ -143,6 +143,7 @@ const main = async () => {
   }
 
   const target = new PrismaClient({ datasources: { db: { url: targetUrl } } });
+  let importCommitted = false;
   try {
     const [membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount] = await Promise.all([
       target.membership.count(),
@@ -171,14 +172,14 @@ const main = async () => {
     ]);
     if ([membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount].some((count) => count > 0)) throw new Error(`Target database is not clean: memberships=${membershipCount}, commissariats=${commissariatCount}, periods=${periodCount}, divisions=${divisionCount}, users=${userCount}, cmsAccounts=${cmsAccountCount}, cmsAssignments=${cmsAssignmentCount}, cmsSessions=${cmsSessionCount}, auditEvents=${auditEventCount}, membershipAliases=${membershipImportAliasCount}, membershipPreviews=${membershipImportPreviewCount}, membershipRows=${membershipImportRowCount}, programs=${programCount}, programArtifacts=${programArtifactCount}, programPhotos=${programKerjaPhotoCount}, programRevisions=${programKerjaRevisionCount}, news=${newsCount}, newsRevisions=${newsRevisionCount}, newsCoverAssets=${newsCoverAssetCount}, newsSlugAliases=${newsSlugAliasCount}, faqs=${faqCount}, testimonials=${testimonialCount}, contacts=${contactMessageCount}.`);
 
-    const paths = await target.$transaction(async (tx) => {
+    const postImport = await target.$transaction(async (tx) => {
       const commissariatIds = new Map<string, string>();
       const periodIds = new Map<string, string>();
       const divisionIds = new Map<string, string>();
       for (const item of MEMBERSHIP_RELEASE_COMMISSARIATS) {
         const commissariat = await tx.commissariat.create({ data: { slug: item.slug, name: item.name, university: item.university, logo: item.logo, description: `GenBI Komisariat ${item.name}.` } });
         commissariatIds.set(item.slug, commissariat.id);
-        const period = await tx.period.create({ data: { commissariatId: commissariat.id, label: '2025/2026' } });
+        const period = await tx.period.create({ data: { commissariatId: commissariat.id, label: MEMBERSHIP_RELEASE_PERIOD } });
         periodIds.set(item.slug, period.id);
       }
       for (const [slug, counts] of Object.entries(validation.divisionCounts)) {
@@ -210,25 +211,32 @@ const main = async () => {
         await tx.commissariat.update({ where: { id: commissariatIds.get(slug)! }, data: { memberCount: count } });
       }
 
-      const [totalMemberships, activeMemberships, publishedMemberships, noDivisionMemberships] = await Promise.all([
-        tx.membership.count(),
-        tx.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
-        tx.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
-        tx.membership.count({ where: { divisionId: null } }),
+      const [releasePeriodCount, totalMemberships, activeMemberships, publishedMemberships, noDivisionMemberships] = await Promise.all([
+        tx.period.count({ where: { label: MEMBERSHIP_RELEASE_PERIOD } }),
+        tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD } } }),
+        tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, membershipStatus: 'ACTIVE' } }),
+        tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, publicationStatus: 'PUBLISHED' } }),
+        tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } }),
       ]);
-      if (totalMemberships !== 619 || activeMemberships !== 619 || publishedMemberships !== 619 || noDivisionMemberships !== 127) {
+      if (releasePeriodCount !== MEMBERSHIP_RELEASE_COMMISSARIATS.length || totalMemberships !== 619 || activeMemberships !== 619 || publishedMemberships !== 619 || noDivisionMemberships !== 127) {
         throw new Error(`Post-import membership totals do not match the approved release: total=${totalMemberships}, active=${activeMemberships}, published=${publishedMemberships}, noDivision=${noDivisionMemberships}.`);
       }
 
       for (const [slug, expectedCount] of Object.entries(MEMBERSHIP_EXPECTED_COUNTS)) {
-        const actualCount = await tx.membership.count({ where: { commissariat: { slug } } });
+        const actualCount = await tx.membership.count({ where: { commissariat: { slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } } });
         if (actualCount !== expectedCount) throw new Error(`Post-import commissariat count mismatch for ${slug}: ${actualCount}.`);
       }
 
       const importedDivisions = await tx.division.findMany({
+        where: { period: { label: MEMBERSHIP_RELEASE_PERIOD } },
         select: { commissariat: { select: { slug: true } }, name: true, _count: { select: { memberships: true } } },
       });
       const importedDivisionCounts = new Map(importedDivisions.map((division) => [`${division.commissariat.slug}|${division.name}`, division._count.memberships]));
+      const expectedDivisionKeys = new Set(Object.entries(MEMBERSHIP_RELEASE_DIVISIONS).flatMap(([slug, names]) => names.map((name) => `${slug}|${name}`)));
+      const actualDivisionKeys = new Set(importedDivisionCounts.keys());
+      if (actualDivisionKeys.size !== expectedDivisionKeys.size || [...expectedDivisionKeys].some((key) => !actualDivisionKeys.has(key))) {
+        throw new Error('Post-import division catalog does not match the approved release.');
+      }
       for (const [slug, divisions] of Object.entries(validation.divisionCounts)) {
         for (const [divisionName, expectedCount] of Object.entries(divisions)) {
           if (divisionName === '-') continue;
@@ -237,21 +245,22 @@ const main = async () => {
         }
       }
 
-      const postImport = {
-        totalMemberships: await tx.membership.count(),
-        activeMemberships: await tx.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
-        publishedMemberships: await tx.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
-        noDivisionMemberships: await tx.membership.count({ where: { divisionId: null } }),
-        perCommissariat: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.membership.count({ where: { commissariat: { slug: item.slug } } })]))),
+      return {
+        totalMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD } } }),
+        activeMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, membershipStatus: 'ACTIVE' } }),
+        publishedMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, publicationStatus: 'PUBLISHED' } }),
+        noDivisionMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } }),
+        perCommissariat: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.membership.count({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } } })]))),
+        perNoDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.membership.count({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } })]))),
         perDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.division.findMany({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } }, select: { name: true, _count: { select: { memberships: true } } }, orderBy: { name: 'asc' } })]))),
       };
-      const paths = writeReport({ ...reportBase, postImport, status: 'IMPORTED' }, runDir);
-      return paths;
     });
 
+    importCommitted = true;
+    const paths = writeReport({ ...reportBase, postImport, status: 'IMPORTED' }, runDir);
     console.log(JSON.stringify({ status: 'IMPORTED', totalRows: validation.totalRows, noDivisionCount: validation.noDivisionCount, report: paths }, null, 2));
   } catch (error) {
-    writeReport({ ...reportBase, status: 'FAILED', error: error instanceof Error ? error.message : String(error) }, runDir);
+    if (!importCommitted) writeReport({ ...reportBase, status: 'FAILED', error: error instanceof Error ? error.message : String(error) }, runDir);
     throw error;
   } finally {
     await target.$disconnect();
