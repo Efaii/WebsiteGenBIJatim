@@ -10,6 +10,7 @@ import {
 } from '../services/membership-import.service';
 import {
   MEMBERSHIP_EXPECTED_COUNTS,
+  MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS,
   MEMBERSHIP_RELEASE_DIVISIONS,
   MEMBERSHIP_RELEASE_COMMISSARIATS,
   MEMBERSHIP_RELEASE_PERIOD,
@@ -59,6 +60,9 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
     ...rawValidation,
     rejectedRows: (rawValidation.rejectedRows as Array<{ rowNumber: number; errors: string[] }>).map(({ rowNumber, errors }) => ({ rowNumber, errors })),
   };
+  const postImport = report.postImport as Record<string, unknown> | undefined;
+  const reportCommissariatCounts = (postImport?.perCommissariat as Record<string, number> | undefined) ?? (validation.commissariatCounts as Record<string, number>);
+  const reportNoDivisionCounts = (postImport?.perNoDivision as Record<string, number> | undefined) ?? (validation.noDivisionCounts as Record<string, number>);
   fs.writeFileSync(jsonPath, `${JSON.stringify({ ...report, validation }, null, 2)}\n`, 'utf8');
   const markdown = [
     '# Membership 2025/2026 Import Report',
@@ -80,7 +84,7 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
     '',
     '| Slug | Expected | Actual |',
     '| --- | ---: | ---: |',
-    ...Object.entries(validation.expectedCommissariatCounts as Record<string, number>).map(([slug, expected]) => `| ${slug} | ${expected} | ${(validation.commissariatCounts as Record<string, number>)[slug] ?? 0} |`),
+    ...Object.entries(validation.expectedCommissariatCounts as Record<string, number>).map(([slug, expected]) => `| ${slug} | ${expected} | ${reportCommissariatCounts[slug] ?? 0} |`),
     '',
     '### Per division',
     '',
@@ -91,7 +95,7 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
     '',
     '### No division by commissariat',
     '',
-    ...Object.entries(validation.noDivisionCounts as Record<string, number>).map(([slug, count]) => `- ${slug}: ${count}`),
+    ...Object.entries(reportNoDivisionCounts).map(([slug, count]) => `- ${slug}: ${count}`),
     '',
     '## Normalization',
     '',
@@ -245,7 +249,7 @@ const main = async () => {
         }
       }
 
-      return {
+      const postImport = {
         totalMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD } } }),
         activeMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, membershipStatus: 'ACTIVE' } }),
         publishedMemberships: await tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, publicationStatus: 'PUBLISHED' } }),
@@ -254,13 +258,26 @@ const main = async () => {
         perNoDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.membership.count({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } })]))),
         perDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.division.findMany({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } }, select: { name: true, _count: { select: { memberships: true } } }, orderBy: { name: 'asc' } })]))),
       };
+      for (const [slug, expectedCount] of Object.entries(MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS)) {
+        if (postImport.perNoDivision[slug] !== expectedCount) throw new Error(`Post-import no-division count mismatch for ${slug}: ${postImport.perNoDivision[slug]}.`);
+      }
+      return postImport;
     });
 
     importCommitted = true;
     const paths = writeReport({ ...reportBase, postImport, status: 'IMPORTED' }, runDir);
     console.log(JSON.stringify({ status: 'IMPORTED', totalRows: validation.totalRows, noDivisionCount: validation.noDivisionCount, report: paths }, null, 2));
   } catch (error) {
-    if (!importCommitted) writeReport({ ...reportBase, status: 'FAILED', error: error instanceof Error ? error.message : String(error) }, runDir);
+    const message = error instanceof Error ? error.message : String(error);
+    if (importCommitted) {
+      try {
+        writeReport({ ...reportBase, status: 'IMPORTED_REPORT_WRITE_FAILED', error: message }, runDir);
+      } catch (reportError) {
+        console.error(`Membership import committed, but audit report could not be written: ${reportError instanceof Error ? reportError.message : String(reportError)}`);
+      }
+    } else {
+      writeReport({ ...reportBase, status: 'FAILED', error: message }, runDir);
+    }
     throw error;
   } finally {
     await target.$disconnect();
