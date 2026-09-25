@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { canonicalCommissariatSlug, normalizeMembershipDivision, parseMembershipWorkbook, validateMembershipSource } from '../services/membership-import.service';
-import { MEMBERSHIP_EXPECTED_COUNTS, MEMBERSHIP_RELEASE_DIVISIONS, MEMBERSHIP_RELEASE_PERIOD, MEMBERSHIP_SOURCE_SHA256 } from '../domain/membership-release';
+import { MEMBERSHIP_EXPECTED_COUNTS, MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS, MEMBERSHIP_RELEASE_DIVISIONS, MEMBERSHIP_RELEASE_PERIOD, MEMBERSHIP_SOURCE_SHA256 } from '../domain/membership-release';
 import XLSX from '@e965/xlsx';
 
 assert.equal(normalizeMembershipDivision('BPH 1', { commissariatSlug: 'unugiri', periodLabel: MEMBERSHIP_RELEASE_PERIOD }), 'BPH');
@@ -39,7 +39,7 @@ assert.equal(sourceValidation.valid, true);
 assert.equal(sourceValidation.totalRows, 619);
 assert.equal(sourceValidation.noDivisionCount, 127);
 assert.deepEqual(sourceValidation.commissariatCounts, MEMBERSHIP_EXPECTED_COUNTS);
-assert.deepEqual(sourceValidation.noDivisionCounts, { its: 46, pens: 2, 'uin-madura': 1, uinsa: 34, unair: 30, utm: 14 });
+assert.deepEqual(sourceValidation.noDivisionCounts, MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS);
 
 const strictValidation = validateMembershipSource(
   { sourceSheet: 'Data Final', rows: [{ rowNumber: 2, rawValues: { divisi: 'Unknown' }, normalized: { komisariat: 'ITS', nama: 'Test', jabatan: 'Staff', divisi: 'Unknown', prodi: 'Teknik' } }] },

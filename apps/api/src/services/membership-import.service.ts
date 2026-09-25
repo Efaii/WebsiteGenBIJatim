@@ -112,6 +112,7 @@ export const validateMembershipSource = (
       divisionCounts[slug] ??= {};
       const division = row.normalized.divisi ?? '-';
       divisionCounts[slug][division] = (divisionCounts[slug][division] ?? 0) + 1;
+      noDivisionCounts[slug] ??= 0;
       if (!row.normalized.divisi) noDivisionCounts[slug] = (noDivisionCounts[slug] ?? 0) + 1;
       if (row.normalized.divisi && expectedDivisionNames && (!expectedDivisionNames[slug] || !expectedDivisionNames[slug].includes(row.normalized.divisi))) rowErrors.push('INVALID_DIVISION');
     }
