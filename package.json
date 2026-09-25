@@ -18,6 +18,8 @@
     "check:schema-readiness": "node scripts/check-schema-readiness.mjs",
     "test:legacy-schema-preflight": "node --test scripts/legacy-schema-preflight.test.mjs",
     "test:proker-promotion": "node --test scripts/proker-promotion.test.mjs",
+    "verify:initial-production": "node scripts/verify-initial-production.mjs",
+    "test:initial-production-verification": "node --test scripts/verify-initial-production.test.mjs",
     "proker-promotion": "node scripts/proker-promotion.mjs",
     "check:migration-mode": "node scripts/check-migration-mode.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""

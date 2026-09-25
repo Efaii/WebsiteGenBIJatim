@@ -99,13 +99,15 @@ export function ProkerCard({
             size="sm"
             variant="outline"
             className="gap-2 text-xs h-8 bg-white border-slate-200 hover:bg-slate-50 hover:text-blue-600 text-slate-700"
-            onClick={(e) => {
-              if (onAction) {
-                e.preventDefault();
-                e.stopPropagation();
-                onAction(e);
-              }
-            }}
+            onClick={
+              onAction
+                ? (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAction(e);
+                  }
+                : undefined
+            }
           >
             {actionLabel || "Lihat Detail"}
           </Button>
