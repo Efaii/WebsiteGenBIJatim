@@ -86,25 +86,45 @@ $env:DATA_MIGRATION_APPROVAL = "SETUJUI DATA MIGRASI"
 
 This approval is deliberately separate from the later `SETUJUI DATA MIGRASI` gate. A schema preflight or schema approval is not permission to reconcile Program Kerja rows or files.
 
-## 5. Required staging acceptance
+## 5. Local Issue #18 acceptance
 
-Issue #18 is not complete for deployment until the same flow has been run against the authorized staging database. Provide `DATABASE_URL` and `MYSQL_BIN` through the runner environment; do not commit or paste credentials:
+Issue #18 is accepted through the local schema-safety gate. Formal staging execution is **deferred**, not removed: the repository keeps the staging/promotion capability for future production hardening, but staging is not a current development or local-acceptance dependency.
+
+Run the flow against the configured local development database or an isolated local legacy copy. Provide `DATABASE_URL` and `MYSQL_BIN` through the runner environment; do not commit or paste credentials:
 
 ```powershell
-$env:DATABASE_URL = $env:STAGING_DATABASE_URL
+$env:DATABASE_URL = "mysql://root:@localhost:3306/genbi_jatim"
 $env:MYSQL_BIN = "C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe"
-$env:BASELINE_REPORT_PATH = ".\artifacts\migration\staging-legacy-schema-baseline.json"
-$env:RESTORE_EVIDENCE_PATH = ".\artifacts\migration\staging-restore-verification.json"
+$env:BASELINE_REPORT_PATH = ".\artifacts\migration\issue18-legacy-schema-baseline.json"
+$env:RESTORE_EVIDENCE_PATH = ".\artifacts\migration\issue18-restore-verification.json"
 
 npm run preflight:legacy-schema -- restore `
-  .\backups\approved-staging-backup.sql `
-  genbi_restore_issue18_staging
+  .\backups\approved-local-backup.sql `
+  genbi_restore_issue18_local
+npm run preflight:legacy-schema -- inspect
 npm run preflight:legacy-schema -- baseline
 ```
 
-The staging acceptance record must show `status: "verified"`, all 20 required tables, unchanged source counts after restore, a matching backup SHA-256, `autoResolveAppliedMigrations: []`, and `status: "review_required"` for the baseline. After owner review and normal Prisma deployment, run `verify` with exact approvals to produce data-migration readiness. No automatic `prisma migrate resolve` is performed.
+The local acceptance evidence must show all 20 required tables, unchanged source counts after restore, a matching backup SHA-256, `autoResolveAppliedMigrations: []`, and `status: "review_required"` for the baseline. After the reviewed forward-only Prisma migrations have been deployed locally, run `verify` with the exact plan hash and approval phrase:
 
-## 6. Program Kerja snapshot promotion
+```powershell
+$env:SCHEMA_PLAN_HASH = "<planHash from the reviewed local plan>"
+$env:SCHEMA_MIGRATION_APPROVAL = "SETUJUI SCHEMA MIGRASI"
+npm run preflight:legacy-schema -- verify
+npm run check:schema-readiness
+```
+
+No automatic `prisma migrate resolve` is performed. A missing, expired, mismatched, blocked, or partial evidence file fails closed and cannot authorize a data migration. The current development database must remain untouched when creating the separate clean initial-production source.
+
+When no local backup is available, the schema gate remains incomplete; do not substitute a staging run or mark the issue complete based only on unit tests.
+
+## 6. Deferred staging and future production hardening
+
+When a production server becomes available, the same forward-only schema evidence may be reviewed for direct initial production. Production backup, deployment approval, API/UI smoke tests, and rollback planning remain mandatory. Staging may be introduced later as an additional safety layer, but it is not required for the current release.
+
+The retained staging acceptance flow, when intentionally activated for a future release, must use an authorized database and secret runner. It must show `status: "verified"`, all 20 required tables, unchanged source counts after restore, a matching backup SHA-256, `autoResolveAppliedMigrations: []`, and `status: "review_required"` for the baseline. No automatic `prisma migrate resolve` is performed.
+
+## 7. Program Kerja snapshot promotion (future staging capability)
 
 Issue #20's local result is promoted without rerunning the data reconciliation. The promotion tool is verification-first and does not perform cutover. It uses the approved baseline: 153 programs, 139 published, 14 archived, 12 cancelled execution statuses, 431 child-photo rows, 431 available/matching files, 207 new WebP files, 186 preserved source images, zero orphan files, and zero staging leftovers.
 

@@ -30,6 +30,8 @@ export const requiredLegacyTables = [
 ];
 const approvalPhrase = 'SETUJUI SCHEMA MIGRASI';
 const programPhotoMigration = '20260923120000_program_kerja_photos';
+export const stagingAcceptance = 'deferred';
+export const stagingAcceptanceReason = 'Formal staging execution is deferred for the current local development release; retained staging tooling is available for future production hardening.';
 const defaultReadinessTtlMs = 24 * 60 * 60 * 1000;
 const defaultRestoreEvidenceTtlMs = 7 * 24 * 60 * 60 * 1000;
 const readinessPath = () => path.resolve(process.env.SCHEMA_READINESS_PATH ?? path.join(root, 'artifacts/migration/schema-readiness.json'));
@@ -259,7 +261,8 @@ async function writeBaselineReport(report, plan) {
         ? ['The active legacy schema lacks CmsAssignment.activeAccountKey and its uniqueness triggers. Review and apply the existing active-assignment migration separately.']
         : []),
     ],
-    stagingAcceptance: 'not_run',
+    stagingAcceptance,
+    stagingAcceptanceReason,
     destructiveOperations: 0,
     operatorActions: [
       'Database owner reviews schema and migration discrepancies.',
