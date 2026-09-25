@@ -37,7 +37,7 @@ export const getCommissariatBySlug = async (slug: string): Promise<CommissariatD
   } catch (error) {
     if (process.env.NODE_ENV !== "development") throw error;
     console.warn("[commissariat.service] API unavailable, using mock data");
-    return COMMISSARIAT_DATA[slug] || null;
+    return COMMISSARIAT_DATA[slug] ? { ...COMMISSARIAT_DATA[slug], awardees: [] } : null;
   }
 };
 

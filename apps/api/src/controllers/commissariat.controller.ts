@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { isPublicProgram, projectPublicProgram } from '../domain/public-program';
+import { projectPublicAwardee } from '../domain/public-membership';
 
 const prisma = new PrismaClient();
 
@@ -60,6 +61,23 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
           orderBy: { programKe: 'asc' },
           include: { photos: { orderBy: { createdAt: 'asc' } } },
         },
+        memberships: {
+          where: {
+            publicationStatus: 'PUBLISHED',
+            membershipStatus: 'ACTIVE',
+            period: { label: '2025/2026' },
+          },
+          select: {
+            id: true,
+            name: true,
+            position: true,
+            studyProgram: true,
+            division: { select: { name: true } },
+            commissariat: { select: { slug: true, name: true } },
+            period: { select: { label: true } },
+          },
+          orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        },
       },
     });
 
@@ -82,10 +100,10 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
       },
       memberCount: commissariat.memberCount,
       proker: commissariat.programKerja.filter((p) => isPublicProgram(p)).map(projectPublicProgram),
-      // BPH, awardees, documents → tetap dari mock untuk sekarang
+      // BPH and documents remain outside the Membership release scope.
       bph: [],
       divisions: [],
-      awardees: [],
+      awardees: commissariat.memberships.map(projectPublicAwardee),
       documents: [],
     };
 

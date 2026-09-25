@@ -93,10 +93,13 @@ export interface CalendarGroup {
 }
 
 export interface Awardee {
-  id: number;
+  id: string;
   name: string;
+  position: string;
   major: string;
-  year: string;
+  division: string;
+  commissariat: { slug: string; name: string };
+  period: string;
 }
 
 export interface Document {

@@ -39,10 +39,14 @@ type TabType = "profil" | "proker" | "awardee" | "arsip";
 // interface Proker was replaced by imported ProkerData
 
 interface Awardee {
-  id: number;
+  id: string | number;
   name: string;
+  position?: string;
   major: string;
-  year: string;
+  division?: string;
+  commissariat?: { slug: string; name: string };
+  period?: string;
+  year?: string;
 }
 
 interface Document {
@@ -250,14 +254,7 @@ export default function CommissariatClient({
           description: "Aksi kepedulian lingkungan di pantai kenjeran.",
         },
       ],
-      awardees: Array.from({ length: 25 }).map((_, i) => ({
-        id: i + 1,
-        name: `Mahasiswa ${universityName} ${i + 1}`,
-        major: ["Manajemen", "Akuntansi", "Ekonomi Islam", "Ilmu Komunikasi"][
-          i % 4
-        ],
-        year: "2024",
-      })),
+      awardees: [],
       documents: [
         {
           id: 1,
@@ -890,7 +887,7 @@ export default function CommissariatClient({
                                 </td>
                                 <td className="p-6 text-center">
                                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
-                                    {awardee.year}
+                                    {awardee.period ?? awardee.year ?? "2025/2026"}
                                   </span>
                                 </td>
                               </tr>
