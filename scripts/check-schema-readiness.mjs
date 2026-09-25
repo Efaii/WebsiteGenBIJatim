@@ -17,11 +17,13 @@ export function validateSchemaReadiness(readiness, { database, planHash, now = D
   if (readiness.database !== database) throw new Error(`Schema readiness targets ${String(readiness.database ?? 'unknown')}, not ${database}; data migration is blocked.`);
   if (readiness.dataMigrationReady !== true || readiness.migrationApplied !== true) throw new Error('Schema readiness does not confirm deployed migration history; data migration is blocked.');
   if (readiness.schemaApproval !== 'SETUJUI SCHEMA MIGRASI') throw new Error('Schema readiness is missing exact schema approval evidence; data migration is blocked.');
-  if (!readiness.expiresAt || Date.parse(readiness.expiresAt) <= now) throw new Error('Schema readiness evidence is expired or missing an expiry; data migration is blocked.');
+  const readinessExpiry = Date.parse(readiness.expiresAt ?? '');
+  if (!readiness.expiresAt || !Number.isFinite(readinessExpiry) || readinessExpiry <= now) throw new Error('Schema readiness evidence is expired, invalid, or missing an expiry; data migration is blocked.');
   if (!readiness.planHash) throw new Error('Schema readiness evidence is missing planHash; data migration is blocked.');
   if (planHash && readiness.planHash !== planHash) throw new Error('Schema readiness planHash does not match the approved plan; data migration is blocked.');
   const recordedRestore = readiness.restoreEvidence;
-  if (!recordedRestore || recordedRestore.status !== 'verified' || recordedRestore.sourceDatabase !== database || !recordedRestore.backupSha256 || !/^[a-f0-9]{64}$/i.test(recordedRestore.backupSha256) || !recordedRestore.expiresAt || Date.parse(recordedRestore.expiresAt) <= now) throw new Error('Schema readiness does not bind a current restore verification; data migration is blocked.');
+  const recordedRestoreExpiry = Date.parse(recordedRestore?.expiresAt ?? '');
+  if (!recordedRestore || recordedRestore.status !== 'verified' || recordedRestore.sourceDatabase !== database || !recordedRestore.backupSha256 || !/^[a-f0-9]{64}$/i.test(recordedRestore.backupSha256) || !recordedRestore.expiresAt || !Number.isFinite(recordedRestoreExpiry) || recordedRestoreExpiry <= now) throw new Error('Schema readiness does not bind a current restore verification; data migration is blocked.');
   return readiness;
 }
 
@@ -29,7 +31,8 @@ export function validateRestoreEvidence(evidence, { database, now = Date.now() }
   if (evidence.status !== 'verified') throw new Error(`Backup restore evidence is ${String(evidence.status ?? 'missing')}; data migration is blocked.`);
   if (evidence.sourceDatabase !== database) throw new Error(`Backup restore evidence targets ${String(evidence.sourceDatabase ?? 'unknown')}, not ${database}; data migration is blocked.`);
   if (!evidence.backupSha256 || !/^[a-f0-9]{64}$/i.test(evidence.backupSha256)) throw new Error('Backup restore evidence is missing a valid SHA-256; data migration is blocked.');
-  if (!evidence.expiresAt || Date.parse(evidence.expiresAt) <= now) throw new Error('Backup restore evidence is expired or missing an expiry; data migration is blocked.');
+  const expiry = Date.parse(evidence.expiresAt ?? '');
+  if (!evidence.expiresAt || !Number.isFinite(expiry) || expiry <= now) throw new Error('Backup restore evidence is expired, invalid, or missing an expiry; data migration is blocked.');
   return evidence;
 }
 

@@ -123,7 +123,10 @@ After the clean target passes the schema gate, bootstrap the verified local sour
 ```powershell
 $env:DATABASE_URL = "mysql://root:@localhost:3306/genbi_jatim"
 $env:INITIAL_PRODUCTION_DATABASE_URL = "mysql://root:@localhost:3306/genbi_jatim_initial_production"
+$env:MYSQL_BIN = "C:\laragon\bin\mysql\mysql-8.4.3-winx64\bin\mysql.exe"
 $env:INITIAL_PRODUCTION_SCHEMA_READINESS_PATH = ".\artifacts\migration\initial-production-schema-readiness.json"
+$env:INITIAL_PRODUCTION_RESTORE_EVIDENCE_PATH = ".\artifacts\migration\initial-production-restore-verification.json"
+$env:SCHEMA_PLAN_HASH = "<planHash from the reviewed initial-production plan>"
 $env:SCHEMA_MIGRATION_APPROVAL = "SETUJUI SCHEMA MIGRASI"
 $env:DATA_MIGRATION_APPROVAL = "SETUJUI DATA MIGRASI"
 npm run bootstrap:initial-production --workspace apps/api
