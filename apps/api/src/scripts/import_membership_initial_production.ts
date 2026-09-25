@@ -63,6 +63,9 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
   const postImport = report.postImport as Record<string, unknown> | undefined;
   const reportCommissariatCounts = (postImport?.perCommissariat as Record<string, number> | undefined) ?? (validation.commissariatCounts as Record<string, number>);
   const reportNoDivisionCounts = (postImport?.perNoDivision as Record<string, number> | undefined) ?? (validation.noDivisionCounts as Record<string, number>);
+  const validationDivisionCounts = validation.divisionCounts as Record<string, Record<string, number>>;
+  const reportPerDivision = postImport?.perDivision as Record<string, Array<{ name: string; _count: { memberships: number } }>> | undefined;
+  const actualDivisionCounts = new Map(Object.entries(reportPerDivision ?? {}).flatMap(([slug, divisions]) => divisions.map((division) => [`${slug}|${division.name}`, division._count.memberships] as const)));
   fs.writeFileSync(jsonPath, `${JSON.stringify({ ...report, validation }, null, 2)}\n`, 'utf8');
   const markdown = [
     '# Membership 2025/2026 Import Report',
@@ -88,14 +91,14 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
     '',
     '### Per division',
     '',
-    ...Object.entries(validation.divisionCounts as Record<string, Record<string, number>>).flatMap(([slug, divisions]) => [
+    ...Object.entries(MEMBERSHIP_RELEASE_DIVISIONS).flatMap(([slug, divisions]) => [
       `- ${slug}:`,
-      ...Object.entries(divisions).map(([division, count]) => `  - ${division}: ${count}`),
+      ...divisions.map((division) => `  - ${division}: expected ${validationDivisionCounts[slug]?.[division] ?? 0}, actual ${actualDivisionCounts.get(`${slug}|${division}`) ?? 0}`),
     ]),
     '',
     '### No division by commissariat',
     '',
-    ...Object.entries(reportNoDivisionCounts).map(([slug, count]) => `- ${slug}: ${count}`),
+    ...Object.entries(MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS).map(([slug, expected]) => `- ${slug}: expected ${expected}, actual ${reportNoDivisionCounts[slug] ?? 0}`),
     '',
     '## Normalization',
     '',
@@ -107,6 +110,13 @@ const writeReport = (report: Record<string, unknown>, runDir: string) => {
   ].join('\n');
   fs.writeFileSync(markdownPath, `${markdown}\n`, 'utf8');
   return { jsonPath, markdownPath };
+};
+
+const writeCommittedReportFailureMarker = (report: Record<string, unknown>, runDir: string, error: string) => {
+  fs.mkdirSync(runDir, { recursive: true });
+  const markerPath = path.join(runDir, 'membership-2025-2026-import-report-failure.json');
+  fs.writeFileSync(markerPath, `${JSON.stringify({ ...report, status: 'IMPORTED_REPORT_WRITE_FAILED', error }, null, 2)}\n`, 'utf8');
+  return markerPath;
 };
 
 const main = async () => {
@@ -148,6 +158,7 @@ const main = async () => {
 
   const target = new PrismaClient({ datasources: { db: { url: targetUrl } } });
   let importCommitted = false;
+  let postImport: Record<string, unknown> | undefined;
   try {
     const [membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount] = await Promise.all([
       target.membership.count(),
@@ -176,7 +187,7 @@ const main = async () => {
     ]);
     if ([membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount].some((count) => count > 0)) throw new Error(`Target database is not clean: memberships=${membershipCount}, commissariats=${commissariatCount}, periods=${periodCount}, divisions=${divisionCount}, users=${userCount}, cmsAccounts=${cmsAccountCount}, cmsAssignments=${cmsAssignmentCount}, cmsSessions=${cmsSessionCount}, auditEvents=${auditEventCount}, membershipAliases=${membershipImportAliasCount}, membershipPreviews=${membershipImportPreviewCount}, membershipRows=${membershipImportRowCount}, programs=${programCount}, programArtifacts=${programArtifactCount}, programPhotos=${programKerjaPhotoCount}, programRevisions=${programKerjaRevisionCount}, news=${newsCount}, newsRevisions=${newsRevisionCount}, newsCoverAssets=${newsCoverAssetCount}, newsSlugAliases=${newsSlugAliasCount}, faqs=${faqCount}, testimonials=${testimonialCount}, contacts=${contactMessageCount}.`);
 
-    const postImport = await target.$transaction(async (tx) => {
+    postImport = await target.$transaction(async (tx) => {
       const commissariatIds = new Map<string, string>();
       const periodIds = new Map<string, string>();
       const divisionIds = new Map<string, string>();
@@ -271,7 +282,8 @@ const main = async () => {
     const message = error instanceof Error ? error.message : String(error);
     if (importCommitted) {
       try {
-        writeReport({ ...reportBase, status: 'IMPORTED_REPORT_WRITE_FAILED', error: message }, runDir);
+        const markerPath = writeCommittedReportFailureMarker({ ...reportBase, postImport }, runDir, message);
+        console.error(`Membership import committed, but the final audit report failed. Marker: ${markerPath}`);
       } catch (reportError) {
         console.error(`Membership import committed, but audit report could not be written: ${reportError instanceof Error ? reportError.message : String(reportError)}`);
       }
