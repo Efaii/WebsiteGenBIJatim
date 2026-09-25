@@ -14,11 +14,7 @@ import { siteConfig } from "@/config/site";
  * - Z-Index: Strategically elevated to maintain brand visibility above mobile navigation overlays.
  */
 
-type NavbarLogoProps = {
-  scrolled: boolean;
-};
-
-export function NavbarLogo({ scrolled }: NavbarLogoProps) {
+export function NavbarLogo() {
   return (
     <Link href="/" className="flex items-center gap-3 group relative z-[110]">
       {/* --- BRAND MARK CONTAINER --- */}
@@ -36,7 +32,7 @@ export function NavbarLogo({ scrolled }: NavbarLogoProps) {
       <span
         className={cn(
           "text-lg font-bold tracking-tight transition-colors duration-300",
-          scrolled ? "text-slate-900" : "text-slate-800",
+          "text-blue-900",
         )}
       >
         {siteConfig.name}

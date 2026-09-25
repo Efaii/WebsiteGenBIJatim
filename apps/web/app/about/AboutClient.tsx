@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { Card, CardContent } from "@/components/Card";
 import {
   FadeIn,
+  SlideInLeft,
   SlideUp,
   StaggerContainer,
   StaggerItem,
@@ -15,7 +16,6 @@ import { PageBackground } from "@/components/PageBackground";
 import Image from "next/image";
 import { BPHMember } from "@/components/MemberDetailModal";
 import { KorkomData, EventItem } from "@/app/types"; // Should come from shared types
-import CountUp from "@/components/CountUp";
 import {
   Crown,
   Shield,
@@ -26,6 +26,18 @@ import {
   Rocket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const commissariats = [
+  { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.svg" },
+  { id: "its", name: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.svg" },
+  { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.svg" },
+  { id: "pens", name: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.svg" },
+  { id: "utm", name: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.svg" },
+  { id: "uin-madura", name: "UIN Madura", logo: "/assets/logos/uinMadura.svg" },
+  { id: "uinsa", name: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.svg" },
+  { id: "unugiri", name: "Universitas Nahdlatul Ulama Sunan Giri", logo: "/assets/logos/unugiri.svg" },
+  { id: "upnvjt", name: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.svg" },
+];
 
 const MemberListItem = ({
   member,
@@ -104,14 +116,14 @@ export default function AboutClient({
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative w-full h-[calc(100vh-5rem)] max-h-[1080px] min-h-[500px] flex items-center justify-center overflow-hidden">
+        <section className="relative flex min-h-screen w-full items-center justify-center overflow-hidden">
           {/* Background Elements */}
           <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           {/* Background Blobs (Standardized) */}
           <PageBackground variant="default" />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-900/10 rounded-full blur-[100px] -z-10"></div>
 
-          <div className="container relative mx-auto px-6 text-center z-10">
+          <div className="container relative z-10 mx-auto flex min-h-screen translate-y-12 flex-col items-center justify-center px-6 text-center">
             <SlideUp once={false} delay={0.2}>
               <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
                 Siapa Kami? <br />
@@ -130,15 +142,79 @@ export default function AboutClient({
         </section>
 
         {/* About GenBI Definition Section */}
-        <section className="py-20 relative z-10 bg-white/5 border-y border-white/5">
-          <div className="container mx-auto px-6 max-w-4xl text-center">
-            <FadeIn once={false}>
-              <SectionHeader
-                title="Tentang GenBI Jatim"
-                align="center"
-                description="Lebih dari sekadar penerima beasiswa, GenBI Jawa Timur adalah inkubator kepemimpinan yang dirancang untuk mencetak generasi Energi Baru. Di sini, integritas intelektual bertemu dengan kepekaan sosial. Kami bergerak melampaui batas kampus, bersinergi sebagai mitra strategis Bank Indonesia dalam mengawal stabilitas ekonomi, mengakselerasi literasi keuangan, dan memberdayakan masyarakat melalui aksi nyata yang berdampak dan berkelanjutan."
-                className="mb-0"
-              />
+        <section className="py-16 md:py-24 bg-white relative overflow-hidden">
+          <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative z-10 max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-center">
+              <div className="relative flex flex-col gap-8">
+                <SlideInLeft delay={0.4}>
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      ["/assets/images/raker.jpg", "Kegiatan Raker GenBI"],
+                      ["/assets/images/individu.jpg", "Aktivitas anggota GenBI"],
+                      ["/assets/images/bnsp.JPG", "Pengembangan kapasitas anggota"],
+                      ["/assets/images/background.jpg", "Kolaborasi GenBI Jawa Timur"],
+                    ].map(([src, alt]) => (
+                      <div
+                        key={src}
+                        className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-lg shadow-blue-900/10 group"
+                      >
+                        <Image
+                          src={src}
+                          alt={alt}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </SlideInLeft>
+              </div>
+
+              <div className="lg:pr-6 xl:pr-10">
+                <FadeIn delay={0.2}>
+                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 mb-4">
+                    Kenali Kami Lebih Dekat
+                  </p>
+                  <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-[1.15] mb-6">
+                    Bukan Sekadar Beasiswa, <br />
+                    <span className="text-blue-600">Tapi Transformasi Diri</span>
+                  </h2>
+                </FadeIn>
+
+                <FadeIn delay={0.3}>
+                  <p className="text-slate-900 text-lg leading-relaxed max-w-xl mb-6">
+                    Lebih dari sekadar penerima beasiswa, GenBI Jawa Timur adalah inkubator kepemimpinan yang dirancang untuk mencetak generasi Energi Baru. Di sini, integritas intelektual bertemu dengan kepekaan sosial. Kami bergerak melampaui batas kampus, bersinergi sebagai mitra strategis Bank Indonesia dalam mengawal stabilitas ekonomi, mengakselerasi literasi keuangan, dan memberdayakan masyarakat melalui aksi nyata yang berdampak dan berkelanjutan.
+                  </p>
+                </FadeIn>
+              </div>
+            </div>
+
+            <FadeIn delay={0.5}>
+              <div className="mt-14 overflow-hidden rounded-[2rem] bg-slate-50 p-8 border border-slate-200/80 shadow-md md:p-10">
+                <p className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-[0.16em] mb-8 text-center">
+                  Menaungi mahasiswa berprestasi dari 9 Kampus Mitra Strategis di Jawa Timur
+                </p>
+                <div className="overflow-hidden">
+                  <div className="flex w-max animate-marquee-loop hover:[animation-play-state:paused]">
+                    {[...commissariats, ...commissariats].map((comm, index) => (
+                      <div
+                        key={`${comm.id}-${index}`}
+                        className="group/logo relative flex w-32 shrink-0 items-center justify-center px-4 md:w-44 md:px-6"
+                        title={comm.name}
+                      >
+                        <Image
+                          src={comm.logo}
+                          alt={comm.name}
+                          width={140}
+                          height={80}
+                          unoptimized
+                          className="h-16 md:h-20 w-auto object-contain opacity-75 transition-all duration-300 group-hover/logo:scale-110 group-hover/logo:opacity-100"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </FadeIn>
           </div>
         </section>
@@ -147,39 +223,18 @@ export default function AboutClient({
         <section className="py-20 relative">
           <div className="container mx-auto px-6 relative z-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-              {/* Stats Card (Left) */}
+              {/* Committee Photo (Left) */}
               <div className="relative order-2 md:order-1">
-                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/20 to-blue-600/20 rounded-[2rem] transform -rotate-3 blur-sm"></div>
-                <div className="relative bg-white/5 backdrop-blur-xl p-8 rounded-[2rem] shadow-2xl border border-white/10">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 p-6 rounded-2xl text-center border border-white/5 hover:bg-white/10 transition-colors duration-300">
-                      <div className="text-4xl font-bold text-white mb-2 flex justify-center items-center gap-1">
-                        <CountUp to={9} />
-                      </div>
-                      <div className="text-sm text-blue-200/60 font-medium">
-                        Mitra Kampus
-                      </div>
-                    </div>
-                    <div className="bg-white/5 p-6 rounded-2xl text-center border border-white/5 hover:bg-white/10 transition-colors duration-300">
-                      <div className="text-4xl font-bold text-white mb-2 flex justify-center items-center gap-1">
-                        <CountUp to={500} />+
-                      </div>
-                      <div className="text-sm text-blue-200/60 font-medium">
-                        Anggota Aktif
-                      </div>
-                    </div>
-                    <div className="col-span-2 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-white/10 p-8 rounded-2xl text-center text-white relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-cyan-500/10 blur-xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
-                      <div className="relative z-10">
-                        <div className="text-5xl font-bold mb-2 flex justify-center items-center gap-1">
-                          <CountUp to={12} />+
-                        </div>
-                        <div className="text-sm text-cyan-200 font-medium uppercase tracking-widest">
-                          Tahun Berkarya
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] bg-gradient-to-tr from-cyan-500/30 to-blue-600/30 blur-sm"></div>
+                <div className="relative aspect-video overflow-hidden rounded-[2rem] border border-white/15 bg-slate-900 shadow-2xl">
+                  <Image
+                    src="/assets/images/raker.jpg"
+                    alt="Pengurus GenBI Jawa Timur"
+                    fill
+                    className="object-cover object-center transition-transform duration-700 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
                 </div>
               </div>
 
@@ -248,13 +303,15 @@ export default function AboutClient({
         </section>
 
         {/* Strategic Roles / 3 Pillars */}
-        <section className="py-20 relative bg-white/5 border-y border-white/5">
+        <section className="relative border-y border-slate-200 bg-white py-20">
           <div className="container mx-auto px-6 text-center">
             <FadeIn once={false}>
               <SectionHeader
+                eyebrow="Kenali Peran GenBI"
                 title="3 Pilar Peran Utama"
                 align="center"
                 description="Tiga fungsi strategis yang dijalankan setiap anggota GenBI sebagai mitra Bank Indonesia."
+                className="[&_h2]:text-blue-700 [&_p]:text-slate-700 [&_span]:text-blue-700"
               />
             </FadeIn>
             <StaggerContainer
@@ -283,17 +340,17 @@ export default function AboutClient({
               ].map((value, i) => (
                 <StaggerItem key={i}>
                   <Card
-                    variant="glass"
-                    className="h-full flex flex-col items-center text-center p-8 pt-12 group cursor-default relative overflow-hidden"
+                    variant="default"
+                    className="h-full flex flex-col items-center text-center p-8 pt-12 group cursor-default relative overflow-hidden border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-lg"
                   >
                     <CardContent className="p-0 relative z-10 flex flex-col items-center">
-                      <div className="text-blue-200/50 mb-6 group-hover:text-cyan-400 transition-all duration-300 transform group-hover:scale-110 group-hover:-translate-y-1">
+                      <div className="mb-6 rounded-2xl bg-blue-100 p-5 text-blue-700 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1">
                         {value.icon}
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-4">
+                      <h3 className="text-xl font-bold text-slate-900 mb-4">
                         {value.title}
                       </h3>
-                      <p className="text-blue-100/70 leading-relaxed">
+                      <p className="text-slate-700 leading-relaxed">
                         {value.desc}
                       </p>
                     </CardContent>
@@ -450,22 +507,55 @@ export default function AboutClient({
           </div>
         </section>
 
-        {/* Organizational Structure */}
-        <section className="py-20 relative">
-          <div className="container mx-auto px-6 relative z-10">
-            <FadeIn once={false}>
-              <SectionHeader
-                title="Kepengurusan Wilayah"
-                description="Tim solid yang berdedikasi penuh menggerakkan visi menjadi aksi nyata, Periode 2025/2026."
-              />
+        {/* GenBI Story & Documentation */}
+        <section className="bg-white py-20 text-slate-900 md:py-28">
+          <div className="container mx-auto max-w-7xl px-6 lg:px-8 xl:px-12">
+            <FadeIn>
+              <div className="max-w-2xl">
+                <p className="mb-5 text-sm font-bold uppercase tracking-[0.2em] text-blue-600">
+                  Cerita GenBI &amp; Dokumentasi
+                </p>
+                <p className="text-lg leading-[1.9] text-slate-800 md:text-xl">
+                  GenBI Jawa Timur bukan hanya tentang program dan kegiatan, tetapi
+                  tentang orang-orang yang tumbuh bersama. Setiap pertemuan,
+                  kolaborasi, dan aksi nyata menjadi bagian dari cerita yang kami
+                  bangun untuk menghadirkan energi baru bagi negeri.
+                </p>
+              </div>
             </FadeIn>
 
-            {/* Note: In a real implementation this section would iterate over korkomData.bph and divisions */}
-            <div className="text-center text-blue-200/60 p-8 border border-white/5 rounded-2xl bg-white/5">
-              <p>Structure content available in props.korkomData</p>
-            </div>
+            <StaggerContainer
+              once={false}
+              className="mt-12 grid auto-rows-[88px] grid-cols-12 gap-3 md:auto-rows-[112px] md:gap-4"
+            >
+              {[
+                ["/assets/images/individu.jpg", "Anggota GenBI dalam kegiatan bersama", "col-span-4 row-span-2 md:col-span-2 md:row-span-2"],
+                ["/assets/images/raker.jpg", "Kolaborasi pengurus GenBI", "col-span-8 row-span-3 md:col-span-3 md:row-span-3"],
+                ["/assets/images/bnsp.JPG", "Pengembangan kapasitas anggota", "col-span-6 row-span-3 md:col-span-3 md:row-span-2"],
+                ["/assets/images/background.jpg", "Momen kebersamaan GenBI", "col-span-6 row-span-2 md:col-span-2 md:row-span-3"],
+                ["/assets/images/raker.jpg", "Rapat kerja GenBI Jawa Timur", "col-span-6 row-span-3 md:col-span-2 md:row-span-2"],
+                ["/assets/images/individu.jpg", "Aktivitas penerima beasiswa", "col-span-6 row-span-2 md:col-span-2 md:row-span-2"],
+                ["/assets/images/background.jpg", "Gerak bersama untuk negeri", "col-span-8 row-span-3 md:col-span-3 md:row-span-2"],
+                ["/assets/images/bnsp.JPG", "Belajar dan bertumbuh bersama", "col-span-4 row-span-3 md:col-span-2 md:row-span-3"],
+                ["/assets/images/individu.jpg", "Jejak perjalanan GenBI", "col-span-6 row-span-2 md:col-span-2 md:row-span-2"],
+                ["/assets/images/raker.jpg", "Dokumentasi kegiatan GenBI", "col-span-6 row-span-2 md:col-span-3 md:row-span-2"],
+              ].map(([src, alt, placement], index) => (
+                <StaggerItem key={`${src}-${index}`} className={placement}>
+                  <div className="group relative h-full overflow-hidden rounded-xl bg-slate-100 md:rounded-2xl">
+                    <Image
+                      src={src}
+                      alt={alt}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
           </div>
         </section>
+
       </main>
 
       <Footer />

@@ -52,19 +52,18 @@ export function Navbar() {
         className={cn(
           "fixed top-0 left-0 w-full z-[100] transition-all duration-300 border-b transform-gpu",
           scrolled
-            ? "bg-white/80 backdrop-blur-md border-slate-100 h-16 shadow-sm"
-            : "bg-transparent border-transparent h-20",
+            ? "bg-white border-slate-100 h-16 shadow-sm"
+            : "bg-white border-slate-100 h-20 shadow-sm",
         )}
       >
         <div className="container px-6 lg:px-8 xl:px-12 mx-auto h-full max-w-7xl">
           <div className="w-full h-full flex items-center justify-between lg:px-6 xl:px-10">
             
             {/* --- BRANDING ASSET INTERFACE --- */}
-            <NavbarLogo scrolled={scrolled} />
+            <NavbarLogo />
 
             {/* --- DESKTOP NAVIGATION ENGINE --- */}
             <NavbarLinks
-              scrolled={scrolled}
               pathname={pathname}
               navItems={siteConfig.navItems}
               commissariatLinks={COMMISSARIAT_LINKS}
@@ -80,7 +79,7 @@ export function Navbar() {
                     ? "bg-slate-900 border-slate-800 text-white"
                     : scrolled
                       ? "bg-white border-slate-200 text-slate-900 shadow-sm"
-                      : "bg-white/50 border-white/40 text-slate-900 backdrop-blur-md",
+                      : "bg-white border-slate-200 text-blue-700 shadow-sm",
                 )}
               >
                 {isOpen ? <X size={20} /> : <Menu size={20} />}
