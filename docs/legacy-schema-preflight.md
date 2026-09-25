@@ -118,6 +118,19 @@ No automatic `prisma migrate resolve` is performed. A missing, expired, mismatch
 
 When no local backup is available, the schema gate remains incomplete; do not substitute a staging run or mark the issue complete based only on unit tests.
 
+After the clean target passes the schema gate, bootstrap the verified local source with separate schema and data approvals:
+
+```powershell
+$env:DATABASE_URL = "mysql://root:@localhost:3306/genbi_jatim"
+$env:INITIAL_PRODUCTION_DATABASE_URL = "mysql://root:@localhost:3306/genbi_jatim_initial_production"
+$env:INITIAL_PRODUCTION_SCHEMA_READINESS_PATH = ".\artifacts\migration\initial-production-schema-readiness.json"
+$env:SCHEMA_MIGRATION_APPROVAL = "SETUJUI SCHEMA MIGRASI"
+$env:DATA_MIGRATION_APPROVAL = "SETUJUI DATA MIGRASI"
+npm run bootstrap:initial-production --workspace apps/api
+```
+
+The bootstrap is verification-first and writes only to the new clean target. It refuses a target that already contains Program Kerja, child-photo, artifact, or revision rows, preserves Membership rows already imported into the target, verifies the 153/431 Program Kerja baseline and all referenced photo hashes, and writes its report under ignored `artifacts/initial-production/`. It never copies the development test commissariat or test period.
+
 ## 6. Deferred staging and future production hardening
 
 When a production server becomes available, the same forward-only schema evidence may be reviewed for direct initial production. Production backup, deployment approval, API/UI smoke tests, and rollback planning remain mandatory. Staging may be introduced later as an additional safety layer, but it is not required for the current release.
