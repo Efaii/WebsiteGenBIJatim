@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { isPublicProgram, projectPublicProgram } from '../domain/public-program';
 import { projectPublicAwardee } from '../domain/public-membership';
+import { MEMBERSHIP_RELEASE_PERIOD } from '../domain/membership-release';
 
 const prisma = new PrismaClient();
 
@@ -52,6 +53,7 @@ export const getAllCommissariats = async (req: Request, res: Response) => {
 export const getCommissariatBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
+    const periodLabel = typeof req.query.periodLabel === 'string' ? req.query.periodLabel : MEMBERSHIP_RELEASE_PERIOD;
 
     const commissariat = await prisma.commissariat.findUnique({
       where: { slug },
@@ -65,7 +67,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
           where: {
             publicationStatus: 'PUBLISHED',
             membershipStatus: 'ACTIVE',
-            period: { label: '2025/2026' },
+            period: { label: periodLabel },
           },
           select: {
             id: true,
