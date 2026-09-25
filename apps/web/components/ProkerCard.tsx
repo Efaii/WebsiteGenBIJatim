@@ -31,6 +31,7 @@ export function ProkerCard({
 }: ProkerCardProps) {
   // Date Formatting Logic: Handles "Feb 2025" (2 parts) vs "10 Jan 2025" (3 parts)
   const dateParts = date.split(" ");
+  const isPeriodLabel = date.startsWith("Periode ");
   const isFullDate = dateParts.length === 3;
   const mainDate = isFullDate ? dateParts[0] : dateParts[0]; // Day "10" OR Month "Feb"
   const subDate = isFullDate ? `${dateParts[1]} ${dateParts[2]}` : dateParts[1]; // "Jan 2025" OR "2025"
@@ -57,13 +58,24 @@ export function ProkerCard({
         className,
       )}
     >
-      <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-blue-300 transition-colors">
-        <span className="text-xs font-bold text-blue-600 uppercase">
-          {isFullDate ? subDate.split(" ")[0] : mainDate}
-        </span>
-        <span className="text-xl font-bold text-slate-900">
-          {isFullDate ? mainDate : subDate}
-        </span>
+      <div className={cn(
+        "min-h-16 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-blue-300 transition-colors",
+        isPeriodLabel ? "w-36 px-3 text-center" : "w-16",
+      )}>
+        {isPeriodLabel ? (
+          <span className="text-xs font-bold text-blue-600 uppercase leading-relaxed">
+            {date}
+          </span>
+        ) : (
+          <>
+            <span className="text-xs font-bold text-blue-600 uppercase">
+              {isFullDate ? subDate.split(" ")[0] : mainDate}
+            </span>
+            <span className="text-xl font-bold text-slate-900">
+              {isFullDate ? mainDate : subDate}
+            </span>
+          </>
+        )}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">

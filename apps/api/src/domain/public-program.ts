@@ -1,5 +1,14 @@
 type ProgramPhoto = { filePath: string };
 
+export const isCancelledProgramStatus = (value: string) =>
+  value.trim().toLowerCase().includes('cancel');
+
+export const publicProgramWhere = () => ({
+  publicationStatus: 'PUBLISHED' as const,
+  executionStatus: { not: 'CANCELLED' as const },
+  status: { not: { contains: 'cancel' } },
+});
+
 type PublicProgramRecord = {
   id: string;
   programKe: number;
@@ -53,7 +62,7 @@ export const isPublicProgram = (program: {
 }) => (
   program.publicationStatus === 'PUBLISHED'
   && program.executionStatus !== 'CANCELLED'
-  && !['cancelled', 'canceled', 'cancel'].includes(program.status.trim().toLowerCase())
+  && !isCancelledProgramStatus(program.status)
 );
 
 export const projectPublicProgram = (program: PublicProgramRecord) => ({
