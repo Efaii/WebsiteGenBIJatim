@@ -77,3 +77,7 @@ assert.equal(
   reconciliationRules.cancelledAction(true),
   "CANCELLED_EXISTING_ARCHIVE",
 );
+assert.equal(reconciliationRules.isPlaceholder("—"), true);
+assert.equal(reconciliationRules.isPlaceholder("-"), true);
+assert.equal(reconciliationRules.isPlaceholder(""), true);
+assert.equal(reconciliationRules.isPlaceholder("GenBI Sowan"), false);
