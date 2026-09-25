@@ -58,7 +58,7 @@ export const parseMembershipWorkbook = (buffer: Buffer, options: WorkbookParseOp
     rows: data.map(({ row, rowNumber }) => {
       const values = Object.fromEntries(headers.map((header, column) => [header, (row as unknown[])[column]]));
       const commissariatSlug = canonicalCommissariatSlug(values.komisariat);
-      return { rowNumber, rawValues: values, normalized: { komisariat: text(values.komisariat), nama: text(values.nama), jabatan: text(values.jabatan), divisi: normalizeMembershipDivision(values.divisi, { commissariatSlug, periodLabel: options.periodLabel ?? MEMBERSHIP_RELEASE_PERIOD }), prodi: text(values.prodi) } };
+      return { rowNumber, rawValues: values, normalized: { komisariat: text(values.komisariat), nama: text(values.nama), jabatan: text(values.jabatan), divisi: normalizeMembershipDivision(values.divisi, { commissariatSlug, periodLabel: options.periodLabel }), prodi: text(values.prodi) } };
     }),
   };
 };
@@ -80,10 +80,12 @@ export type MembershipSourceValidation = {
 
 export const validateMembershipSource = (
   parsed: { rows: ParsedRow[]; sourceSheet: string },
-  options: { expectedTotalRows?: number | null; expectedCommissariatCounts?: Record<string, number> | null } = {},
+  options: { expectedTotalRows?: number | null; expectedCommissariatCounts?: Record<string, number> | null; expectedNoDivisionCount?: number | null; expectedDivisionNames?: Record<string, readonly string[]> | null; requireDivisionCatalog?: boolean } = {},
 ): MembershipSourceValidation => {
   const expectedTotalRows = options.expectedTotalRows ?? null;
   const expectedCommissariatCounts = options.expectedCommissariatCounts ?? null;
+  const expectedNoDivisionCount = options.expectedNoDivisionCount ?? null;
+  const expectedDivisionNames = options.expectedDivisionNames ?? null;
   const errors: string[] = [];
   const commissariatCounts: Record<string, number> = {};
   const divisionCounts: Record<string, Record<string, number>> = {};
@@ -95,6 +97,7 @@ export const validateMembershipSource = (
 
   if (parsed.sourceSheet !== 'Data Final') errors.push(`INVALID_SOURCE_SHEET:${parsed.sourceSheet}`);
   if (expectedTotalRows !== null && parsed.rows.length !== expectedTotalRows) errors.push(`ROW_COUNT_MISMATCH:${parsed.rows.length}`);
+  if (options.requireDivisionCatalog && !expectedDivisionNames) errors.push('DIVISION_CATALOG_REQUIRED');
 
   parsed.rows.forEach((row) => {
     const rowErrors: string[] = [];
@@ -110,6 +113,7 @@ export const validateMembershipSource = (
       const division = row.normalized.divisi ?? '-';
       divisionCounts[slug][division] = (divisionCounts[slug][division] ?? 0) + 1;
       if (!row.normalized.divisi) noDivisionCounts[slug] = (noDivisionCounts[slug] ?? 0) + 1;
+      if (row.normalized.divisi && expectedDivisionNames && (!expectedDivisionNames[slug] || !expectedDivisionNames[slug].includes(row.normalized.divisi))) rowErrors.push('INVALID_DIVISION');
     }
 
     const rawDivision = text(row.rawValues.divisi);
@@ -142,6 +146,8 @@ export const validateMembershipSource = (
   }
 
   if (rejectedRows.length) errors.push(`REJECTED_ROWS:${rejectedRows.length}`);
+  const noDivisionCount = parsed.rows.filter((row) => row.normalized.divisi === null).length;
+  if (expectedNoDivisionCount !== null && noDivisionCount !== expectedNoDivisionCount) errors.push(`NO_DIVISION_COUNT_MISMATCH:${noDivisionCount}`);
 
   return {
     valid: errors.length === 0,
@@ -151,7 +157,7 @@ export const validateMembershipSource = (
     commissariatCounts,
     expectedCommissariatCounts,
     divisionCounts,
-    noDivisionCount: parsed.rows.filter((row) => row.normalized.divisi === null).length,
+    noDivisionCount,
     noDivisionCounts,
     duplicateRows,
     rejectedRows,

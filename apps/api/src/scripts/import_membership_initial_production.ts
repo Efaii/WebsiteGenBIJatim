@@ -10,6 +10,7 @@ import {
 } from '../services/membership-import.service';
 import {
   MEMBERSHIP_EXPECTED_COUNTS,
+  MEMBERSHIP_RELEASE_DIVISIONS,
   MEMBERSHIP_RELEASE_COMMISSARIATS,
   MEMBERSHIP_RELEASE_PERIOD,
   MEMBERSHIP_SOURCE_SHA256,
@@ -113,11 +114,14 @@ const main = async () => {
   if (!fs.existsSync(SOURCE_FILE)) throw new Error(`Membership workbook not found: ${SOURCE_FILE}`);
 
   const buffer = fs.readFileSync(SOURCE_FILE);
-  const parsed = parseMembershipWorkbook(buffer);
+  const parsed = parseMembershipWorkbook(buffer, { periodLabel: MEMBERSHIP_RELEASE_PERIOD });
   const runDir = path.join(REPORT_DIR, `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 12)}`);
   const validation = validateMembershipSource(parsed, {
     expectedTotalRows: 619,
     expectedCommissariatCounts: MEMBERSHIP_EXPECTED_COUNTS,
+    expectedNoDivisionCount: 127,
+    expectedDivisionNames: MEMBERSHIP_RELEASE_DIVISIONS,
+    requireDivisionCatalog: true,
   });
   const sourceFileHash = crypto.createHash('sha256').update(buffer).digest('hex');
   if (sourceFileHash !== MEMBERSHIP_SOURCE_SHA256) {
@@ -140,23 +144,32 @@ const main = async () => {
 
   const target = new PrismaClient({ datasources: { db: { url: targetUrl } } });
   try {
-    const [membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, faqCount, testimonialCount, contactMessageCount] = await Promise.all([
+    const [membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount] = await Promise.all([
       target.membership.count(),
       target.commissariat.count(),
       target.period.count(),
       target.division.count(),
       target.user.count(),
       target.cmsAccount.count(),
+      target.cmsAssignment.count(),
+      target.cmsSession.count(),
+      target.auditEvent.count(),
+      target.membershipImportAlias.count(),
+      target.membershipImportPreview.count(),
+      target.membershipImportRow.count(),
       target.programKerja.count(),
       target.programArtifact.count(),
       target.programKerjaPhoto.count(),
       target.programKerjaRevision.count(),
       target.news.count(),
+      target.newsRevision.count(),
+      target.newsCoverAsset.count(),
+      target.newsSlugAlias.count(),
       target.faq.count(),
       target.testimonial.count(),
       target.contactMessage.count(),
     ]);
-    if ([membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, faqCount, testimonialCount, contactMessageCount].some((count) => count > 0)) throw new Error(`Target database is not clean: memberships=${membershipCount}, commissariats=${commissariatCount}, periods=${periodCount}, divisions=${divisionCount}, users=${userCount}, cmsAccounts=${cmsAccountCount}, programs=${programCount}, programArtifacts=${programArtifactCount}, programPhotos=${programKerjaPhotoCount}, programRevisions=${programKerjaRevisionCount}, news=${newsCount}, faqs=${faqCount}, testimonials=${testimonialCount}, contacts=${contactMessageCount}.`);
+    if ([membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount].some((count) => count > 0)) throw new Error(`Target database is not clean: memberships=${membershipCount}, commissariats=${commissariatCount}, periods=${periodCount}, divisions=${divisionCount}, users=${userCount}, cmsAccounts=${cmsAccountCount}, cmsAssignments=${cmsAssignmentCount}, cmsSessions=${cmsSessionCount}, auditEvents=${auditEventCount}, membershipAliases=${membershipImportAliasCount}, membershipPreviews=${membershipImportPreviewCount}, membershipRows=${membershipImportRowCount}, programs=${programCount}, programArtifacts=${programArtifactCount}, programPhotos=${programKerjaPhotoCount}, programRevisions=${programKerjaRevisionCount}, news=${newsCount}, newsRevisions=${newsRevisionCount}, newsCoverAssets=${newsCoverAssetCount}, newsSlugAliases=${newsSlugAliasCount}, faqs=${faqCount}, testimonials=${testimonialCount}, contacts=${contactMessageCount}.`);
 
     await target.$transaction(async (tx) => {
       const commissariatIds = new Map<string, string>();
@@ -195,6 +208,33 @@ const main = async () => {
       });
       for (const [slug, count] of Object.entries(validation.commissariatCounts)) {
         await tx.commissariat.update({ where: { id: commissariatIds.get(slug)! }, data: { memberCount: count } });
+      }
+
+      const [totalMemberships, activeMemberships, publishedMemberships, noDivisionMemberships] = await Promise.all([
+        tx.membership.count(),
+        tx.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
+        tx.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
+        tx.membership.count({ where: { divisionId: null } }),
+      ]);
+      if (totalMemberships !== 619 || activeMemberships !== 619 || publishedMemberships !== 619 || noDivisionMemberships !== 127) {
+        throw new Error(`Post-import membership totals do not match the approved release: total=${totalMemberships}, active=${activeMemberships}, published=${publishedMemberships}, noDivision=${noDivisionMemberships}.`);
+      }
+
+      for (const [slug, expectedCount] of Object.entries(MEMBERSHIP_EXPECTED_COUNTS)) {
+        const actualCount = await tx.membership.count({ where: { commissariat: { slug } } });
+        if (actualCount !== expectedCount) throw new Error(`Post-import commissariat count mismatch for ${slug}: ${actualCount}.`);
+      }
+
+      const importedDivisions = await tx.division.findMany({
+        select: { commissariat: { select: { slug: true } }, name: true, _count: { select: { memberships: true } } },
+      });
+      const importedDivisionCounts = new Map(importedDivisions.map((division) => [`${division.commissariat.slug}|${division.name}`, division._count.memberships]));
+      for (const [slug, divisions] of Object.entries(validation.divisionCounts)) {
+        for (const [divisionName, expectedCount] of Object.entries(divisions)) {
+          if (divisionName === '-') continue;
+          const actualCount = importedDivisionCounts.get(`${slug}|${divisionName}`) ?? 0;
+          if (actualCount !== expectedCount) throw new Error(`Post-import division count mismatch for ${slug}/${divisionName}: ${actualCount}.`);
+        }
       }
     });
 

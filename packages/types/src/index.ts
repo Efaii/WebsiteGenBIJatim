@@ -96,7 +96,7 @@ export interface Awardee {
   id: string;
   name: string;
   position: string;
-  major: string;
+  studyProgram: string;
   division: string;
   commissariat: { slug: string; name: string };
   period: string;

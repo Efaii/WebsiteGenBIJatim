@@ -12,7 +12,7 @@ import type { Awardee } from "@repo/types";
 export default function AwardeePage() {
   const [awardees, setAwardees] = useState<Awardee[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUniversity, setSelectedUniversity] = useState("Semua");
+  const [selectedCommissariat, setSelectedCommissariat] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +36,7 @@ export default function AwardeePage() {
     };
   }, []);
 
-  const universities = useMemo(
+  const commissariats = useMemo(
     () => [
       "Semua",
       ...Array.from(new Set(awardees.map((awardee) => awardee.commissariat.name))).sort(),
@@ -49,7 +49,7 @@ export default function AwardeePage() {
     return awardees.filter((awardee) => {
       const haystack = [
         awardee.name,
-        awardee.major,
+        awardee.studyProgram,
         awardee.position,
         awardee.division,
         awardee.commissariat.name,
@@ -57,12 +57,12 @@ export default function AwardeePage() {
         .join(" ")
         .toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
-      const matchesUniversity =
-        selectedUniversity === "Semua" ||
-        awardee.commissariat.name === selectedUniversity;
-      return matchesSearch && matchesUniversity;
+      const matchesCommissariat =
+        selectedCommissariat === "Semua" ||
+        awardee.commissariat.name === selectedCommissariat;
+      return matchesSearch && matchesCommissariat;
     });
-  }, [awardees, searchTerm, selectedUniversity]);
+  }, [awardees, searchTerm, selectedCommissariat]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAwardees.length / itemsPerPage));
   const safePage = Math.min(currentPage, totalPages);
@@ -119,24 +119,24 @@ export default function AwardeePage() {
                   onClick={() => setIsDropdownOpen((open) => !open)}
                   className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/5 px-6 py-3 pr-10 text-left font-bold text-white hover:bg-white/10 md:w-64"
                 >
-                  <span className="truncate">{selectedUniversity}</span>
+                  <span className="truncate">{selectedCommissariat}</span>
                   <span className={isDropdownOpen ? "rotate-180 text-blue-200/60" : "text-blue-200/60"}>▼</span>
                 </button>
                 {isDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
                     <div className="absolute left-0 top-full z-50 mt-2 flex max-h-60 w-full flex-col gap-1 overflow-y-auto rounded-2xl border border-white/10 bg-blue-950/90 p-2 shadow-2xl backdrop-blur-2xl md:w-64">
-                      {universities.map((university) => (
+                      {commissariats.map((commissariat) => (
                         <button
-                          key={university}
+                          key={commissariat}
                           onClick={() => {
-                            setSelectedUniversity(university);
+                            setSelectedCommissariat(commissariat);
                             setCurrentPage(1);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full rounded-full px-4 py-3 text-left text-base font-medium ${selectedUniversity === university ? "bg-cyan-500/20 font-bold text-cyan-200" : "text-blue-100/80 hover:bg-white/10 hover:text-white"}`}
+                          className={`w-full rounded-full px-4 py-3 text-left text-base font-medium ${selectedCommissariat === commissariat ? "bg-cyan-500/20 font-bold text-cyan-200" : "text-blue-100/80 hover:bg-white/10 hover:text-white"}`}
                         >
-                          {university}
+                          {commissariat}
                         </button>
                       ))}
                     </div>
@@ -177,7 +177,7 @@ export default function AwardeePage() {
                               </div>
                             </td>
                             <td className="hidden p-6 font-medium text-blue-100/70 md:table-cell">{item.commissariat.name}</td>
-                            <td className="hidden p-6 text-blue-100/70 sm:table-cell">{item.major}</td>
+                            <td className="hidden p-6 text-blue-100/70 sm:table-cell">{item.studyProgram}</td>
                             <td className="p-6 text-center">
                               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold text-blue-200">{item.period}</span>
                             </td>

@@ -17,6 +17,18 @@ export const MEMBERSHIP_EXPECTED_COUNTS = Object.fromEntries(
   MEMBERSHIP_RELEASE_COMMISSARIATS.map((item) => [item.slug, item.expectedCount]),
 ) as Record<string, number>;
 
+export const MEMBERSHIP_RELEASE_DIVISIONS: Record<string, readonly string[]> = {
+  its: ['Hubungan Masyarakat', 'Sosial dan Lingkungan', 'Media dan Publikasi', 'Pengembangan Organisasi', 'BPH'],
+  pens: ['Media Informasi & Komunikasi', 'Lingkungan Hidup & Sosial', 'Kesehatan Masyarakat', 'Pengembangan Sumber Daya Mahasiswa', 'BPH', 'Ekonomi Kreatif', 'Pendidikan & Kreativitas'],
+  'uin-madura': ['BPH', 'Lingkungan Hidup & Kesehatan Masyarakat', 'Kewirausahaan', 'Komunikasi & Informasi', 'Pendidikan'],
+  uinsa: ['Media Informasi', 'Pendidikan', 'Pengembangan Sumber Daya Mahasiswa', 'Lingkungan Hidup', 'BPH', 'Pariwisata & Ekonomi Kreatif', 'Kesehatan & Sosial Masyarakat'],
+  unair: ['Media Komunikasi', 'Ekonomi Kreatif', 'Hubungan Luar', 'Kontrol Mutu Internal', 'Pengembangan Sumber Daya Mahasiswa', 'Pengabdian Masyarakat', 'BPH', 'Pendidikan', 'Media Komunikasi & Hubungan Luar'],
+  unesa: ['BPH', 'Pengembangan Sumber Daya Mahasiswa', 'Sosial dan Lingkungan', 'Kesehatan Masyarakat', 'Media dan Informasi', 'Ekonomi Kreatif', 'Pendidikan', 'Hubungan Eksternal'],
+  unugiri: ['BPH', 'Media Informasi', 'Lingkungan Hidup', 'Kewirausahaan', 'Sosial Masyarakat', 'Pendidikan'],
+  upnvjt: ['Ekonomi Kreatif', 'Pendidikan', 'Pengembangan Sumber Daya Mahasiswa', 'BPH', 'Media Komunikasi', 'Sosial Lingkungan', 'Hubungan Eksternal'],
+  utm: ['Ekonomi Kreatif', 'Lingkungan Hidup', 'BPH', 'Publication & Public Relation', 'Pendidikan', 'Pengembangan Sumber Daya Mahasiswa', 'Sosial Masyarakat'],
+};
+
 const COMMISSARIAT_ALIASES: Record<string, string> = {
   its: 'its',
   pens: 'pens',
@@ -54,7 +66,7 @@ export const normalizeMembershipDivision = (
 ): string | null => {
   const normalized = String(value ?? '').replace(/\s+/g, ' ').trim();
   if (!normalized) return null;
-  if (/^bph [123]$/i.test(normalized)) return 'BPH';
   if (!scope?.commissariatSlug || !scope.periodLabel) return normalized;
+  if (scope.commissariatSlug === 'unugiri' && scope.periodLabel === MEMBERSHIP_RELEASE_PERIOD && /^bph [123]$/i.test(normalized)) return 'BPH';
   return SCOPED_DIVISION_ALIASES[`${scope.commissariatSlug}|${scope.periodLabel}|${normalized.toLowerCase()}`] ?? normalized;
 };
