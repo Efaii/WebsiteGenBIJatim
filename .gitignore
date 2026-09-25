@@ -33,3 +33,4 @@ ts-debug.log*
 # Migration evidence is generated locally and stored in secure artifact storage.
 artifacts/migration/
 artifacts/promotion/
+artifacts/membership/

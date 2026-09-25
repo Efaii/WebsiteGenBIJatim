@@ -6,13 +6,25 @@ import { prisma } from '../lib/prisma';
 import { ApiError } from '../lib/api-error';
 import { CmsSession } from '../middlewares/cms-session.middleware';
 import { assertScopeAccess } from './cms-scope.service';
+import {
+  canonicalCommissariatSlug,
+  MEMBERSHIP_EXPECTED_COUNTS,
+  MEMBERSHIP_RELEASE_PERIOD,
+  normalizeMembershipDivision,
+} from '../domain/membership-release';
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_ROWS = 10_000;
 const REQUIRED_HEADERS = ['komisariat', 'nama', 'jabatan', 'divisi', 'prodi'] as const;
 const aliases: Record<string, string> = { 'nama lengkap': 'nama', 'program studi': 'prodi' };
 
-type ParsedRow = { rowNumber: number; rawValues: Record<string, unknown>; normalized: { komisariat: string; nama: string; jabatan: string; divisi: string | null; prodi: string } };
+export type ParsedRow = { rowNumber: number; rawValues: Record<string, unknown>; normalized: { komisariat: string; nama: string; jabatan: string; divisi: string | null; prodi: string } };
+
+export { canonicalCommissariatSlug, normalizeMembershipDivision } from '../domain/membership-release';
+
+export const EXPECTED_MEMBERSHIP_COUNTS = MEMBERSHIP_EXPECTED_COUNTS;
+
+export const EXPECTED_MEMBERSHIP_TOTAL = 619;
 
 const text = (value: unknown) => {
   if (typeof value === 'string' || typeof value === 'number') return String(value).replace(/\s+/g, ' ').trim();
@@ -21,9 +33,9 @@ const text = (value: unknown) => {
 
 const normalizeHeader = (value: unknown) => aliases[text(value).toLowerCase()] ?? text(value).toLowerCase();
 const identityKey = (row: Pick<ParsedRow['normalized'], 'nama' | 'prodi'>) => [row.nama.toLowerCase(), row.prodi.toLowerCase()].join('|');
-const valueKey = (row: Pick<ParsedRow['normalized'], 'nama' | 'jabatan' | 'prodi' | 'divisi'>) => [identityKey(row), row.jabatan.toLowerCase(), (row.divisi ?? '').toLowerCase()].join('|');
+type WorkbookParseOptions = { periodLabel?: string };
 
-export const parseMembershipWorkbook = (buffer: Buffer): { rows: ParsedRow[]; hash: string } => {
+export const parseMembershipWorkbook = (buffer: Buffer, options: WorkbookParseOptions = {}): { rows: ParsedRow[]; hash: string; sourceSheet: string } => {
   if (buffer.length > MAX_BYTES) throw new ApiError('VALIDATION_ERROR', 'Import file exceeds 10 MB.', 400, { file: ['Maximum 10 MB'] });
   if (!buffer.subarray(0, 2).equals(Buffer.from('PK'))) throw new ApiError('UNSUPPORTED_MEDIA_TYPE', 'Only valid XLSX workbooks are supported.', 415);
   const hash = crypto.createHash('sha256').update(buffer).digest('hex');
@@ -34,18 +46,116 @@ export const parseMembershipWorkbook = (buffer: Buffer): { rows: ParsedRow[]; ha
     return REQUIRED_HEADERS.every((header) => headers.includes(header));
   });
   if (validSheets.length !== 1) throw new ApiError('VALIDATION_ERROR', validSheets.length ? 'Workbook contains multiple valid sheets.' : 'Workbook has no valid sheet headers.', 400, { sheet: [validSheets.length ? 'AMBIGUOUS_SHEET' : 'INVALID_HEADER'] });
-  const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[validSheets[0]], { header: 1, blankrows: false, defval: null });
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[validSheets[0]], { header: 1, blankrows: true, defval: null });
   const headers = (matrix[0] as unknown[]).map(normalizeHeader);
   const duplicateHeaders = headers.filter((header, index) => headers.indexOf(header) !== index);
   if (duplicateHeaders.length || headers.some((header) => !REQUIRED_HEADERS.includes(header as never))) throw new ApiError('VALIDATION_ERROR', 'Workbook headers are invalid.', 400, { header: ['INVALID_HEADER'] });
-  const data = matrix.slice(1).filter((row) => (row as unknown[]).some((cell) => text(cell)));
+  const data = matrix.slice(1).flatMap((row, index) => (row as unknown[]).some((cell) => text(cell)) ? [{ row, rowNumber: index + 2 }] : []);
   if (data.length > MAX_ROWS) throw new ApiError('VALIDATION_ERROR', 'Workbook exceeds 10,000 data rows.', 400);
   return {
     hash,
-    rows: data.map((row, index) => {
+    sourceSheet: validSheets[0],
+    rows: data.map(({ row, rowNumber }) => {
       const values = Object.fromEntries(headers.map((header, column) => [header, (row as unknown[])[column]]));
-      return { rowNumber: index + 2, rawValues: values, normalized: { komisariat: text(values.komisariat), nama: text(values.nama), jabatan: text(values.jabatan), divisi: text(values.divisi) || null, prodi: text(values.prodi) } };
+      const commissariatSlug = canonicalCommissariatSlug(values.komisariat);
+      return { rowNumber, rawValues: values, normalized: { komisariat: text(values.komisariat), nama: text(values.nama), jabatan: text(values.jabatan), divisi: normalizeMembershipDivision(values.divisi, { commissariatSlug, periodLabel: options.periodLabel ?? MEMBERSHIP_RELEASE_PERIOD }), prodi: text(values.prodi) } };
     }),
+  };
+};
+
+export type MembershipSourceValidation = {
+  valid: boolean;
+  errors: string[];
+  totalRows: number;
+  expectedTotalRows: number | null;
+  commissariatCounts: Record<string, number>;
+  expectedCommissariatCounts: Record<string, number> | null;
+  divisionCounts: Record<string, Record<string, number>>;
+  noDivisionCount: number;
+  duplicateRows: number[];
+  rejectedRows: Array<{ rowNumber: number; errors: string[]; normalized: ParsedRow['normalized'] }>;
+  normalizationRules: Record<string, { normalized: string; count: number; rowNumbers: number[] }>;
+  noDivisionCounts: Record<string, number>;
+};
+
+export const validateMembershipSource = (
+  parsed: { rows: ParsedRow[]; sourceSheet: string },
+  options: { expectedTotalRows?: number | null; expectedCommissariatCounts?: Record<string, number> | null } = {},
+): MembershipSourceValidation => {
+  const expectedTotalRows = options.expectedTotalRows ?? null;
+  const expectedCommissariatCounts = options.expectedCommissariatCounts ?? null;
+  const errors: string[] = [];
+  const commissariatCounts: Record<string, number> = {};
+  const divisionCounts: Record<string, Record<string, number>> = {};
+  const duplicateRows: number[] = [];
+  const rejectedRows: MembershipSourceValidation['rejectedRows'] = [];
+  const seen = new Map<string, number>();
+  const normalizationRules: MembershipSourceValidation['normalizationRules'] = {};
+  const noDivisionCounts: Record<string, number> = {};
+
+  if (parsed.sourceSheet !== 'Data Final') errors.push(`INVALID_SOURCE_SHEET:${parsed.sourceSheet}`);
+  if (expectedTotalRows !== null && parsed.rows.length !== expectedTotalRows) errors.push(`ROW_COUNT_MISMATCH:${parsed.rows.length}`);
+
+  parsed.rows.forEach((row) => {
+    const rowErrors: string[] = [];
+    const slug = canonicalCommissariatSlug(row.normalized.komisariat);
+    if (!slug) rowErrors.push('INVALID_COMMISSARIAT');
+    if (!row.normalized.nama) rowErrors.push('INVALID_NAME');
+    if (!row.normalized.jabatan) rowErrors.push('INVALID_POSITION');
+    if (!row.normalized.prodi) rowErrors.push('INVALID_STUDY_PROGRAM');
+
+    if (slug) {
+      commissariatCounts[slug] = (commissariatCounts[slug] ?? 0) + 1;
+      divisionCounts[slug] ??= {};
+      const division = row.normalized.divisi ?? '-';
+      divisionCounts[slug][division] = (divisionCounts[slug][division] ?? 0) + 1;
+      if (!row.normalized.divisi) noDivisionCounts[slug] = (noDivisionCounts[slug] ?? 0) + 1;
+    }
+
+    const rawDivision = text(row.rawValues.divisi);
+    if (rawDivision && row.normalized.divisi && rawDivision !== row.normalized.divisi) {
+      const current = normalizationRules[rawDivision] ?? { normalized: row.normalized.divisi, count: 0, rowNumbers: [] };
+      current.count += 1;
+      current.rowNumbers.push(row.rowNumber);
+      normalizationRules[rawDivision] = current;
+    }
+
+    const identity = `${slug ?? row.normalized.komisariat.toLowerCase()}|${row.normalized.nama.toLowerCase()}|${row.normalized.prodi.toLowerCase()}`;
+    const previousRow = seen.get(identity);
+    if (previousRow) {
+      rowErrors.push('DUPLICATE_ROW');
+      duplicateRows.push(row.rowNumber);
+    } else {
+      seen.set(identity, row.rowNumber);
+    }
+
+    if (rowErrors.length) rejectedRows.push({ rowNumber: row.rowNumber, errors: rowErrors, normalized: row.normalized });
+  });
+
+  if (expectedCommissariatCounts) {
+    for (const [slug, expected] of Object.entries(expectedCommissariatCounts)) {
+      if ((commissariatCounts[slug] ?? 0) !== expected) errors.push(`COMMISSARIAT_COUNT_MISMATCH:${slug}:${commissariatCounts[slug] ?? 0}`);
+    }
+    for (const slug of Object.keys(commissariatCounts)) {
+      if (!(slug in expectedCommissariatCounts)) errors.push(`UNEXPECTED_COMMISSARIAT:${slug}`);
+    }
+  }
+
+  if (rejectedRows.length) errors.push(`REJECTED_ROWS:${rejectedRows.length}`);
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    totalRows: parsed.rows.length,
+    expectedTotalRows,
+    commissariatCounts,
+    expectedCommissariatCounts,
+    divisionCounts,
+    noDivisionCount: parsed.rows.filter((row) => row.normalized.divisi === null).length,
+    noDivisionCounts,
+    duplicateRows,
+    rejectedRows,
+    normalizationRules,
   };
 };
 
@@ -56,15 +166,15 @@ const assertImportScope = async (session: CmsSession, commissariatId: string, pe
     prisma.period.findFirst({ where: { id: periodId, commissariatId } }),
   ]);
   if (!commissariat || !period) throw new ApiError('VALIDATION_ERROR', 'Import scope is invalid.', 400, { scope: ['INVALID_SCOPE'] });
-  return commissariat;
+  return { commissariat, period };
 };
 
 export const createMembershipPreview = async (session: CmsSession, buffer: Buffer, sourceFilename: string, commissariatId: string, periodId: string) => {
-  const commissariat = await assertImportScope(session, commissariatId, periodId);
-  const parsed = parseMembershipWorkbook(buffer);
+  const { commissariat, period } = await assertImportScope(session, commissariatId, periodId);
+  const parsed = parseMembershipWorkbook(buffer, { periodLabel: period.label });
   const [divisions, approvedAliases] = await Promise.all([
     prisma.division.findMany({ where: { commissariatId, periodId } }),
-    prisma.membershipImportAlias.findMany({ where: { approved: true, OR: [{ commissariatId }, { periodId }, { commissariatId: null, periodId: null }] } }),
+    prisma.membershipImportAlias.findMany({ where: { approved: true, OR: [{ commissariatId, periodId }, { commissariatId: null, periodId: null }] } }),
   ]);
   const existing = await prisma.membership.findMany({ where: { commissariatId, periodId } });
   const seen = new Set<string>();
@@ -78,7 +188,7 @@ export const createMembershipPreview = async (session: CmsSession, buffer: Buffe
     const divisionAlias = row.normalized.divisi ? approvedAliases.find((alias) => alias.kind === 'DIVISION' && alias.rawValue.toLowerCase() === row.normalized.divisi!.toLowerCase()) : null;
     const division = row.normalized.divisi ? divisions.find((item) => item.name.toLowerCase() === row.normalized.divisi!.toLowerCase() || item.id === divisionAlias?.divisionId) : null;
     if (row.normalized.divisi && !division) errors.push('UNMAPPED_DIVISION');
-    const rowKey = valueKey(row.normalized);
+    const rowKey = identityKey(row.normalized);
     if (seen.has(rowKey)) errors.push('DUPLICATE_IN_FILE');
     seen.add(rowKey);
     const matches = existing.filter((item) => identityKey({ nama: item.name, prodi: item.studyProgram }) === identityKey(row.normalized));
@@ -96,7 +206,7 @@ export const createMembershipPreview = async (session: CmsSession, buffer: Buffe
     return acc;
   }, { newCount: 0, updatedCount: 0, unchangedCount: 0, invalidCount: 0, ambiguousCount: 0, duplicateCount: 0 });
   const preview = await prisma.membershipImportPreview.create({ data: { cmsAccountId: session.cmsAccount.id, commissariatId, periodId, sourceFilename: path.basename(sourceFilename), sourceFileHash: parsed.hash, status: 'PREVIEW_READY', totalRows: results.length, ...counts, expiresAt: new Date(Date.now() + 30 * 60 * 1000), rows: { create: results.map((item) => ({ rowNumber: item.row.rowNumber, rawValues: item.row.rawValues as object, normalizedValues: item.row.normalized as object, classification: item.classification, errorCode: item.errors[0], errorMessage: item.errors.join(', '), matchedMembershipId: item.matched?.id, mappedDivisionId: item.division?.id, baselineUpdatedAt: item.matched?.updatedAt })) } } });
-  return { previewId: preview.id, sourceFileHash: parsed.hash, totalRows: results.length, ...counts, rows: results.map((item) => ({ rowNumber: item.row.rowNumber, classification: item.classification, errors: item.errors, rawValues: item.row.rawValues, normalizedValues: item.row.normalized, matchedMembershipId: item.matched?.id, mappedDivisionId: item.division?.id })) };
+  return { previewId: preview.id, sourceFileHash: parsed.hash, sourceSheet: parsed.sourceSheet, totalRows: results.length, ...counts, rows: results.map((item) => ({ rowNumber: item.row.rowNumber, classification: item.classification, errors: item.errors, rawValues: item.row.rawValues, normalizedValues: item.row.normalized, matchedMembershipId: item.matched?.id, mappedDivisionId: item.division?.id })) };
 };
 
 export const expireMembershipImportPreviews = async (now = new Date()) => {
@@ -110,7 +220,7 @@ export const expireMembershipImportPreviews = async (now = new Date()) => {
 };
 
 export const purgeMembershipImportReports = async (cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)) => {
-  const result = await prisma.membershipImportPreview.deleteMany({ where: { updatedAt: { lt: cutoff }, status: { in: ['EXPIRED', 'FAILED', 'APPROVED'] } } });
+  const result = await prisma.membershipImportPreview.deleteMany({ where: { updatedAt: { lt: cutoff }, status: { in: ['EXPIRED', 'FAILED', 'APPROVED', 'REJECTED', 'COMMITTED', 'SUBMITTED'] } } });
   return result.count;
 };
 
