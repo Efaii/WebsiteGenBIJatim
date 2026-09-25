@@ -171,7 +171,7 @@ const main = async () => {
     ]);
     if ([membershipCount, commissariatCount, periodCount, divisionCount, userCount, cmsAccountCount, cmsAssignmentCount, cmsSessionCount, auditEventCount, membershipImportAliasCount, membershipImportPreviewCount, membershipImportRowCount, programCount, programArtifactCount, programKerjaPhotoCount, programKerjaRevisionCount, newsCount, newsRevisionCount, newsCoverAssetCount, newsSlugAliasCount, faqCount, testimonialCount, contactMessageCount].some((count) => count > 0)) throw new Error(`Target database is not clean: memberships=${membershipCount}, commissariats=${commissariatCount}, periods=${periodCount}, divisions=${divisionCount}, users=${userCount}, cmsAccounts=${cmsAccountCount}, cmsAssignments=${cmsAssignmentCount}, cmsSessions=${cmsSessionCount}, auditEvents=${auditEventCount}, membershipAliases=${membershipImportAliasCount}, membershipPreviews=${membershipImportPreviewCount}, membershipRows=${membershipImportRowCount}, programs=${programCount}, programArtifacts=${programArtifactCount}, programPhotos=${programKerjaPhotoCount}, programRevisions=${programKerjaRevisionCount}, news=${newsCount}, newsRevisions=${newsRevisionCount}, newsCoverAssets=${newsCoverAssetCount}, newsSlugAliases=${newsSlugAliasCount}, faqs=${faqCount}, testimonials=${testimonialCount}, contacts=${contactMessageCount}.`);
 
-    await target.$transaction(async (tx) => {
+    const paths = await target.$transaction(async (tx) => {
       const commissariatIds = new Map<string, string>();
       const periodIds = new Map<string, string>();
       const divisionIds = new Map<string, string>();
@@ -236,17 +236,19 @@ const main = async () => {
           if (actualCount !== expectedCount) throw new Error(`Post-import division count mismatch for ${slug}/${divisionName}: ${actualCount}.`);
         }
       }
+
+      const postImport = {
+        totalMemberships: await tx.membership.count(),
+        activeMemberships: await tx.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
+        publishedMemberships: await tx.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
+        noDivisionMemberships: await tx.membership.count({ where: { divisionId: null } }),
+        perCommissariat: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.membership.count({ where: { commissariat: { slug: item.slug } } })]))),
+        perDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await tx.division.findMany({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } }, select: { name: true, _count: { select: { memberships: true } } }, orderBy: { name: 'asc' } })]))),
+      };
+      const paths = writeReport({ ...reportBase, postImport, status: 'IMPORTED' }, runDir);
+      return paths;
     });
 
-    const postImport = {
-      totalMemberships: await target.membership.count(),
-      activeMemberships: await target.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
-      publishedMemberships: await target.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
-      noDivisionMemberships: await target.membership.count({ where: { divisionId: null } }),
-      perCommissariat: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await target.membership.count({ where: { commissariat: { slug: item.slug } } })]))),
-      perDivision: Object.fromEntries(await Promise.all(MEMBERSHIP_RELEASE_COMMISSARIATS.map(async (item: (typeof MEMBERSHIP_RELEASE_COMMISSARIATS)[number]) => [item.slug, await target.division.findMany({ where: { commissariat: { slug: item.slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } }, select: { name: true, _count: { select: { memberships: true } } }, orderBy: { name: 'asc' } })]))),
-    };
-    const paths = writeReport({ ...reportBase, postImport, status: 'IMPORTED' }, runDir);
     console.log(JSON.stringify({ status: 'IMPORTED', totalRows: validation.totalRows, noDivisionCount: validation.noDivisionCount, report: paths }, null, 2));
   } catch (error) {
     writeReport({ ...reportBase, status: 'FAILED', error: error instanceof Error ? error.message : String(error) }, runDir);
