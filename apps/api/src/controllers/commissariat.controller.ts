@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
-import { isPublicProgram, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
+import { isPublicProgram, orderProgramsDocumentationFirst, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
 import { projectPublicAwardee } from '../domain/public-membership';
 import { MEMBERSHIP_RELEASE_PERIOD } from '../domain/membership-release';
 
@@ -97,7 +97,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
         email: commissariat.email || '',
       },
       memberCount: commissariat.memberCount,
-      proker: commissariat.programKerja.filter((p) => isPublicProgram(p)).map(projectPublicProgram),
+      proker: orderProgramsDocumentationFirst(commissariat.programKerja.filter((p) => isPublicProgram(p))).map(projectPublicProgram),
       // BPH and documents remain outside the Membership release scope.
       bph: [],
       divisions: [],
@@ -121,7 +121,7 @@ export const getAllProgramKerja = async (_req: Request, res: Response) => {
       include: { commissariat: { select: { name: true, slug: true } }, photos: { orderBy: { createdAt: 'asc' } } },
     });
 
-    res.json(programs.filter((proker) => isPublicProgram(proker)).map(projectPublicProgram));
+      res.json(orderProgramsDocumentationFirst(programs.filter((proker) => isPublicProgram(proker))).map(projectPublicProgram));
   } catch (error) {
     console.error('Error fetching program kerja list:', error);
     res.status(500).json({ message: 'Internal server error' });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { isCancelledProgramStatus, isPublicProgram, programDate, programGallery, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
+import { isCancelledProgramStatus, isPublicProgram, orderProgramsDocumentationFirst, programDate, programGallery, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
 
 const undated = programDate(null, null);
 assert.equal(undated.date, 'Periode 2025/2026');
@@ -69,3 +69,7 @@ assert.equal(projectedUndated.date, 'Periode 2025/2026');
 assert.equal(projectedUndated.dateLabel, 'Periode 2025/2026');
 assert.equal(projectedUndated.gallery.length, 15);
 assert.equal(projectedUndated.commissariatSlug, 'test-commissariat');
+
+const documented = { foto1: '/one.webp', foto2: null, foto3: null, foto4: null, foto5: null, foto6: null, photos: [] };
+const undocumented = { foto1: null, foto2: null, foto3: null, foto4: null, foto5: null, foto6: null, photos: [] };
+assert.deepEqual(orderProgramsDocumentationFirst([undocumented, documented]).map((program) => program.foto1), ['/one.webp', null]);
