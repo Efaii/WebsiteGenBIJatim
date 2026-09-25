@@ -3,7 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { readRestoreEvidence, validateRestoreEvidence } from './check-schema-readiness.mjs';
+import { readRestoreEvidence, restoreEvidenceSha256, validateRestoreEvidence } from './check-schema-readiness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const requiredLegacyTables = [
@@ -413,7 +413,8 @@ async function restoreBackup(connection, dumpFile, restoreDatabase) {
   const sourceDifferences = compareRestore(sourceReport, sourceAfter);
   if (sourceDifferences.length) throw new Error(`Source database changed during restore verification: ${sourceDifferences.join('; ')}.`);
   const restoreTtlMs = Number(process.env.RESTORE_EVIDENCE_TTL_MS ?? defaultRestoreEvidenceTtlMs);
-  const evidence = { status: 'verified', verifiedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + (Number.isFinite(restoreTtlMs) && restoreTtlMs > 0 ? restoreTtlMs : defaultRestoreEvidenceTtlMs)).toISOString(), sourceDatabase: connection.database, restoreDatabase, backupSha256: checksum, source: sourceReport, restoredDatabase: restoredReport, sourceAfter };
+  const unsignedEvidence = { status: 'verified', verifiedAt: new Date().toISOString(), expiresAt: new Date(Date.now() + (Number.isFinite(restoreTtlMs) && restoreTtlMs > 0 ? restoreTtlMs : defaultRestoreEvidenceTtlMs)).toISOString(), sourceDatabase: connection.database, restoreDatabase, backupSha256: checksum, source: sourceReport, restoredDatabase: restoredReport, sourceAfter };
+  const evidence = { ...unsignedEvidence, evidenceSha256: restoreEvidenceSha256(unsignedEvidence) };
   await writeRestoreEvidence(evidence);
   console.log(JSON.stringify(evidence, null, 2));
 }
@@ -476,7 +477,7 @@ async function main() {
       const readinessExpiresAt = new Date(Date.now() + (Number.isFinite(readinessTtlMs) && readinessTtlMs > 0 ? readinessTtlMs : defaultReadinessTtlMs)).toISOString();
       const restoreEvidence = await readRestoreEvidence();
       validateRestoreEvidence(restoreEvidence, { database: connection.database });
-      const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt };
+      const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, restoreDatabase: restoreEvidence.restoreDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt, evidenceSha256: restoreEvidence.evidenceSha256 };
       await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: [], migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence, migrationDiscrepancies: report.migrationDiscrepancies, planHash, schemaFingerprint: report.schemaFingerprint, verifiedAt: new Date().toISOString() });
       console.log(JSON.stringify({ schemaReady: true, dataMigrationReady: true, verifiedAt: new Date().toISOString(), planHash }, null, 2));
       return;
@@ -524,7 +525,7 @@ async function main() {
     const readinessExpiresAt = new Date(Date.now() + (Number.isFinite(readinessTtlMs) && readinessTtlMs > 0 ? readinessTtlMs : defaultReadinessTtlMs)).toISOString();
     const restoreEvidence = await readRestoreEvidence();
     validateRestoreEvidence(restoreEvidence, { database: connection.database });
-    const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt };
+    const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, restoreDatabase: restoreEvidence.restoreDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt, evidenceSha256: restoreEvidence.evidenceSha256 };
     await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: actions.map(({ description }) => description), migrationDiscrepancies: verified.migrationDiscrepancies, planHash, schemaFingerprint: verified.schemaFingerprint, migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence });
     console.log(JSON.stringify({ schemaReady: true, dataMigrationReady: true, applied: actions.map(({ description }) => description), verifiedAt: new Date().toISOString(), migrationDiscrepancies: verified.migrationDiscrepancies }, null, 2));
   } catch (error) {

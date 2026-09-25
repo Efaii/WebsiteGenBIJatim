@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, stagingAcceptance, stagingAcceptanceReason, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
-import { assertSchemaReady, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
+import { assertSchemaReady, restoreEvidenceSha256, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
 import { repositorySchemaDiscrepancies } from './legacy-schema-preflight.mjs';
 
 test('parses mysql connection details without exposing the password', () => {
@@ -69,16 +69,24 @@ test('fails closed when schema readiness evidence is absent', async () => {
 
 test('rejects expired or mismatched readiness and restore evidence', () => {
   const now = Date.parse('2026-09-23T00:00:00.000Z');
-  const validReadiness = { status: 'ready', planHash: 'abc', migrationApplied: true, dataMigrationReady: true, schemaApproval: 'SETUJUI SCHEMA MIGRASI', restoreEvidence: { status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-24T00:00:00.000Z' } };
+  const legacyTables = ['auditevent', 'cmsaccount', 'cmsassignment', 'cmssession', 'commissariat', 'contact_messages', 'division', 'faq', 'membership', 'membershipimportalias', 'membershipimportpreview', 'membershipimportrow', 'news', 'newscoverasset', 'newsrevision', 'newsslugalias', 'period', 'program_kerja', 'testimonial', 'user'];
+  const validRestoreUnsigned = { status: 'verified', sourceDatabase: 'db', restoreDatabase: 'genbi_restore_test', backupSha256: 'a'.repeat(64), verifiedAt: '2026-09-22T00:00:00.000Z', expiresAt: '2026-09-24T00:00:00.000Z', source: { database: 'db', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables.map((table) => table.toUpperCase()), programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 }, restoredDatabase: { database: 'genbi_restore_test', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables, programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 }, sourceAfter: { database: 'db', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables, programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 } };
+  const validRestore = { ...validRestoreUnsigned, evidenceSha256: restoreEvidenceSha256(validRestoreUnsigned) };
+  const validReadiness = { status: 'ready', planHash: 'abc', migrationApplied: true, dataMigrationReady: true, schemaApproval: 'SETUJUI SCHEMA MIGRASI', restoreEvidence: { status: validRestore.status, sourceDatabase: validRestore.sourceDatabase, restoreDatabase: validRestore.restoreDatabase, backupSha256: validRestore.backupSha256, verifiedAt: validRestore.verifiedAt, expiresAt: validRestore.expiresAt, evidenceSha256: validRestore.evidenceSha256 } };
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: 'not-a-date' }, { database: 'db', now }), /expired|invalid/);
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'other', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /targets/);
-  assert.throws(() => validateRestoreEvidence({ status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
-  assert.throws(() => validateRestoreEvidence({ status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: 'not-a-date' }, { database: 'db', now }), /expired|invalid/);
-  assert.doesNotThrow(() => validateRestoreEvidence({ status: 'verified', sourceDatabase: 'db', backupSha256: 'a'.repeat(64), expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }));
+  const expiredRestore = { ...validRestoreUnsigned, expiresAt: '2026-09-22T23:59:00.000Z' };
+  assert.throws(() => validateRestoreEvidence({ ...expiredRestore, evidenceSha256: restoreEvidenceSha256(expiredRestore) }, { database: 'db', now }), /expired/);
+  const invalidTimestampRestore = { ...validRestoreUnsigned, verifiedAt: 'not-a-date' };
+  assert.throws(() => validateRestoreEvidence({ ...invalidTimestampRestore, evidenceSha256: restoreEvidenceSha256(invalidTimestampRestore) }, { database: 'db', now }), /timestamp/);
+  assert.doesNotThrow(() => validateRestoreEvidence(validRestore, { database: 'db', now }));
+  const partialRestore = { ...validRestoreUnsigned, source: { ...validRestoreUnsigned.source, tables: undefined } };
+  assert.throws(() => validateRestoreEvidence({ ...partialRestore, evidenceSha256: restoreEvidenceSha256(partialRestore) }, { database: 'db', now }), /partial/);
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: { ...validRestore, backupSha256: 'b'.repeat(64) }, now }), /does not match/);
   assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /does not confirm deployed migration history/);
   assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z', migrationApplied: true, dataMigrationReady: true }, { database: 'db', now }), /missing exact schema approval/);
-  assert.doesNotThrow(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }));
+  assert.doesNotThrow(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: validRestore, now }));
 });
 
 test('reports nullable-date migration discrepancies without auto-modifying legacy columns', () => {
