@@ -80,10 +80,16 @@ export interface CalendarGroup {
     items: EventItem[];
 }
 export interface Awardee {
-    id: number;
+    id: string;
     name: string;
-    major: string;
-    year: string;
+    position: string;
+    studyProgram: string;
+    division: string;
+    commissariat: {
+        slug: string;
+        name: string;
+    };
+    period: string;
 }
 export interface Document {
     id: number;

@@ -42,7 +42,7 @@ interface Awardee {
   id: string | number;
   name: string;
   position?: string;
-  major: string;
+  studyProgram: string;
   division?: string;
   commissariat?: { slug: string; name: string };
   period?: string;
@@ -883,7 +883,7 @@ export default function CommissariatClient({
                                   {awardee.name}
                                 </td>
                                 <td className="p-6 text-slate-600 hidden sm:table-cell">
-                                  {awardee.major}
+                                  {awardee.studyProgram}
                                 </td>
                                 <td className="p-6 text-center">
                                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">

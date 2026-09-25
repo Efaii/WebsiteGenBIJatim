@@ -22,7 +22,7 @@ export const projectPublicAwardee = (membership: PublicMembershipRecord) => ({
   id: membership.id,
   name: membership.name,
   position: membership.position,
-  major: membership.studyProgram,
+  studyProgram: membership.studyProgram,
   division: membership.division?.name ?? '-',
   commissariat: membership.commissariat,
   period: membership.period.label,

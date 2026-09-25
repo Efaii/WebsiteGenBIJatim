@@ -6,7 +6,7 @@ const awardeeSchema = z.object({
   id: z.string(),
   name: z.string(),
   position: z.string(),
-  major: z.string(),
+  studyProgram: z.string(),
   division: z.string(),
   commissariat: z.object({ slug: z.string(), name: z.string() }),
   period: z.string(),

@@ -25,7 +25,7 @@ assert.deepEqual(projectPublicAwardee(record), {
   id: 'membership-1',
   name: 'Alya Callysta Nugraha',
   position: 'Wakil Ketua Divisi',
-  major: 'S1 Sistem Informasi',
+  studyProgram: 'S1 Sistem Informasi',
   division: 'Hubungan Masyarakat',
   commissariat: { slug: 'its', name: 'ITS' },
   period: '2025/2026',
