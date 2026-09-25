@@ -83,6 +83,8 @@ interface LegacyProgram {
   impact: string | null;
   evaluation: string | null;
   photos: string[];
+  legacyPhotos: string[];
+  childPhotos: string[];
   validPhotos: Array<{ filePath: string; fileHash: string }>;
   documentationEvidence: boolean;
 }
@@ -92,6 +94,13 @@ interface SourcePhotoFolder {
   prokerFolder: string;
   files: string[];
 }
+
+type PhotoMatch = {
+  program: SourceProgram | null;
+  type: "EXACT_MATCH" | "UNMATCHED";
+  score: number;
+  reason: string;
+};
 
 interface ProgramPlan {
   source: SourceProgram;
@@ -106,12 +115,15 @@ interface ProgramPlan {
 
 interface PhotoPlan {
   sourceFolder: string;
+  sourcePath: string;
   commissariat: string;
   prokerFolder: string;
   targetProgramIds: string[];
   file: string;
   extension: string;
   bytes: number;
+  sourceSha256: string | null;
+  finalWebpSha256: string | null;
   sha256: string | null;
   destinationWebpPath: string | null;
   destinationWebpPaths: string[];
@@ -134,7 +146,9 @@ const rootFromCwd = () => {
   const cwd = process.cwd();
   const candidates = [
     path.resolve(cwd, "data/proker"),
+    path.resolve(cwd, "../data/proker"),
     path.resolve(cwd, "../../data/proker"),
+    path.resolve(cwd, "../../../data/proker"),
   ];
   return (
     candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0]
@@ -143,17 +157,34 @@ const rootFromCwd = () => {
 
 const args = process.argv.slice(2);
 const hasFlag = (flag: string) => args.includes(flag);
+const cleanArgument = (value: string | undefined) =>
+  value?.trim().replace(/^(?:"([\s\S]*)"|'([\s\S]*)')$/, (_, doubleQuoted, singleQuoted) => doubleQuoted ?? singleQuoted);
 const argument = (name: string) => {
-  const index = args.indexOf(name);
-  return index >= 0 ? args[index + 1] : undefined;
+  const inlineIndex = args.findIndex((value) => value.startsWith(`${name}=`));
+  const exactIndex = args.indexOf(name);
+  const index = inlineIndex >= 0 ? inlineIndex : exactIndex;
+  if (index < 0) return undefined;
+  const first = inlineIndex >= 0 ? args[index].slice(name.length + 1) : args[index + 1];
+  const values = [first];
+  let next = index + (inlineIndex >= 0 ? 1 : 2);
+  while (next < args.length && !args[next].startsWith("--")) values.push(args[next++]);
+  return cleanArgument(values.filter(Boolean).join(" "));
 };
 
 const SOURCE_ROOT = path.resolve(argument("--source-dir") || rootFromCwd());
 const EXCEL_ROOT = path.join(SOURCE_ROOT, "Data Program Kerja Updated");
 const PHOTO_ROOT = path.join(SOURCE_ROOT, "Dokumentasi Proker");
-const PROJECT_ROOT = fs.existsSync(path.join(SOURCE_ROOT, "../../apps/web"))
-  ? path.resolve(SOURCE_ROOT, "../..")
-  : path.resolve(SOURCE_ROOT, "../../..");
+const findProjectRoot = (sourceRoot: string) => {
+  let current = path.resolve(sourceRoot);
+  for (let depth = 0; depth < 6; depth += 1) {
+    if (fs.existsSync(path.join(current, "apps/web")) && fs.existsSync(path.join(current, "apps/api"))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error(`Unable to locate monorepo root from source directory: ${sourceRoot}`);
+};
+const PROJECT_ROOT = findProjectRoot(SOURCE_ROOT);
 const PUBLIC_ROOT = path.join(PROJECT_ROOT, "apps/web/public");
 const REPORT_PATH = path.resolve(
   argument("--report") ||
@@ -165,6 +196,22 @@ const DATA_APPROVAL = "SETUJUI DATA MIGRASI";
 const SCHEMA_APPROVAL = "SETUJUI SCHEMA MIGRASI";
 const preparedWebpBuffers = new Map<string, Buffer>();
 
+const canonicalize = (value: unknown): unknown => Array.isArray(value)
+  ? value.map(canonicalize)
+  : value && typeof value === "object"
+    ? Object.fromEntries(
+        Object.keys(value as Record<string, unknown>)
+          .sort()
+          .map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]),
+      )
+    : value;
+
+const fingerprint = (value: unknown) =>
+  crypto
+    .createHash("sha256")
+    .update(JSON.stringify(canonicalize(value)))
+    .digest("hex");
+
 type PhotoWork = {
   folder: SourcePhotoFolder;
   file: string;
@@ -174,6 +221,7 @@ type PhotoWork = {
   validTargets: ProgramPlan[];
   hasCancelledTarget: boolean;
   hasReviewTarget: boolean;
+  mappingReasons: string[];
 };
 
 const normalizeText = (value: unknown) =>
@@ -242,6 +290,14 @@ const clean = (value: unknown) =>
     : value == null
       ? ""
       : String(value).trim();
+
+const isPlaceholder = (value: unknown) =>
+  ["", "-", "—", "–", "n/a", "na", "null"].includes(
+    clean(value).toLowerCase(),
+  );
+
+const relativeProjectPath = (filePath: string) =>
+  path.relative(PROJECT_ROOT, filePath).replace(/\\/g, "/");
 
 const firstNonEmpty = (row: Record<string, unknown>, keys: string[]) => {
   for (const key of keys) {
@@ -423,6 +479,7 @@ const photoActionFor = (
 export const reconciliationRules = {
   normalizeCommissariat: commissariatKey,
   normalizeDivision,
+  isPlaceholder,
   sameProgramTitle,
   statusToExecution,
   statusFromExcludedSheet,
@@ -828,6 +885,34 @@ const PHOTO_ALIASES: PhotoAlias[] = [
   },
 ];
 
+const sourceRootLabel = () => {
+  const relative = path.relative(PROJECT_ROOT, SOURCE_ROOT).replace(/\\/g, "/");
+  return relative || ".";
+};
+
+const sourceIdentityKey = (source: SourceProgram) =>
+  `${commissariatKey(source.commissariat)}\0${normalizeText(source.title)}\0${normalizeDivision(source.division)}`;
+
+const markSourceCollisions = (plans: ProgramPlan[]) => {
+  const groups = new Map<string, ProgramPlan[]>();
+  for (const planItem of plans) {
+    if (planItem.source.sourceFile === "-") continue;
+    const key = sourceIdentityKey(planItem.source);
+    const group = groups.get(key) ?? [];
+    group.push(planItem);
+    groups.set(key, group);
+  }
+  for (const [key, group] of groups) {
+    if (group.length < 2) continue;
+    for (const planItem of group) {
+      planItem.matchType = "CONFLICT";
+      planItem.action = "REVIEW";
+      planItem.programId = null;
+      planItem.reason = `Duplicate source identity collision; ${group.length} rows share ${key.replace(/\0/g, " / ")}.`;
+    }
+  }
+};
+
 const findPhotoAlias = (folder: SourcePhotoFolder) =>
   PHOTO_ALIASES.find(
     (alias) =>
@@ -840,40 +925,53 @@ const readSourcePrograms = (): SourceProgram[] => {
   if (!fs.existsSync(EXCEL_ROOT))
     throw new Error(`Excel source directory not found: ${EXCEL_ROOT}`);
   const programs: SourceProgram[] = [];
-  for (const fileName of fs
+  const workbookFiles = fs
     .readdirSync(EXCEL_ROOT)
     .filter((name) => /\.xlsx?$/i.test(name))
-    .sort()) {
+    .sort();
+  if (!workbookFiles.length) throw new Error(`No normalized Excel workbooks found: ${EXCEL_ROOT}`);
+  for (const fileName of workbookFiles) {
     const workbook = xlsx.readFile(path.join(EXCEL_ROOT, fileName));
     const defaultCommissariat = fileName
       .replace(/_.*$/, "")
       .replace(/_/g, " ")
       .trim();
     const worksheet = workbook.Sheets.proker;
+    if (!worksheet) throw new Error(`Workbook ${fileName} is missing the required proker sheet.`);
+    const invalidRows: number[] = [];
     const appendRows = (
       rows: Record<string, unknown>[],
       sourceExcluded = false,
     ) =>
       rows.forEach((row, index) => {
-        const title = clean(
+        const rawTitle = clean(
           row.title ||
             row["Nama Proker"] ||
             row.Proker ||
             row["Program Kerja"] ||
             row["Nama/Status"],
         );
+        if (isPlaceholder(rawTitle)) return;
+        const title = rawTitle;
         const commissariat =
           clean(row.commissariat || row.komisariat || row.Komisariat) ||
           defaultCommissariat;
-        if (!title || !commissariat) return;
+        const hasAnyValue = Object.values(row).some((value) => clean(value) !== "");
+        if (!title || !commissariat) {
+          if (hasAnyValue) invalidRows.push(index + 2);
+          return;
+        }
+        const programKe = Number(row.programKe || row.program_ke || row.no || index + 1);
+        if (!Number.isInteger(programKe) || programKe < 1) {
+          invalidRows.push(index + 2);
+          return;
+        }
         programs.push({
           sourceFile: fileName,
           sourceRow: index + 2,
           commissariat,
           division: clean(row.division || row.Divisi),
-          programKe: Number(
-            row.programKe || row.program_ke || row.no || index + 1,
-          ),
+          programKe,
           title,
           slug: clean(row.slug),
           status: firstValue(row, [
@@ -989,6 +1087,9 @@ const readSourcePrograms = (): SourceProgram[] => {
         }
       }
     }
+    if (invalidRows.length) {
+      throw new Error(`Workbook ${fileName} contains invalid non-empty rows: ${invalidRows.join(", ")}.`);
+    }
   }
   return programs;
 };
@@ -998,7 +1099,8 @@ const readPhotoFolders = (): SourcePhotoFolder[] => {
   const folders: SourcePhotoFolder[] = [];
   for (const commissariat of fs
     .readdirSync(PHOTO_ROOT, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())) {
+    .filter((entry) => entry.isDirectory())
+    .sort((a, b) => a.name.localeCompare(b.name))) {
     const commissariatPath = path.join(PHOTO_ROOT, commissariat.name);
     for (const proker of fs
       .readdirSync(commissariatPath, { withFileTypes: true })
@@ -1022,7 +1124,11 @@ const readPhotoFolders = (): SourcePhotoFolder[] => {
       });
     }
   }
-  return folders;
+  return folders.sort((a, b) =>
+    `${a.commissariatFolder}\0${a.prokerFolder}`.localeCompare(
+      `${b.commissariatFolder}\0${b.prokerFolder}`,
+    ),
+  );
 };
 
 const readLegacyDatabase = async () => {
@@ -1073,7 +1179,12 @@ const readLegacyDatabase = async () => {
       values.push(String(photo.filePath));
       childPhotos.set(photo.programKerjaId, values);
     }
-    result.rows = rows.map((row) => ({
+    result.rows = rows.map((row) => {
+      const legacyPhotos = [row.foto1, row.foto2, row.foto3, row.foto4, row.foto5, row.foto6]
+        .filter(Boolean)
+        .map(String);
+      const childPhotosForRow = childPhotos.get(String(row.id)) ?? [];
+      return {
       id: String(row.id),
       commissariatId: String(row.commissariatId ?? ""),
       commissariat: String(row.commissariat ?? ""),
@@ -1088,16 +1199,14 @@ const readLegacyDatabase = async () => {
       kpi: row.kpiTukTarget == null ? null : String(row.kpiTukTarget),
       impact: row.dampak == null ? null : String(row.dampak),
       evaluation: row.evaluasi == null ? null : String(row.evaluasi),
-      photos: [row.foto1, row.foto2, row.foto3, row.foto4, row.foto5, row.foto6]
-        .filter(Boolean)
-        .map(String)
-        .concat(childPhotos.get(String(row.id)) ?? []),
+      photos: legacyPhotos.concat(childPhotosForRow),
+      legacyPhotos,
+      childPhotos: childPhotosForRow,
       validPhotos: [],
       documentationEvidence:
-        [row.foto1, row.foto2, row.foto3, row.foto4, row.foto5, row.foto6].some(
-          Boolean,
-        ) || (childPhotos.get(String(row.id)) ?? []).length > 0,
-    }));
+        legacyPhotos.length > 0 || childPhotosForRow.length > 0,
+      };
+    });
     result.foreignKeys = await prisma.$queryRawUnsafe(
       "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME,REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME IS NOT NULL AND TABLE_NAME='program_kerja'",
     );
@@ -1127,7 +1236,7 @@ const readLegacyDatabase = async () => {
 const chooseSourcePrograms = (
   folder: SourcePhotoFolder,
   programs: SourceProgram[],
-) => {
+): PhotoMatch[] => {
   const alias = findPhotoAlias(folder);
   if (alias) {
     return alias.titles.map((target) => {
@@ -1144,6 +1253,9 @@ const chooseSourcePrograms = (
         program: program ?? null,
         type: program ? ("EXACT_MATCH" as const) : ("UNMATCHED" as const),
         score: program ? 1 : 0,
+        reason: program
+          ? `PHOTO_ALIAS:${alias.folder}->${target.title}`
+          : `PHOTO_ALIAS_UNMATCHED:${alias.folder}->${target.title}`,
       };
     });
   }
@@ -1163,6 +1275,7 @@ const chooseSourcePrograms = (
       program,
       type: "EXACT_MATCH" as const,
       score: 1,
+      reason: `COLLABORATION:${program.collaborationGroup}`,
     }));
   const exact = candidates.filter((program) =>
     sameProgramTitle(program.title, folder.prokerFolder),
@@ -1172,8 +1285,9 @@ const chooseSourcePrograms = (
       program,
       type: "EXACT_MATCH" as const,
       score: 1,
+      reason: "TITLE_EXACT",
     }));
-  return [{ program: null, type: "UNMATCHED" as const, score: 0 }];
+  return [{ program: null, type: "UNMATCHED" as const, score: 0, reason: "UNMATCHED" }];
 };
 
 const matchPrograms = (
@@ -1192,6 +1306,7 @@ const matchPrograms = (
       ),
     );
   }
+  const claimedLegacyIds = new Set<string>();
   return sources.map((source) => {
     const sourceComm = commissariatKey(source.commissariat);
     const sourceDivision = normalizeDivision(source.division);
@@ -1203,7 +1318,11 @@ const matchPrograms = (
             commissariatKey(row.commissariat) === sourceComm,
         )
       : undefined;
+    if (exactId && claimedLegacyIds.has(exactId.id)) {
+      return plan(source, "CONFLICT", null, 1, "Explicit database identifier is already claimed by another source row.");
+    }
     if (exactId) {
+      claimedLegacyIds.add(exactId.id);
       return plan(
         source,
         "EXACT_MATCH",
@@ -1230,8 +1349,12 @@ const matchPrograms = (
     const sameIdentity = exactTitle.filter(
       (row) => normalizeDivision(row.division) === sourceDivision,
     );
+    if (sameIdentity.length === 1 && claimedLegacyIds.has(sameIdentity[0].id)) {
+      return plan(source, "CONFLICT", null, 0.98, "The only exact legacy identity match is already claimed by another source row.");
+    }
     if (sameIdentity.length === 1) {
       const identity = sameIdentity[0];
+      claimedLegacyIds.add(identity.id);
       const dateReason =
         source.date && identity.date && source.date !== identity.date
           ? "Commissariat, normalized title, and division match; date is updated from Excel."
@@ -1275,6 +1398,10 @@ const matchPrograms = (
       best.divisionScore >= 0.55 &&
       best.score >= 0.68
     ) {
+      if (claimedLegacyIds.has(best.row.id)) {
+        return plan(source, "CONFLICT", null, best.score, "The best fuzzy legacy match is already claimed by another source row.");
+      }
+      claimedLegacyIds.add(best.row.id);
       return plan(
         source,
         "POSSIBLE_MATCH",
@@ -1395,8 +1522,13 @@ const hashFile = async (filePath: string) => {
   return hash.digest("hex");
 };
 
+const hashFileSync = (filePath: string) =>
+  crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+
 const convertToWebp = async (filePath: string) =>
   sharp(filePath).rotate().webp().toBuffer();
+
+const sourcePhotoHash = async (filePath: string) => hashFile(filePath);
 
 const mapConcurrent = async <T, R>(
   values: T[],
@@ -1447,7 +1579,7 @@ const legacyHashMap = async (legacy: LegacyProgram[]) => {
 const populateLegacyPhotoHashes = async (legacy: LegacyProgram[]) => {
   await mapConcurrent(legacy, 8, async (row) => {
     const validPhotos: Array<{ filePath: string; fileHash: string }> = [];
-    for (const storedPath of row.photos) {
+    for (const storedPath of [...row.legacyPhotos, ...row.childPhotos]) {
       const diskPath = path.join(PUBLIC_ROOT, storedPath.replace(/^\/+/, ""));
       if (!fs.existsSync(diskPath)) continue;
       try {
@@ -1475,6 +1607,35 @@ const buildPhotoPlans = async (
   const existingHashes = existing.hashes;
   const plannedHashes = new Set<string>();
 
+  for (const target of programPlans) {
+    if (target.action === "REVIEW" || target.matchType === "CONFLICT" || target.matchType === "POSSIBLE_MATCH" || !target.legacy?.legacyPhotos.length || !target.programId) continue;
+    const childPhotoPaths = new Set(target.legacy.childPhotos);
+    for (const storedPath of target.legacy.legacyPhotos) {
+      if (childPhotoPaths.has(storedPath)) continue;
+      const diskPath = path.join(PUBLIC_ROOT, storedPath.replace(/^\/+/, ""));
+      if (!fs.existsSync(diskPath)) continue;
+      const sourceSha256 = hashFileSync(diskPath);
+      plans.push({
+        sourceFolder: `legacy/${target.programId}`,
+        sourcePath: storedPath,
+        commissariat: target.legacy.commissariat,
+        prokerFolder: target.source.title,
+        targetProgramIds: [target.programId],
+        file: path.basename(storedPath),
+        extension: path.extname(storedPath).toLowerCase(),
+        bytes: fs.statSync(diskPath).size,
+        sourceSha256,
+        finalWebpSha256: null,
+        sha256: null,
+        destinationWebpPath: storedPath,
+        destinationWebpPaths: [storedPath],
+        targetActions: [{ programId: target.programId, action: "LEGACY_PHOTO_REGISTRATION", destinationWebpPath: storedPath }],
+        action: "LEGACY_PHOTO_REGISTRATION",
+        reason: `Existing legacy photo field registered as a child photo; source file was not moved or converted. Target: ${target.programId}.`,
+      });
+    }
+  }
+
   const buildSkippedPlan = (
     folder: SourcePhotoFolder,
     file: string,
@@ -1485,12 +1646,15 @@ const buildPhotoPlans = async (
     reason: string,
   ): PhotoPlan => ({
     sourceFolder: relative,
+    sourcePath: relative,
     commissariat: folder.commissariatFolder,
     prokerFolder: folder.prokerFolder,
     targetProgramIds: [],
     file: path.basename(file),
     extension,
     bytes,
+    sourceSha256: (() => { try { return hashFileSync(file); } catch { return null; } })(),
+    finalWebpSha256: null,
     sha256: null,
     destinationWebpPath: null,
     destinationWebpPaths: [],
@@ -1504,7 +1668,7 @@ const buildPhotoPlans = async (
     const sourceMatches = chooseSourcePrograms(folder, sources);
     for (const file of folder.files) {
       const extension = path.extname(file).toLowerCase();
-      const relative = path.relative(PROJECT_ROOT, file);
+      const relative = relativeProjectPath(file);
       const matchedSourcePrograms = sourceMatches
         .map((m) => m.program)
         .filter((p): p is SourceProgram => !!p);
@@ -1570,26 +1734,29 @@ const buildPhotoPlans = async (
         validTargets,
         hasCancelledTarget,
         hasReviewTarget,
+        mappingReasons: sourceMatches.map((match) => match.reason),
       });
     }
   }
-  const converted = await mapConcurrent(work, 4, async (item) => {
+  const prepared = await mapConcurrent(work, 4, async (item) => {
     try {
+      const sourceSha256 = await sourcePhotoHash(item.file);
       const webp = await convertToWebp(item.file);
-      const sha256 = crypto.createHash("sha256").update(webp).digest("hex");
-      preparedWebpBuffers.set(item.relative, webp);
-      return { item, sha256, error: null as string | null };
+      const finalWebpSha256 = crypto.createHash("sha256").update(webp).digest("hex");
+      if (hasFlag("--apply")) preparedWebpBuffers.set(item.relative, webp);
+      return { item, sourceSha256, finalWebpSha256, error: null as string | null };
     } catch (error) {
       return {
         item,
-        sha256: null,
+        sourceSha256: null,
+        finalWebpSha256: null,
         error: error instanceof Error ? error.message : String(error),
       };
     }
   });
-  for (const result of converted) {
-    const { item, sha256, error } = result;
-    if (!sha256) {
+  for (const result of prepared) {
+    const { item, sourceSha256, finalWebpSha256, error } = result;
+    if (!sourceSha256 || (hasFlag("--apply") && !finalWebpSha256)) {
       plans.push(
         buildSkippedPlan(
           item.folder,
@@ -1598,7 +1765,7 @@ const buildPhotoPlans = async (
           item.extension,
           item.sourceBytes,
           "ORPHAN",
-          error ?? "WebP conversion failed.",
+          error ?? "Source photo hashing failed, or apply-phase WebP conversion failed.",
         ),
       );
       continue;
@@ -1610,13 +1777,15 @@ const buildPhotoPlans = async (
     for (const target of item.validTargets) {
       const id = target.programId!;
       const destinationWebpPath =
-        (target.legacy && existing.paths.get(`${id}:${sha256}`)) ||
-        `/uploads/proker/${target.legacy?.commissariatSlug || commissariatKey(target.source.commissariat)}/${id}/${sha256}.webp`;
+        finalWebpSha256 && target.legacy && existing.paths.get(`${id}:${finalWebpSha256}`)
+          ? existing.paths.get(`${id}:${finalWebpSha256}`)!
+          : finalWebpSha256
+            ? `/uploads/proker/${target.legacy?.commissariatSlug || commissariatKey(target.source.commissariat)}/${id}/${finalWebpSha256}.webp`
+            : null;
       const duplicate =
-        (target.legacy && existingHashes.get(sha256)?.has(target.legacy.id)) ||
-        plannedHashes.has(`${id}:${sha256}`);
+        Boolean(finalWebpSha256 && ((target.legacy && existingHashes.get(finalWebpSha256)?.has(target.legacy.id)) || plannedHashes.has(`${id}:${finalWebpSha256}`)));
       const action = photoActionFor(target.action, Boolean(duplicate), true);
-      plannedHashes.add(`${id}:${sha256}`);
+      if (finalWebpSha256) plannedHashes.add(`${id}:${finalWebpSha256}`);
       targetActions.push({ programId: id, action, destinationWebpPath });
     }
     const distinctActions = [
@@ -1626,13 +1795,16 @@ const buildPhotoPlans = async (
       distinctActions.length === 1 ? distinctActions[0] : "NEW_WEBP";
     plans.push({
       sourceFolder: item.relative,
+      sourcePath: item.relative,
       commissariat: item.folder.commissariatFolder,
       prokerFolder: item.folder.prokerFolder,
       targetProgramIds: targetActions.map((target) => target.programId),
       file: path.basename(item.file),
       extension: item.extension,
       bytes: item.sourceBytes,
-      sha256,
+      sourceSha256,
+      finalWebpSha256,
+      sha256: finalWebpSha256,
       destinationWebpPath:
         targetActions.length === 1
           ? targetActions[0].destinationWebpPath
@@ -1642,7 +1814,7 @@ const buildPhotoPlans = async (
         .filter((value): value is string => !!value),
       targetActions,
       action: overallAction,
-      reason: `${distinctActions.length === 1 && distinctActions[0] === "DUPLICATE" ? "Final WebP SHA-256 already exists" : "Final WebP bytes hashed in memory only; no source or destination file was written"}. Confirmed targets: ${targetLabels}. Per-target actions: ${targetActions.map((target) => `${target.programId}=${target.action}`).join(", ")}.`,
+      reason: `${distinctActions.length === 1 && distinctActions[0] === "DUPLICATE" ? "Final WebP SHA-256 already exists" : hasFlag("--apply") ? "Final WebP bytes encoded and hashed in memory; destination write is part of the approved apply phase" : "Preview does not convert source images; final WebP conversion and hash are deferred until apply"}. Mapping: ${item.mappingReasons.join("; ") || "UNMATCHED"}. Confirmed targets: ${targetLabels}. Per-target actions: ${targetActions.map((target) => `${target.programId}=${target.action}`).join(", ")}.`,
     });
   }
   return plans;
@@ -1707,19 +1879,21 @@ const renderReport = (
   folders: SourcePhotoFolder[],
   plans: ProgramPlan[],
   photos: PhotoPlan[],
+  inputFingerprint: string,
 ) => {
   const summary = summarize(plans, photos);
   const lines: string[] = [];
   lines.push("# Dry-Run Rekonsiliasi Program Kerja dan Dokumentasi Foto");
   lines.push("");
   lines.push(
-    "> Laporan ini read-only. Tidak ada INSERT, UPDATE, DELETE, pemindahan file, overwrite foto, atau perubahan schema production. Untuk menghitung SHA-256 final WebP, gambar aktif yang memiliki target valid hanya di-encode di memory; tidak ada hasil conversion yang ditulis ke disk.",
+    hasFlag("--apply")
+      ? "> Laporan ini dibuat setelah apply yang telah melewati approval gate. WebP di-encode ke memory lalu ditulis secara eksklusif ke destination yang direncanakan; tidak ada source file yang dipindah atau di-overwrite."
+      : "> Laporan ini adalah read-only preview. Tidak ada INSERT, UPDATE, DELETE, pemindahan file, overwrite foto, perubahan schema production, atau penulisan hasil conversion. Untuk evidence SHA-256 final WebP, gambar hanya di-encode di memory; tidak ada hasil conversion yang ditulis ke disk.",
   );
   lines.push("");
-  lines.push(`- **Dibuat:** ${new Date().toISOString()}`);
-  lines.push(`- **Source root:** \`${sourceRoot}\``);
-  lines.push(`- **Excel root:** \`${EXCEL_ROOT}\``);
-  lines.push(`- **Dokumentasi root:** \`${PHOTO_ROOT}\``);
+  lines.push(`- **Source root:** \`${sourceRootLabel()}\``);
+  lines.push(`- **Excel root:** \`${path.relative(PROJECT_ROOT, EXCEL_ROOT).replace(/\\/g, "/")}\``);
+  lines.push(`- **Dokumentasi root:** \`${path.relative(PROJECT_ROOT, PHOTO_ROOT).replace(/\\/g, "/")}\``);
   lines.push(
     `- **Database read status:** ${database.connected ? "CONNECTED" : "BLOCKED/OFFLINE"}`,
   );
@@ -1728,6 +1902,7 @@ const renderReport = (
   lines.push(`- **Record Excel terbaru:** ${sources.length}`);
   lines.push(`- **Folder proker foto:** ${folders.length}`);
   lines.push(`- **File foto sumber:** ${photos.length}`);
+  lines.push(`- **Report input fingerprint:** \`${inputFingerprint}\``);
   lines.push("");
   lines.push("## Hasil Matching Program");
   lines.push("");
@@ -1788,11 +1963,8 @@ const renderReport = (
   );
   lines.push("|---|---|---:|---|---|---|---|");
   for (const folder of folders) {
-    const rows = photos.filter((photo) =>
-      photo.sourceFolder.startsWith(
-        `${path.relative(PROJECT_ROOT, path.join(PHOTO_ROOT, folder.commissariatFolder, folder.prokerFolder))}${path.sep}`,
-      ),
-    );
+    const folderPrefix = `${relativeProjectPath(path.join(PHOTO_ROOT, folder.commissariatFolder, folder.prokerFolder))}/`;
+    const rows = photos.filter((photo) => photo.sourceFolder.startsWith(folderPrefix));
     lines.push(
       `| ${markdown(folder.commissariatFolder)} | ${markdown(folder.prokerFolder)} | ${folder.files.length} | ${markdown([...new Set(rows.flatMap((row) => row.targetProgramIds))].join(", ") || "-")} | ${markdown([...new Set(rows.flatMap((row) => row.destinationWebpPaths))].join(", ") || "-")} | ${markdown([...new Set(rows.flatMap((row) => row.targetActions.map((target) => `${target.programId}=${target.action}`)).concat(rows.filter((row) => !row.targetActions.length).map((row) => row.action)))].join(", ") || "-")} | ${markdown([...new Set(rows.map((row) => row.reason))].join("; ") || "-")} |`,
     );
@@ -1801,12 +1973,12 @@ const renderReport = (
   lines.push("## Detail File Foto dan SHA-256");
   lines.push("");
   lines.push(
-    "| Source path | Destination WebP | SHA-256 final WebP | Target program IDs | Bytes | Action | Reason |",
+    "| Source path | Source SHA-256 | Destination WebP | Final WebP SHA-256 | Target program IDs | Bytes | Action | Reason |",
   );
-  lines.push("|---|---|---|---|---:|---|---|");
+  lines.push("|---|---|---|---|---:|---|---|---|");
   for (const photo of photos)
     lines.push(
-      `| \`${markdown(photo.sourceFolder)}\` | \`${markdown(photo.destinationWebpPaths.join(", ") || photo.destinationWebpPath || "-")}\` | \`${photo.sha256 ?? "-"}\` | ${markdown(photo.targetProgramIds.join(", ") || "-")} | ${photo.bytes} | ${markdown(photo.targetActions.map((target) => `${target.programId}=${target.action}`).join(", ") || photo.action)} | ${markdown(photo.reason)} |`,
+      `| \`${markdown(photo.sourcePath)}\` | \`${photo.sourceSha256 ?? "-"}\` | \`${markdown(photo.destinationWebpPaths.join(", ") || photo.destinationWebpPath || "-")}\` | \`${photo.finalWebpSha256 ?? "-"}\` | ${markdown(photo.targetProgramIds.join(", ") || "-")} | ${photo.bytes} | ${markdown(photo.targetActions.map((target) => `${target.programId}=${target.action}`).join(", ") || photo.action)} | ${markdown(photo.reason)} |`,
     );
   lines.push("");
   lines.push("## Database dan Schema yang Diaudit");
@@ -1837,7 +2009,7 @@ const renderReport = (
     "5. Foto disimpan sebagai child records berbasis SHA-256; kolom foto lama tetap dipertahankan. Foto proker baru berstatus pending insert sampai ID program dibuat.",
   );
   lines.push(
-    "6. Tidak ada operasi mass delete, truncate, overwrite, pemindahan file sumber, atau penulisan hasil conversion. Encoding WebP hanya dilakukan di memory untuk evidence hash.",
+    "6. Preview tidak melakukan mass delete, truncate, overwrite, pemindahan file sumber, staging, atau penulisan hasil conversion. Encoding WebP hanya dilakukan di memory untuk evidence hash; apply tetap memerlukan approval terpisah.",
   );
   lines.push(
     "7. Tidak ada operasi data dalam mode preview. Data migration memerlukan approval terpisah `SETUJUI DATA MIGRASI` setelah report direview; baris REVIEW tetap memblokir apply.",
@@ -1986,6 +2158,7 @@ const main = async () => {
   const database = await readLegacyDatabase();
   if (database.connected) await populateLegacyPhotoHashes(database.rows);
   const plans = matchPrograms(sources, database.rows, database.connected);
+  markSourceCollisions(plans);
   const matchedLegacyIds = new Set(
     plans
       .filter((item) => item.legacy)
@@ -2034,10 +2207,21 @@ const main = async () => {
   const photos = await buildPhotoPlans(
     folders,
     sources,
-    plans.filter((item) => item.source.sourceFile !== "-"),
+    plans,
     database.rows,
     database.connected,
   );
+  const inputFingerprint = fingerprint({
+    sources,
+    folders: folders.map((folder) => ({ ...folder, files: folder.files.map((file) => path.relative(PROJECT_ROOT, file).replace(/\\/g, "/")) })),
+    database: {
+      connected: database.connected,
+      tables: database.tables,
+      columns: database.columns,
+      rows: database.rows.map((row) => ({ id: row.id, programKe: row.programKe, title: row.title, division: row.division, date: row.date, status: row.status, photos: row.photos })),
+    },
+    photos: photos.map((photo) => ({ sourcePath: photo.sourcePath, bytes: photo.bytes, sourceSha256: photo.sourceSha256 })),
+  });
   if (hasFlag("--apply")) {
     const backup = argument("--backup");
     if (!backup) throw new Error("Data migration requires --backup <verified-dump-file>.");
@@ -2051,6 +2235,7 @@ const main = async () => {
     folders,
     plans,
     photos,
+    inputFingerprint,
   );
   fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
   fs.writeFileSync(REPORT_PATH, report, "utf8");
@@ -2058,11 +2243,16 @@ const main = async () => {
     JSON_REPORT_PATH,
     JSON.stringify(
       {
-        generatedAt: new Date().toISOString(),
-        sourceRoot: SOURCE_ROOT,
+        reportVersion: 2,
+        deterministic: true,
+        inputFingerprint,
+        sourceRoot: sourceRootLabel(),
         database,
         sources,
-        folders,
+        folders: folders.map((folder) => ({
+          ...folder,
+          files: folder.files.map((file) => path.relative(PROJECT_ROOT, file).replace(/\\/g, "/")),
+        })),
         programs: plans,
         photos,
         summary: summarize(plans, photos),
