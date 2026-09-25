@@ -18,10 +18,17 @@ const SOURCE_DATABASE = 'genbi_jatim';
 const TARGET_DATABASE = 'genbi_jatim_initial_production';
 const SCHEMA_APPROVAL = 'SETUJUI SCHEMA MIGRASI';
 const DATA_APPROVAL = 'SETUJUI DATA MIGRASI';
+const PROGRAM_PERIOD_APPROVAL = 'SETUJUI PROGRAM KERJA 2025/2026';
 const PROGRAM_TOTAL = 153;
 const CHILD_PHOTO_TOTAL = 431;
 const PERIOD_LABEL = MEMBERSHIP_RELEASE_PERIOD;
 const CANONICAL_COMMISSARIAT_SLUGS = new Set(Object.keys(MEMBERSHIP_EXPECTED_COUNTS));
+const REQUIRED_LEGACY_TABLES = [
+  'auditevent', 'cmsaccount', 'cmsassignment', 'cmssession', 'commissariat', 'contact_messages',
+  'division', 'faq', 'membership', 'membershipimportalias', 'membershipimportpreview',
+  'membershipimportrow', 'news', 'newscoverasset', 'newsrevision', 'newsslugalias', 'period',
+  'program_kerja', 'testimonial', 'user',
+];
 const REPORT_DIR = process.env.INITIAL_PRODUCTION_REPORT_DIR
   ? path.resolve(process.env.INITIAL_PRODUCTION_REPORT_DIR)
   : path.resolve(__dirname, '../../../../artifacts/initial-production');
@@ -35,10 +42,39 @@ const databaseIdentity = (value: string) => {
 const jsonValue = (value: Prisma.JsonValue | null): Prisma.InputJsonValue | Prisma.JsonNullValueInput =>
   value === null ? Prisma.JsonNull : value as Prisma.InputJsonValue;
 
+const canonicalize = (value: unknown): unknown => Array.isArray(value)
+  ? value.map(canonicalize)
+  : value && typeof value === 'object'
+    ? Object.fromEntries(Object.keys(value as Record<string, unknown>).sort().map((key) => [key, canonicalize((value as Record<string, unknown>)[key])]))
+    : value;
+
+const restoreEvidenceSha256 = (evidence: Record<string, unknown>) => {
+  const { evidenceSha256: _ignored, ...unsignedEvidence } = evidence;
+  return crypto.createHash('sha256').update(JSON.stringify(canonicalize(unsignedEvidence))).digest('hex');
+};
+
 const assertValidRestoreEvidence = (evidence: Record<string, unknown>, target: string) => {
   const expiry = typeof evidence.expiresAt === 'string' ? Date.parse(evidence.expiresAt) : Number.NaN;
-  if (evidence.status !== 'verified' || evidence.sourceDatabase !== target || typeof evidence.backupSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(evidence.backupSha256) || !Number.isFinite(expiry) || expiry <= Date.now()) {
+  const verifiedAt = typeof evidence.verifiedAt === 'string' ? Date.parse(evidence.verifiedAt) : Number.NaN;
+  const reports = [evidence.source, evidence.restoredDatabase, evidence.sourceAfter] as Array<Record<string, unknown> | undefined>;
+  const hasRequiredInventory = (report: Record<string, unknown> | undefined) => {
+    const tables = report?.requiredLegacyTables;
+    const missing = report?.missingRequiredTables;
+    const inventory = report?.tables;
+    const required = Array.isArray(tables) ? tables.map((table) => String(table).toLowerCase()) : [];
+    const actual = Array.isArray(inventory) ? new Set(inventory.map((table) => String(table).toLowerCase())) : new Set<string>();
+    return required.length === REQUIRED_LEGACY_TABLES.length
+      && new Set(required).size === REQUIRED_LEGACY_TABLES.length
+      && REQUIRED_LEGACY_TABLES.every((table) => required.includes(table))
+      && REQUIRED_LEGACY_TABLES.every((table) => actual.has(table))
+      && Array.isArray(missing)
+      && missing.length === 0;
+  };
+  if (evidence.status !== 'verified' || evidence.sourceDatabase !== target || typeof evidence.restoreDatabase !== 'string' || !/^genbi_restore_[a-zA-Z0-9_]+$/.test(evidence.restoreDatabase) || typeof evidence.backupSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(evidence.backupSha256) || typeof evidence.evidenceSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(evidence.evidenceSha256) || evidence.evidenceSha256 !== restoreEvidenceSha256(evidence) || !Number.isFinite(verifiedAt) || !Number.isFinite(expiry) || expiry <= Date.now() || reports.some((report) => !report || report.database !== (report === evidence.restoredDatabase ? evidence.restoreDatabase : target) || !hasRequiredInventory(report) || typeof report.programCount !== 'number' || typeof report.programsWithLegacyPhotos !== 'number' || typeof report.legacyPhotoReferenceCount !== 'number')) {
     throw new Error(`Initial-production restore evidence is invalid, expired, or targets another database: ${target}.`);
+  }
+  for (const metric of ['programCount', 'programsWithLegacyPhotos', 'legacyPhotoReferenceCount']) {
+    if (reports[0]?.[metric] !== reports[1]?.[metric] || reports[0]?.[metric] !== reports[2]?.[metric]) throw new Error(`Initial-production restore evidence ${metric} does not match across reports.`);
   }
 };
 
@@ -57,8 +93,12 @@ const runPreflightPlan = (targetUrl: string): PreflightPlan => {
   const result = spawnSync(process.execPath, [scriptPath, 'plan'], {
     env: { ...process.env, DATABASE_URL: targetUrl },
     encoding: 'utf8',
+    timeout: 120000,
+    killSignal: 'SIGTERM',
+    maxBuffer: 16 * 1024 * 1024,
   });
-  if (result.error) throw result.error;
+  if (result.error) throw new Error(`Initial-production schema plan inspection failed: ${result.error.message}`);
+  if (result.signal) throw new Error(`Initial-production schema plan inspection stopped by ${result.signal}.`);
   if (result.status !== 0) throw new Error(result.stderr.trim() || 'Initial-production schema plan inspection failed.');
   try {
     return JSON.parse(result.stdout) as PreflightPlan;
@@ -115,12 +155,12 @@ const assertSchemaReadiness = (target: string) => {
   }
   const restoreEvidencePath = process.env.INITIAL_PRODUCTION_RESTORE_EVIDENCE_PATH
     ? path.resolve(process.env.INITIAL_PRODUCTION_RESTORE_EVIDENCE_PATH)
-    : path.resolve(__dirname, '../../../../artifacts/migration/initial-production-restore-verification.json');
+    : path.resolve(__dirname, '../../../../artifacts/migration/initial-production-final-restore-verification.json');
   if (!fs.existsSync(restoreEvidencePath)) throw new Error(`Initial-production restore evidence is missing at ${restoreEvidencePath}.`);
   const restoreEvidence = JSON.parse(fs.readFileSync(restoreEvidencePath, 'utf8')) as Record<string, unknown>;
   assertValidRestoreEvidence(restoreEvidence, target);
   const embeddedRestore = evidence.restoreEvidence as Record<string, unknown> | undefined;
-  if (!embeddedRestore || embeddedRestore.sourceDatabase !== target || embeddedRestore.backupSha256 !== restoreEvidence.backupSha256 || embeddedRestore.verifiedAt !== restoreEvidence.verifiedAt) {
+  if (!embeddedRestore || ['status', 'sourceDatabase', 'restoreDatabase', 'backupSha256', 'verifiedAt', 'expiresAt', 'evidenceSha256'].some((field) => embeddedRestore[field] !== restoreEvidence[field])) {
     throw new Error('Initial-production schema evidence is not bound to the current restore evidence.');
   }
   return { evidencePath, restoreEvidencePath, planHash: evidence.planHash };
@@ -268,8 +308,15 @@ const main = async () => {
     if (sourcePrograms.length !== PROGRAM_TOTAL || sourceChildPhotos !== CHILD_PHOTO_TOTAL) {
       throw new Error(`Source Program Kerja metrics mismatch: programs=${sourcePrograms.length}, childPhotos=${sourceChildPhotos}.`);
     }
-    if (sourcePrograms.some((program) => !CANONICAL_COMMISSARIAT_SLUGS.has(program.commissariat.slug) || (program.period && program.period.label !== PERIOD_LABEL))) {
-      throw new Error('Source Program Kerja contains a non-canonical commissariat or non-release period; refusing to copy it.');
+    const sourcePeriods = new Set(sourcePrograms.map((program) => program.period?.label ?? null));
+    if (sourcePeriods.size !== 1 || (!sourcePeriods.has(null) && !sourcePeriods.has(PERIOD_LABEL)) || sourcePrograms.some((program) => !CANONICAL_COMMISSARIAT_SLUGS.has(program.commissariat.slug) || (program.period && (program.period.label !== PERIOD_LABEL || program.period.commissariatId !== program.commissariatId)) || (program.division && (program.division.commissariatId !== program.commissariatId || program.division.periodId !== program.periodId)))) {
+      throw new Error('Source Program Kerja contains a non-canonical commissariat or ambiguous period scope; refusing to copy it.');
+    }
+    if (sourcePeriods.has(null) && process.env.PROGRAM_PERIOD_APPROVAL !== PROGRAM_PERIOD_APPROVAL) {
+      throw new Error(`Source Program Kerja has null period relations. Set PROGRAM_PERIOD_APPROVAL="${PROGRAM_PERIOD_APPROVAL}" only after reviewing the approved 2025/2026 source mapping.`);
+    }
+    if (sourcePrograms.some((program) => program.division && program.divisi.trim().toLowerCase() !== program.division.name.trim().toLowerCase())) {
+      throw new Error('Source Program Kerja division relation does not match its legacy divisi value; refusing to copy it.');
     }
     const verifiedPhotoPaths = sourcePrograms.flatMap((program) => program.photos.map((photo) => {
       const filePath = localPhotoPath(photo.filePath);
@@ -305,20 +352,15 @@ const main = async () => {
     }
 
     await target.$transaction(async (tx) => {
-      const targetDivisionByScope = new Map(targetDivisions.map((item) => [`${item.commissariatId}|${item.periodId}|${item.name.toLowerCase()}`, item.id]));
       for (const program of sourcePrograms) {
         const commissariatId = targetCommissariatBySlug.get(program.commissariat.slug);
         if (!commissariatId) throw new Error(`Target commissariat is missing: ${program.commissariat.slug}`);
         const periodId = targetPeriodByScope.get(`${commissariatId}|${PERIOD_LABEL}`);
         if (!periodId) throw new Error(`Target period ${PERIOD_LABEL} is missing for ${program.commissariat.slug}.`);
-        let divisionId = program.division
-          ? targetDivisionByScope.get(`${commissariatId}|${periodId}|${program.division.name.toLowerCase()}`)
+        const divisionId = program.division
+          ? targetDivisionByScope.get(`${commissariatId}|${periodId}|${program.division.name.trim().toLowerCase()}`)
           : undefined;
-        if (program.division && !divisionId) {
-          const createdDivision = await tx.division.create({ data: { commissariatId, periodId, name: program.division.name } });
-          divisionId = createdDivision.id;
-          targetDivisionByScope.set(`${commissariatId}|${periodId}|${program.division.name.toLowerCase()}`, divisionId);
-        }
+        if (program.division && !divisionId) throw new Error(`Target division is missing for ${program.commissariat.slug}/${program.division.name}; refusing to create an unapproved division.`);
         await tx.programKerja.create({
           data: {
             id: program.id,
@@ -431,6 +473,7 @@ const main = async () => {
       schemaPlanHash: schema.planHash,
       schemaApproval: SCHEMA_APPROVAL,
       dataApproval: DATA_APPROVAL,
+      programPeriodApproval: sourcePeriods.has(null) ? PROGRAM_PERIOD_APPROVAL : null,
       sourceUntouched: true,
       membershipPreserved: targetMemberships === 619,
       membershipRelease: membership,
