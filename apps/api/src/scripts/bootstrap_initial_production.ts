@@ -1,8 +1,16 @@
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  MEMBERSHIP_EXPECTED_COUNTS,
+  MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS,
+  MEMBERSHIP_RELEASE_DIVISIONS,
+  MEMBERSHIP_RELEASE_PERIOD,
+  MEMBERSHIP_SOURCE_SHA256,
+} from '../domain/membership-release';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -12,7 +20,8 @@ const SCHEMA_APPROVAL = 'SETUJUI SCHEMA MIGRASI';
 const DATA_APPROVAL = 'SETUJUI DATA MIGRASI';
 const PROGRAM_TOTAL = 153;
 const CHILD_PHOTO_TOTAL = 431;
-const PERIOD_LABEL = '2025/2026';
+const PERIOD_LABEL = MEMBERSHIP_RELEASE_PERIOD;
+const CANONICAL_COMMISSARIAT_SLUGS = new Set(Object.keys(MEMBERSHIP_EXPECTED_COUNTS));
 const REPORT_DIR = process.env.INITIAL_PRODUCTION_REPORT_DIR
   ? path.resolve(process.env.INITIAL_PRODUCTION_REPORT_DIR)
   : path.resolve(__dirname, '../../../../artifacts/initial-production');
@@ -25,6 +34,43 @@ const databaseIdentity = (value: string) => {
 
 const jsonValue = (value: Prisma.JsonValue | null): Prisma.InputJsonValue | Prisma.JsonNullValueInput =>
   value === null ? Prisma.JsonNull : value as Prisma.InputJsonValue;
+
+const assertValidRestoreEvidence = (evidence: Record<string, unknown>, target: string) => {
+  const expiry = typeof evidence.expiresAt === 'string' ? Date.parse(evidence.expiresAt) : Number.NaN;
+  if (evidence.status !== 'verified' || evidence.sourceDatabase !== target || typeof evidence.backupSha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(evidence.backupSha256) || !Number.isFinite(expiry) || expiry <= Date.now()) {
+    throw new Error(`Initial-production restore evidence is invalid, expired, or targets another database: ${target}.`);
+  }
+};
+
+type PreflightPlan = {
+  inspection: {
+    database: string;
+    migrationTablePresent: boolean;
+    migrationDiscrepancies: { missingFromDatabase?: string[]; appliedButNotInRepository?: string[]; failedOrRolledBack?: string[] };
+    repositorySchemaDiscrepancies: string[];
+  };
+  plan: { database: string; planHash: string };
+};
+
+const runPreflightPlan = (targetUrl: string): PreflightPlan => {
+  const scriptPath = path.resolve(__dirname, '../../../../scripts/legacy-schema-preflight.mjs');
+  const result = spawnSync(process.execPath, [scriptPath, 'plan'], {
+    env: { ...process.env, DATABASE_URL: targetUrl },
+    encoding: 'utf8',
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(result.stderr.trim() || 'Initial-production schema plan inspection failed.');
+  try {
+    return JSON.parse(result.stdout) as PreflightPlan;
+  } catch {
+    throw new Error('Initial-production schema plan inspection returned invalid JSON.');
+  }
+};
+
+const migrationHistoryIsReady = (inspection: PreflightPlan['inspection']) => inspection.migrationTablePresent === true
+  && (inspection.migrationDiscrepancies.missingFromDatabase ?? []).length === 0
+  && (inspection.migrationDiscrepancies.appliedButNotInRepository ?? []).length === 0
+  && (inspection.migrationDiscrepancies.failedOrRolledBack ?? []).length === 0;
 
 const assertDatabaseTargets = (sourceUrl: string, targetUrl: string) => {
   const source = databaseName(sourceUrl);
@@ -59,16 +105,39 @@ const assertSchemaReadiness = (target: string) => {
   } catch {
     throw new Error(`Initial-production schema evidence is invalid at ${evidencePath}.`);
   }
-  if (evidence.status !== 'ready' || evidence.database !== target || evidence.migrationApplied !== true || evidence.dataMigrationReady !== true || evidence.schemaApproval !== SCHEMA_APPROVAL) {
+  const expectedPlanHash = process.env.SCHEMA_PLAN_HASH?.trim();
+  if (!expectedPlanHash) throw new Error('SCHEMA_PLAN_HASH is required for initial-production bootstrap.');
+  if (evidence.status !== 'ready' || evidence.database !== target || evidence.migrationApplied !== true || evidence.dataMigrationReady !== true || evidence.schemaApproval !== SCHEMA_APPROVAL || evidence.planHash !== expectedPlanHash) {
     throw new Error(`Initial-production schema evidence is not ready for ${target}.`);
   }
-  if (typeof evidence.expiresAt !== 'string' || Date.parse(evidence.expiresAt) <= Date.now()) {
+  if (typeof evidence.expiresAt !== 'string' || !Number.isFinite(Date.parse(evidence.expiresAt)) || Date.parse(evidence.expiresAt) <= Date.now()) {
     throw new Error('Initial-production schema evidence is expired or missing an expiry.');
   }
-  return { evidencePath, planHash: evidence.planHash };
+  const restoreEvidencePath = process.env.INITIAL_PRODUCTION_RESTORE_EVIDENCE_PATH
+    ? path.resolve(process.env.INITIAL_PRODUCTION_RESTORE_EVIDENCE_PATH)
+    : path.resolve(__dirname, '../../../../artifacts/migration/initial-production-restore-verification.json');
+  if (!fs.existsSync(restoreEvidencePath)) throw new Error(`Initial-production restore evidence is missing at ${restoreEvidencePath}.`);
+  const restoreEvidence = JSON.parse(fs.readFileSync(restoreEvidencePath, 'utf8')) as Record<string, unknown>;
+  assertValidRestoreEvidence(restoreEvidence, target);
+  const embeddedRestore = evidence.restoreEvidence as Record<string, unknown> | undefined;
+  if (!embeddedRestore || embeddedRestore.sourceDatabase !== target || embeddedRestore.backupSha256 !== restoreEvidence.backupSha256 || embeddedRestore.verifiedAt !== restoreEvidence.verifiedAt) {
+    throw new Error('Initial-production schema evidence is not bound to the current restore evidence.');
+  }
+  return { evidencePath, restoreEvidencePath, planHash: evidence.planHash };
 };
 
 const hashFile = (filePath: string) => crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+
+const latestMembershipReportPath = () => {
+  const reportRoot = path.resolve(__dirname, '../../../../artifacts/membership');
+  if (!fs.existsSync(reportRoot)) return null;
+  const candidates = fs.readdirSync(reportRoot)
+    .map((entry) => path.join(reportRoot, entry, 'membership-2025-2026-import-report.json'))
+    .filter((entry) => fs.existsSync(entry))
+    .sort()
+    .reverse();
+  return candidates[0] ?? null;
+};
 
 const localPhotoPath = (filePath: string) => {
   if (!filePath.startsWith('/uploads/proker/')) throw new Error(`Unsupported Program Kerja photo path: ${filePath}`);
@@ -116,6 +185,61 @@ const writeReport = (report: Record<string, unknown>) => {
   return { jsonPath, markdownPath };
 };
 
+const assertMembershipRelease = async (target: PrismaClient, reportPath: string) => {
+  if (!fs.existsSync(reportPath)) throw new Error(`Membership import report is missing at ${reportPath}.`);
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as Record<string, any>;
+  if (report.status !== 'IMPORTED' || report.sourceFileHash !== MEMBERSHIP_SOURCE_SHA256 || report.sourceSheet !== 'Data Final' || report.period !== MEMBERSHIP_RELEASE_PERIOD || report.targetDatabase !== databaseIdentity(process.env.INITIAL_PRODUCTION_DATABASE_URL ?? '')) {
+    throw new Error('Membership import report is not the approved 2025/2026 release report.');
+  }
+  if (report.validation?.valid !== true || report.validation?.totalRows !== 619 || report.validation?.rejectedRows?.length !== 0 || report.postImport?.totalMemberships !== 619 || report.postImport?.activeMemberships !== 619 || report.postImport?.publishedMemberships !== 619 || report.postImport?.noDivisionMemberships !== 127) {
+    throw new Error('Membership import report does not prove the approved 619-row release.');
+  }
+  const [total, active, published, noDivision, periods, commissariats, targetCommissariats, targetDivisions] = await Promise.all([
+    target.membership.count(),
+    target.membership.count({ where: { membershipStatus: 'ACTIVE' } }),
+    target.membership.count({ where: { publicationStatus: 'PUBLISHED' } }),
+    target.membership.count({ where: { divisionId: null } }),
+    target.period.count({ where: { label: MEMBERSHIP_RELEASE_PERIOD } }),
+    target.commissariat.count(),
+    target.commissariat.findMany({ select: { slug: true } }),
+    target.division.findMany({
+      where: { period: { label: MEMBERSHIP_RELEASE_PERIOD } },
+      select: { name: true, commissariat: { select: { slug: true } }, _count: { select: { memberships: true } } },
+    }),
+  ]);
+  if (total !== 619 || active !== 619 || published !== 619 || noDivision !== 127 || periods !== 9 || commissariats !== 9) {
+    throw new Error(`Target Membership release mismatch: total=${total}, active=${active}, published=${published}, noDivision=${noDivision}, periods=${periods}, commissariats=${commissariats}.`);
+  }
+  const actualSlugs = new Set(targetCommissariats.map(({ slug }) => slug));
+  if (actualSlugs.size !== CANONICAL_COMMISSARIAT_SLUGS.size || [...CANONICAL_COMMISSARIAT_SLUGS].some((slug) => !actualSlugs.has(slug))) {
+    throw new Error('Target Membership commissariat catalog does not match the approved release.');
+  }
+  const actualDivisionCounts = new Map(targetDivisions.map((division) => [`${division.commissariat.slug}|${division.name}`, division._count.memberships]));
+  const reportDivisionCounts = report.validation?.divisionCounts as Record<string, Record<string, number>>;
+  const expectedDivisionKeys = new Set(Object.entries(MEMBERSHIP_RELEASE_DIVISIONS).flatMap(([slug, names]) => names.map((name) => `${slug}|${name}`)));
+  if (actualDivisionCounts.size !== expectedDivisionKeys.size || [...expectedDivisionKeys].some((key) => !actualDivisionCounts.has(key))) {
+    throw new Error('Target Membership division catalog does not match the approved release.');
+  }
+  for (const [slug, divisionNames] of Object.entries(MEMBERSHIP_RELEASE_DIVISIONS)) {
+    for (const divisionName of divisionNames) {
+      const key = `${slug}|${divisionName}`;
+      const expected = reportDivisionCounts?.[slug]?.[divisionName];
+      const actual = actualDivisionCounts.get(key);
+      if (expected === undefined || actual === undefined || actual !== expected) {
+        throw new Error(`Target division count mismatch for ${key}: expected=${expected ?? 'missing'}, actual=${actual ?? 'missing'}.`);
+      }
+    }
+  }
+  for (const [slug, expected] of Object.entries(MEMBERSHIP_EXPECTED_COUNTS)) {
+    const actual = await target.membership.count({ where: { commissariat: { slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD } } });
+    if (actual !== expected) throw new Error(`Target Membership count mismatch for ${slug}: ${actual}.`);
+    const expectedNoDivision = MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS[slug] ?? 0;
+    const actualNoDivision = await target.membership.count({ where: { commissariat: { slug }, period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } });
+    if (actualNoDivision !== expectedNoDivision) throw new Error(`Target no-division count mismatch for ${slug}: ${actualNoDivision}.`);
+  }
+  return { reportPath, sourceFileHash: report.sourceFileHash, total, active, published, noDivision };
+};
+
 const main = async () => {
   const sourceUrl = process.env.DATABASE_URL;
   const targetUrl = process.env.INITIAL_PRODUCTION_DATABASE_URL;
@@ -123,10 +247,19 @@ const main = async () => {
   if (!targetUrl) throw new Error('INITIAL_PRODUCTION_DATABASE_URL is required for the clean target.');
   const databases = assertDatabaseTargets(sourceUrl, targetUrl);
   const schema = assertSchemaReadiness(databases.target);
+  const currentPlan = runPreflightPlan(targetUrl);
+  if (currentPlan.inspection.database !== databases.target || currentPlan.plan.database !== databases.target || !migrationHistoryIsReady(currentPlan.inspection) || currentPlan.inspection.repositorySchemaDiscrepancies.length || currentPlan.plan.planHash !== schema.planHash) {
+    throw new Error('Initial-production active schema/migration history does not match the approved readiness evidence.');
+  }
+  const membershipReportPath = process.env.MEMBERSHIP_IMPORT_REPORT_PATH
+    ? path.resolve(process.env.MEMBERSHIP_IMPORT_REPORT_PATH)
+    : latestMembershipReportPath();
+  if (!membershipReportPath) throw new Error('Membership import report is missing; set MEMBERSHIP_IMPORT_REPORT_PATH or run the approved import first.');
   const source = new PrismaClient({ datasources: { db: { url: sourceUrl } } });
   const target = new PrismaClient({ datasources: { db: { url: targetUrl } } });
 
   try {
+    const membership = await assertMembershipRelease(target, membershipReportPath);
     const sourcePrograms = await source.programKerja.findMany({
       include: { commissariat: true, period: true, division: true, photos: true, artifacts: true, revisions: true },
       orderBy: [{ commissariatId: 'asc' }, { programKe: 'asc' }, { id: 'asc' }],
@@ -135,7 +268,10 @@ const main = async () => {
     if (sourcePrograms.length !== PROGRAM_TOTAL || sourceChildPhotos !== CHILD_PHOTO_TOTAL) {
       throw new Error(`Source Program Kerja metrics mismatch: programs=${sourcePrograms.length}, childPhotos=${sourceChildPhotos}.`);
     }
-    const sourcePhotoHashes = sourcePrograms.flatMap((program) => program.photos.map((photo) => {
+    if (sourcePrograms.some((program) => !CANONICAL_COMMISSARIAT_SLUGS.has(program.commissariat.slug) || (program.period && program.period.label !== PERIOD_LABEL))) {
+      throw new Error('Source Program Kerja contains a non-canonical commissariat or non-release period; refusing to copy it.');
+    }
+    const verifiedPhotoPaths = sourcePrograms.flatMap((program) => program.photos.map((photo) => {
       const filePath = localPhotoPath(photo.filePath);
       if (!fs.existsSync(filePath)) throw new Error(`Missing Program Kerja photo file: ${photo.filePath}`);
       const actualHash = hashFile(filePath);
@@ -164,18 +300,25 @@ const main = async () => {
     const targetPeriodByScope = new Map(targetPeriods.map((item) => [`${item.commissariatId}|${item.label}`, item.id]));
     const targetDivisionByScope = new Map(targetDivisions.map((item) => [`${item.commissariatId}|${item.periodId}|${item.name.toLowerCase()}`, item.id]));
     const sourceCommissariatSlugs = new Set(sourcePrograms.map((program) => program.commissariat.slug));
-    if (sourceCommissariatSlugs.size !== 9 || [...sourceCommissariatSlugs].some((slug) => !targetCommissariatBySlug.has(slug))) {
-      throw new Error('Source and target canonical commissariat sets do not match.');
+    if (sourceCommissariatSlugs.size !== CANONICAL_COMMISSARIAT_SLUGS.size || [...sourceCommissariatSlugs].some((slug) => !CANONICAL_COMMISSARIAT_SLUGS.has(slug) || !targetCommissariatBySlug.has(slug))) {
+      throw new Error('Source and target canonical commissariat allowlists do not match.');
     }
 
     await target.$transaction(async (tx) => {
+      const targetDivisionByScope = new Map(targetDivisions.map((item) => [`${item.commissariatId}|${item.periodId}|${item.name.toLowerCase()}`, item.id]));
       for (const program of sourcePrograms) {
         const commissariatId = targetCommissariatBySlug.get(program.commissariat.slug);
         if (!commissariatId) throw new Error(`Target commissariat is missing: ${program.commissariat.slug}`);
-        const periodId = targetPeriodByScope.get(`${commissariatId}|${PERIOD_LABEL}`) ?? null;
-        const divisionId = program.division && periodId
-          ? targetDivisionByScope.get(`${commissariatId}|${periodId}|${program.division.name.toLowerCase()}`) ?? null
-          : null;
+        const periodId = targetPeriodByScope.get(`${commissariatId}|${PERIOD_LABEL}`);
+        if (!periodId) throw new Error(`Target period ${PERIOD_LABEL} is missing for ${program.commissariat.slug}.`);
+        let divisionId = program.division
+          ? targetDivisionByScope.get(`${commissariatId}|${periodId}|${program.division.name.toLowerCase()}`)
+          : undefined;
+        if (program.division && !divisionId) {
+          const createdDivision = await tx.division.create({ data: { commissariatId, periodId, name: program.division.name } });
+          divisionId = createdDivision.id;
+          targetDivisionByScope.set(`${commissariatId}|${periodId}|${program.division.name.toLowerCase()}`, divisionId);
+        }
         await tx.programKerja.create({
           data: {
             id: program.id,
@@ -199,7 +342,7 @@ const main = async () => {
             createdAt: program.createdAt,
             updatedAt: program.updatedAt,
             periodId,
-            divisionId,
+            divisionId: divisionId ?? null,
             publicationStatus: program.publicationStatus,
             rejectionReason: program.rejectionReason,
             authorAccountId: null,
@@ -253,6 +396,17 @@ const main = async () => {
           })) });
         }
       }
+
+      const [committedPrograms, committedPhotos, committedPublished, committedArchived, committedCancelled] = await Promise.all([
+        tx.programKerja.count(),
+        tx.programKerjaPhoto.count(),
+        tx.programKerja.count({ where: { publicationStatus: 'PUBLISHED' } }),
+        tx.programKerja.count({ where: { publicationStatus: 'ARCHIVED' } }),
+        tx.programKerja.count({ where: { executionStatus: 'CANCELLED' } }),
+      ]);
+      if (committedPrograms !== PROGRAM_TOTAL || committedPhotos !== CHILD_PHOTO_TOTAL || committedPublished !== 139 || committedArchived !== 14 || committedCancelled !== 12) {
+        throw new Error(`Target Program Kerja metrics mismatch before commit: programs=${committedPrograms}, photos=${committedPhotos}, published=${committedPublished}, archived=${committedArchived}, cancelled=${committedCancelled}.`);
+      }
     }, { maxWait: 10000, timeout: 120000 });
 
     const [actualPrograms, actualPhotos, actualArtifacts, actualRevisions, publishedPrograms, archivedPrograms, cancelledPrograms] = await Promise.all([
@@ -272,13 +426,14 @@ const main = async () => {
       generatedAt: new Date().toISOString(),
       source: { database: databaseIdentity(sourceUrl), programs: sourcePrograms.length, childPhotoRows: sourceChildPhotos },
       target: { database: databaseIdentity(targetUrl), programs: actualPrograms, childPhotoRows: actualPhotos, artifacts: actualArtifacts, revisions: actualRevisions, publishedPrograms, archivedPrograms, cancelledPrograms },
-      photoFilesVerified: sourcePhotoHashes.length,
+      photoFilesVerified: verifiedPhotoPaths.length,
       schemaEvidencePath: schema.evidencePath,
       schemaPlanHash: schema.planHash,
       schemaApproval: SCHEMA_APPROVAL,
       dataApproval: DATA_APPROVAL,
       sourceUntouched: true,
       membershipPreserved: targetMemberships === 619,
+      membershipRelease: membership,
     };
     const paths = writeReport(report);
     console.log(JSON.stringify({ ...report, report: paths }, null, 2));
