@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
+import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, stagingAcceptance, stagingAcceptanceReason, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
 import { assertSchemaReady, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
 import { repositorySchemaDiscrepancies } from './legacy-schema-preflight.mjs';
 
@@ -114,4 +114,9 @@ test('blocks schema verification when Prisma migration history is absent or inco
   assert.equal(migrationHistoryReady({ migrationTablePresent: true, migrationDiscrepancies: { missingFromDatabase: ['pending'], appliedButNotInRepository: [], failedOrRolledBack: [] } }), false);
   assert.equal(migrationHistoryReady({ migrationTablePresent: true, migrationDiscrepancies: { missingFromDatabase: [], appliedButNotInRepository: [], failedOrRolledBack: [] } }), true);
   assert.deepEqual(structuralSchemaDiscrepancies(['Active schema conflicts: incompatible date', 'Repository migration expects a nullable field']), ['Active schema conflicts: incompatible date']);
+});
+
+test('keeps staging deferred without treating it as a failed local schema gate', () => {
+  assert.equal(stagingAcceptance, 'deferred');
+  assert.match(stagingAcceptanceReason, /retained staging tooling/);
 });
