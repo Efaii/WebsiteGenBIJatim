@@ -55,6 +55,18 @@ export const programGallery = (
   ),
 ];
 
+export const hasProgramDocumentation = (program: Pick<PublicProgramRecord, 'foto1' | 'foto2' | 'foto3' | 'foto4' | 'foto5' | 'foto6' | 'photos'>) =>
+  programGallery(
+    [program.foto1, program.foto2, program.foto3, program.foto4, program.foto5, program.foto6],
+    program.photos,
+  ).length > 0;
+
+export const orderProgramsDocumentationFirst = <T extends Pick<PublicProgramRecord, 'foto1' | 'foto2' | 'foto3' | 'foto4' | 'foto5' | 'foto6' | 'photos'>>(programs: T[]) =>
+  programs
+    .map((program, index) => ({ program, index, hasDocumentation: hasProgramDocumentation(program) }))
+    .sort((left, right) => Number(right.hasDocumentation) - Number(left.hasDocumentation) || left.index - right.index)
+    .map(({ program }) => program);
+
 export const isPublicProgram = (program: {
   publicationStatus: string;
   executionStatus: string;
