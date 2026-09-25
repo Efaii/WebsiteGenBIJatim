@@ -22,8 +22,8 @@ export const homeContent = {
   },
   stats: [
     { label: "Komisariat", suffix: "", isDynamic: true },
-    { label: "Anggota", number: 500, suffix: "+" },
-    { label: "Program Kerja", number: 130, suffix: "+" },
+    { label: "Anggota", number: 619, suffix: "" },
+    { label: "Program Kerja", number: 139, suffix: "" },
     { label: "Tahun Berkarya", number: 12, suffix: "+" },
   ],
   portalGrid: {
