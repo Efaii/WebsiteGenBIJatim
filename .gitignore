@@ -34,3 +34,4 @@ ts-debug.log*
 artifacts/migration/
 artifacts/promotion/
 artifacts/membership/
+artifacts/initial-production/
