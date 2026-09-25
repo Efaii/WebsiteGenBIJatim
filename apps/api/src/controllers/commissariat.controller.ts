@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
-import { isPublicProgram, projectPublicProgram } from '../domain/public-program';
+import { isPublicProgram, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
 import { projectPublicAwardee } from '../domain/public-membership';
 import { MEMBERSHIP_RELEASE_PERIOD } from '../domain/membership-release';
 
@@ -16,11 +16,7 @@ export const getAllCommissariats = async (req: Request, res: Response) => {
         _count: {
           select: {
             programKerja: {
-              where: {
-                publicationStatus: 'PUBLISHED',
-                executionStatus: { not: 'CANCELLED' },
-                status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] },
-              },
+              where: publicProgramWhere(),
             },
           },
         },
@@ -59,7 +55,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
       where: { slug },
       include: {
         programKerja: {
-          where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
+          where: publicProgramWhere(),
           orderBy: { programKe: 'asc' },
           include: { photos: { orderBy: { createdAt: 'asc' } } },
         },
@@ -120,7 +116,7 @@ export const getCommissariatBySlug = async (req: Request, res: Response) => {
 export const getAllProgramKerja = async (_req: Request, res: Response) => {
   try {
     const programs = await prisma.programKerja.findMany({
-      where: { publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
+      where: publicProgramWhere(),
       orderBy: [{ tanggalProker: 'desc' }, { programKe: 'asc' }],
       include: { commissariat: { select: { name: true, slug: true } }, photos: { orderBy: { createdAt: 'asc' } } },
     });
@@ -138,7 +134,7 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const proker = await prisma.programKerja.findUnique({
-      where: { id, publicationStatus: 'PUBLISHED', executionStatus: { not: 'CANCELLED' }, status: { notIn: ['cancelled', 'canceled', 'cancel', 'Cancelled', 'Canceled', 'Cancel', 'CANCELLED', 'CANCELED', 'CANCEL'] } },
+      where: { id, ...publicProgramWhere() },
       include: {
         commissariat: {
           select: { name: true, slug: true },
@@ -166,7 +162,7 @@ export const getProgramKerjaById = async (req: Request, res: Response) => {
 export const getCommissariatStats = async (req: Request, res: Response) => {
   try {
     const [prokerCount, commissariatCount, totalMembers] = await Promise.all([
-      prisma.programKerja.count(),
+      prisma.programKerja.count({ where: publicProgramWhere() }),
       prisma.commissariat.count({ where: { isActive: true } }),
       prisma.commissariat.aggregate({
         where: { isActive: true },

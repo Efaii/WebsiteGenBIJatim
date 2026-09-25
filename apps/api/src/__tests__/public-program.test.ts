@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { isPublicProgram, programDate, programGallery, projectPublicProgram } from '../domain/public-program';
+import { isCancelledProgramStatus, isPublicProgram, programDate, programGallery, projectPublicProgram, publicProgramWhere } from '../domain/public-program';
 
 const undated = programDate(null, null);
 assert.equal(undated.date, 'Periode 2025/2026');
@@ -32,6 +32,13 @@ assert.equal(isPublicProgram({ publicationStatus: 'ARCHIVED', executionStatus: '
 assert.equal(isPublicProgram({ publicationStatus: 'PUBLISHED', executionStatus: 'CANCELLED', status: 'Completed' }), false);
 assert.equal(isPublicProgram({ publicationStatus: 'PUBLISHED', executionStatus: 'COMPLETED', status: 'cancelled' }), false);
 assert.equal(isPublicProgram({ publicationStatus: 'PUBLISHED', executionStatus: 'COMPLETED', status: 'Cancel' }), false);
+assert.equal(isCancelledProgramStatus(' Cancelled by source '), true);
+assert.equal(isPublicProgram({ publicationStatus: 'PUBLISHED', executionStatus: 'COMPLETED', status: ' Cancelled by source ' }), false);
+assert.deepEqual(publicProgramWhere(), {
+  publicationStatus: 'PUBLISHED',
+  executionStatus: { not: 'CANCELLED' },
+  status: { not: { contains: 'cancel' } },
+});
 
 const projectedUndated = projectPublicProgram({
   id: 'program-1',
