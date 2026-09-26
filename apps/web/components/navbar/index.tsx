@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
 import { COMMISSARIAT_DATA } from "@/content/commissariatData";
+import { getPublicPeriods, periodSlug } from "@/lib/services/period.service";
 
 import { NavbarLogo } from "./navbarLogo";
 import { NavbarLinks } from "./navbarLinks";
@@ -24,6 +25,18 @@ export function Navbar() {
   const pathname = usePathname();
   const scrolled = useScrollPosition();
   const [isOpen, setIsOpen] = useState(false);
+  const [periods, setPeriods] = useState<string[]>([]);
+
+  {/* --- DATA ARCHITECTURE: PUBLIC PERIODS --- */}
+  useEffect(() => {
+    let cancelled = false;
+    getPublicPeriods().then((data) => {
+      if (!cancelled) setPeriods(data.periods);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   {/* --- INTERACTION LOGIC: SCROLL LOCK --- */}
   useEffect(() => {
@@ -44,6 +57,11 @@ export function Navbar() {
       slug: c.slug,
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const PERIOD_LINKS = periods.map((period) => ({
+    name: period,
+    href: `/profil/${periodSlug(period)}`,
+  }));
 
   return (
     <>
@@ -67,6 +85,7 @@ export function Navbar() {
               pathname={pathname}
               navItems={siteConfig.navItems}
               commissariatLinks={COMMISSARIAT_LINKS}
+              periodLinks={PERIOD_LINKS}
             />
 
             {/* --- MOBILE INTERACTION TRIGGER --- */}
@@ -95,6 +114,7 @@ export function Navbar() {
         onClose={() => setIsOpen(false)}
         pathname={pathname}
         commissariatLinks={COMMISSARIAT_LINKS}
+        periodLinks={PERIOD_LINKS}
       />
     </>
   );
