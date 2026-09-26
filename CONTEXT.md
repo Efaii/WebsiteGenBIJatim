@@ -122,6 +122,12 @@ _Avoid_: Menganggap arsip komisariat sebagai sumber akses Proposal/LPJ.
 Galeri foto atau dokumentasi kegiatan yang melekat pada satu Program kerja. Dokumentasi ini tetap dapat ditampilkan pada detail Program kerja dan berbeda dari arsip komisariat serta halaman Dokumen umum.
 _Avoid_: Menghapus dokumentasi Program kerja ketika menghapus halaman Dokumen umum.
 
+## Presentasi Publik
+
+**Beranda**:
+Halaman publik utama (landing page) yang menjadi titik masuk situs: menyusun narasi identitas organisasi, ringkasan metrik, akses ke platform lain, berita terbaru, dan FAQ. Beranda berbeda dari Daftar Program kerja dan Detail Komisariat.
+_Avoid_: Menyamakan Beranda dengan halaman daftar Program kerja atau Detail Komisariat.
+
 ## Migrasi dan Rilis
 
 **Snapshot hasil rekonsiliasi**:
@@ -247,3 +253,11 @@ _Avoid_: Menampilkan Proposal/LPJ pada tab Arsip komisariat atau menaruhnya seba
 **Awardee**:
 Subset atau projection publik dari Membership yang berstatus `ACTIVE` dan `PUBLISHED`, ditampilkan berdasarkan komisariat dan periode. Field tampilan awalnya adalah nama, jabatan, dan prodi; Awardee bukan source data terpisah dari Membership.
 _Avoid_: Membuat mock Awardee sebagai source of truth atau mencampur Awardee lintas periode tanpa filter.
+
+**Initial production source**:
+Database local baru yang bersih dari record test dan dipakai sebagai sumber initial production setelah schema, Program Kerja, dan Membership menerima verifikasi local. Ini bukan staging environment dan bukan database development yang memuat fixture/test data.
+_Avoid_: Mempromosikan database development yang masih berisi komisariat, periode, divisi, atau membership test.
+
+**Membership release 2025/2026**:
+Seluruh 619 baris pada workbook anggota resmi dipetakan ke periode `2025/2026` dan boleh dipublikasikan setelah validasi import. Normalisasi sumber yang disepakati adalah `BPH 1`, `BPH 2`, dan `BPH 3` menjadi `BPH`, serta typo `Linkungan` menjadi `Lingkungan`; nama `Media Komunikasi & Hubungan Luar` dipertahankan.
+_Avoid_: Menebak periode dari tanggal import atau mempublikasikan data sebelum validasi baris selesai.

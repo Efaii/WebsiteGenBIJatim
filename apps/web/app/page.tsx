@@ -2,11 +2,11 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
+import { Pilar } from "@/components/home/Pilar";
+import { Story } from "@/components/home/Story";
 import { Portal } from "@/components/home/Portal";
-import { Testimonials } from "@/components/home/Testimonials";
 import { News } from "@/components/home/News";
 import { FAQ } from "@/components/home/FAQ";
-import { CTA } from "@/components/home/CTA";
 import { getHomeData } from "@/services/home.service";
 import { getLatestNews } from "@/services/news.service";
 
@@ -37,11 +37,14 @@ export default async function Home() {
         {/* Organizational Context & Metrics */}
         <About commissariats={homeData.commissariats} />
 
+        {/* Three Strategic Roles */}
+        <Pilar />
+
+        {/* Organizational History */}
+        <Story />
+
         {/* Strategic Program Access */}
         <Portal />
-
-        {/* Social Proof & Community Impact */}
-        <Testimonials testimonials={homeData.testimonials} />
 
         {/* Dynamic Content & Updates */}
         <News initialNews={latestNews} />
@@ -49,8 +52,6 @@ export default async function Home() {
         {/* Knowledge Base & Support */}
         <FAQ faqs={homeData.faqs} />
 
-        {/* Conversion & Final Call-to-Action */}
-        <CTA />
       </main>
 
       {/* --- GLOBAL FOOTER ARCHITECTURE --- */}

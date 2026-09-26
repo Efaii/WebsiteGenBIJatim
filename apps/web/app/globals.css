@@ -70,6 +70,16 @@
   }
   --animate-marquee: marquee 30s linear infinite;
 
+  @keyframes marquee-loop {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  --animate-marquee-loop: marquee-loop 24s linear infinite;
+
   /* Blob: Ambient background movement */
   @keyframes blob {
     0% {
