@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import {
   getCommissariatBySlug,
   getAllCommissariats,
+  getCommissariatAwardees,
+  getCommissariatStructure,
 } from "@/lib/services/commissariat.service";
-import CommissariatClient from "./CommissariatClient";
+import { getPublicPeriods, periodFromSlug } from "@/lib/services/period.service";
+import CommissariatDetail from "./CommissariatDetail";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 
 export async function generateMetadata({
   params,
@@ -30,19 +32,32 @@ export async function generateStaticParams() {
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ periode?: string }>;
 }) {
   const { slug } = await params;
-  const commissariat = await getCommissariatBySlug(slug);
+  const { periode } = await searchParams;
 
-  if (!commissariat) {
-    notFound();
-  }
+  const commissariat = await getCommissariatBySlug(slug);
+  if (!commissariat) notFound();
+
+  const { periods, defaultPeriod } = await getPublicPeriods();
+  const period = (periode && periodFromSlug(periode, periods)) || periods[0] || defaultPeriod;
+
+  const [structure, awardees] = await Promise.all([
+    period ? getCommissariatStructure(slug, period) : Promise.resolve(null),
+    period ? getCommissariatAwardees(slug, period) : Promise.resolve([]),
+  ]);
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
-      <CommissariatClient initialData={commissariat} />
-    </Suspense>
+    <CommissariatDetail
+      data={commissariat}
+      periods={periods}
+      period={period}
+      structure={structure}
+      awardees={awardees}
+    />
   );
 }

@@ -44,3 +44,47 @@ export const getGlobalCommissariatStats = async (): Promise<{
   if (!res.ok) throw new Error(`Failed to fetch commissariat stats: ${res.status}`);
   return await res.json();
 };
+
+export type StructureMember = { name: string; position: string };
+export type CommissariatStructure = {
+  commissariat: { slug: string; name: string };
+  period: string;
+  bph: StructureMember[];
+  divisions: Array<{ name: string; members: StructureMember[] }>;
+};
+
+export const getCommissariatStructure = async (
+  slug: string,
+  period: string,
+): Promise<CommissariatStructure | null> => {
+  const res = await fetch(
+    `${API_BASE}/v1/commissariats/${slug}/structure?period=${encodeURIComponent(period)}`,
+    { cache: "no-store" },
+  );
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to fetch structure for ${slug}: ${res.status}`);
+  const body = await res.json();
+  return body.data ?? null;
+};
+
+export type CommissariatAwardee = {
+  id: string;
+  name: string;
+  position: string;
+  studyProgram: string;
+  division: string;
+  period: string;
+};
+
+export const getCommissariatAwardees = async (
+  slug: string,
+  period: string,
+): Promise<CommissariatAwardee[]> => {
+  const res = await fetch(
+    `${API_BASE}/v1/awardees?period=${encodeURIComponent(period)}&commissariatSlug=${encodeURIComponent(slug)}`,
+    { cache: "no-store" },
+  );
+  if (!res.ok) throw new Error(`Failed to fetch awardees for ${slug}: ${res.status}`);
+  const body = await res.json();
+  return Array.isArray(body.data?.awardees) ? body.data.awardees : [];
+};
