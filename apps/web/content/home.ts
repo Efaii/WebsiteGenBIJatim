@@ -65,15 +65,4 @@ export const homeContent = {
     description:
       "Ikuti jejak langkah dan kegiatan inspiratif dari GenBI Jawa Timur dalam membangun negeri.",
   },
-  cta: {
-    badge: "Nantikan Informasi Resmi Pendaftaran 2026",
-    title: "Mari Bergerak \n Tebarkan Makna",
-    description:
-      "Bergabunglah dengan keluarga besar GenBI Jawa Timur. Temukan ruang untuk tumbuh, memimpin, dan memberikan dampak nyata bagi masyarakat bersama Bank Indonesia.",
-    primary: { label: "Gabung Bersama", href: "/docs" },
-    secondary: {
-      label: "Intip Keseruan",
-      href: "https://instagram.com/genbi_jatim",
-    },
-  },
 };
