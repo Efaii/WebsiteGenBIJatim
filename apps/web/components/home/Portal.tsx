@@ -36,7 +36,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
  * - Animation: Implements staggered entry animations for optimized perceived performance.
  */
 export function Portal() {
-  const { title, description, items } = homeContent.portalGrid;
+  const { description, items } = homeContent.portalGrid;
 
   return (
     <section className="py-16 md:py-24 bg-white relative overflow-hidden">

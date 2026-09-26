@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import CountUp from "@/components/CountUp";
 import { homeContent } from "@/content/home";

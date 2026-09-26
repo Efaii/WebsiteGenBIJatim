@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FadeIn, StaggerContainer } from "../MotionWrapper";
 import {
-  Plus,
   MessageCircleQuestion,
   Info,
   ArrowRight,
   X,
 } from "lucide-react";
 import { FAQItem } from "@/types/home.types";
-import { cn } from "@/lib/utils";
 
 /**
  * FAQ Component
