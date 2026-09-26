@@ -10,6 +10,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated TypeScript output that sits next to its sources (tsc emits
+    // .js / .d.ts into apps/web). These are build artifacts, not source.
+    "**/*.js",
+    "**/*.js.map",
+    "**/*.d.ts",
+    "**/*.d.ts.map",
   ]),
   {
     files: [
@@ -19,7 +25,6 @@ const eslintConfig = defineConfig([
       "**/app/admin/news/page.tsx",
       "**/app/admin/testimonials/page.tsx",
       "**/app/calendar/CalendarClient.tsx",
-      "**/app/commissariat/*/CommissariatClient.tsx",
       "**/app/commissariat/page.tsx",
       "**/app/news/*/page.tsx",
       "**/components/Card.tsx",
