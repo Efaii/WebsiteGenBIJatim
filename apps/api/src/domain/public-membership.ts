@@ -27,3 +27,19 @@ export const projectPublicAwardee = (membership: PublicMembershipRecord) => ({
   commissariat: membership.commissariat,
   period: membership.period.label,
 });
+
+export type AwardeeCommissariatCount = { slug: string; name: string; count: number };
+
+/** Counts awardees per commissariat, ordered by commissariat name. */
+export const summarizeAwardeesByCommissariat = (
+  awardees: Array<{ commissariat: { slug: string; name: string } }>,
+): AwardeeCommissariatCount[] => {
+  const counts = new Map<string, AwardeeCommissariatCount>();
+  for (const awardee of awardees) {
+    const { slug, name } = awardee.commissariat;
+    const entry = counts.get(slug) ?? { slug, name, count: 0 };
+    entry.count += 1;
+    counts.set(slug, entry);
+  }
+  return [...counts.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+};
