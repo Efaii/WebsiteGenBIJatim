@@ -128,6 +128,14 @@ _Avoid_: Menghapus dokumentasi Program kerja ketika menghapus halaman Dokumen um
 Halaman publik utama (landing page) yang menjadi titik masuk situs: menyusun narasi identitas organisasi, ringkasan metrik, akses ke platform lain, berita terbaru, dan FAQ. Beranda berbeda dari Daftar Program kerja dan Detail Komisariat.
 _Avoid_: Menyamakan Beranda dengan halaman daftar Program kerja atau Detail Komisariat.
 
+**Profil**:
+Halaman publik tentang organisasi yang menggantikan "Tentang Kami" pada navigasi dan dipilih per periode kepengurusan. Bagian naratif (visi, misi, nilai, pilar) bersifat lintas periode; bagian yang bergantung periode mengikuti periode yang dipilih.
+_Avoid_: Menyebut Profil sebagai Tentang Kami, atau mencampur data beberapa periode dalam satu tampilan.
+
+**Struktur organisasi**:
+Susunan pengurus satu komisariat pada satu periode, ditampilkan sebagai BPH terlebih dahulu lalu per divisi. Setiap entri memuat nama dan jabatan, dan diturunkan dari Membership; anggota tanpa divisi tidak ditampilkan di sini.
+_Avoid_: Menyimpan jabatan di sumber manual terpisah, atau memasukkan anggota tanpa divisi ke struktur.
+
 ## Migrasi dan Rilis
 
 **Snapshot hasil rekonsiliasi**:
