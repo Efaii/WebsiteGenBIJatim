@@ -20,7 +20,7 @@ import {
   PhoneCall,
   LayoutGrid
 } from "lucide-react";
-import { siteConfig } from "@/config/site";
+import { siteConfig, type NavDropdown } from "@/config/site";
 
 /**
  * MobileMenu Component
@@ -36,11 +36,17 @@ type CommissariatLink = {
   slug: string;
 };
 
+type PeriodLink = {
+  name: string;
+  href: string;
+};
+
 type MobileMenuProps = {
   isOpen: boolean;
   onClose: () => void;
   pathname: string;
   commissariatLinks: CommissariatLink[];
+  periodLinks: PeriodLink[];
 };
 
 export function MobileMenu({
@@ -48,8 +54,9 @@ export function MobileMenu({
   onClose,
   pathname,
   commissariatLinks,
+  periodLinks,
 }: MobileMenuProps) {
-  const [isCommissariatOpen, setIsCommissariatOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<NavDropdown | null>(null);
 
   return (
     <AnimatePresence>
@@ -82,8 +89,8 @@ export function MobileMenu({
                   </div>
                   <span className="text-sm font-bold text-slate-900 tracking-tight">Menu Utama</span>
                 </div>
-                <button 
-                  onClick={onClose} 
+                <button
+                  onClick={onClose}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-900 hover:bg-red-50 hover:text-red-500 transition-colors"
                 >
                   <X size={18} />
@@ -97,12 +104,17 @@ export function MobileMenu({
               <div className="flex flex-col gap-3">
                 {siteConfig.navItems.map((link, i) => {
                   const isActive = pathname === link.href;
-                  const isCommissariatMenu = link.href === "/commissariat";
+                  const dropdown = link.dropdown;
+                  const isAccordion = Boolean(dropdown);
+                  const isAccordionOpen = dropdown != null && openDropdown === dropdown;
+                  const submenu = dropdown === "profil"
+                    ? periodLinks.map((item) => ({ key: item.href, label: item.name, href: item.href }))
+                    : commissariatLinks.map((item) => ({ key: item.slug, label: item.name, href: `/commissariat/${item.slug}` }));
 
                   {/* --- DYNAMIC ICON RESOLVER --- */}
                   let IconComponent = <LayoutGrid size={18} />;
                   if (link.href === "/") IconComponent = <Home size={18} />;
-                  else if (link.href === "/about") IconComponent = <Users2 size={18} />;
+                  else if (link.href === "/profil") IconComponent = <Users2 size={18} />;
                   else if (link.href === "/commissariat") IconComponent = <MapPin size={18} />;
                   else if (link.href === "/calendar") IconComponent = <CalendarDays size={18} />;
                   else if (link.href === "/awardee") IconComponent = <Medal size={18} />;
@@ -112,24 +124,24 @@ export function MobileMenu({
 
                   return (
                     <div key={link.href} className="flex flex-col">
-                      <motion.div 
-                        initial={{ opacity: 0, x: 10 }} 
-                        animate={{ opacity: 1, x: 0 }} 
+                      <motion.div
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
-                        {isCommissariatMenu ? (
+                        {isAccordion ? (
                           <button
-                            onClick={() => setIsCommissariatOpen(!isCommissariatOpen)}
+                            onClick={() => setOpenDropdown(isAccordionOpen ? null : dropdown!)}
                             className={cn(
                               "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border",
-                              isCommissariatOpen || isActive ? "bg-white border-blue-200 text-blue-700 shadow-md ring-1 ring-blue-50" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
+                              isAccordionOpen || isActive ? "bg-white border-blue-200 text-blue-700 shadow-md ring-1 ring-blue-50" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
                             )}
                           >
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isCommissariatOpen || isActive ? "bg-blue-600 text-white shadow-lg" : "bg-slate-50 text-blue-600")}>
+                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isAccordionOpen || isActive ? "bg-blue-600 text-white shadow-lg" : "bg-slate-50 text-blue-600")}>
                               {IconComponent}
                             </div>
                             <span className="font-semibold text-base flex-1 text-left">{link.label}</span>
-                            <ChevronDown size={18} className={cn("transition-transform duration-300", isCommissariatOpen ? "rotate-180 text-blue-500" : "text-slate-900")} />
+                            <ChevronDown size={18} className={cn("transition-transform duration-300", isAccordionOpen ? "rotate-180 text-blue-500" : "text-slate-900")} />
                           </button>
                         ) : (
                           <Link
@@ -150,9 +162,9 @@ export function MobileMenu({
                       </motion.div>
 
                       {/* --- COLLAPSIBLE SUB-MENU ARCHITECTURE --- */}
-                      {isCommissariatMenu && (
+                      {isAccordion && (
                         <AnimatePresence>
-                          {isCommissariatOpen && (
+                          {isAccordionOpen && (
                             <motion.div
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}
@@ -161,19 +173,21 @@ export function MobileMenu({
                               className="overflow-hidden"
                             >
                               <div className="grid grid-cols-2 gap-2 mt-3 px-2">
-                                {commissariatLinks.map((item, index) => (
+                                {submenu.length > 0 ? submenu.map((item, index) => (
                                   <Link
-                                    key={item.slug}
-                                    href={`/commissariat/${item.slug}`}
+                                    key={item.key}
+                                    href={item.href}
                                     onClick={onClose}
                                     className={cn(
                                       "px-3 py-3 text-[11px] font-semibold bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm active:bg-blue-50 active:border-blue-200 transition-all text-center flex items-center justify-center leading-tight",
-                                      index === commissariatLinks.length - 1 && commissariatLinks.length % 2 !== 0 ? "col-span-2" : ""
+                                      index === submenu.length - 1 && submenu.length % 2 !== 0 ? "col-span-2" : ""
                                     )}
                                   >
-                                    {item.name}
+                                    {item.label}
                                   </Link>
-                                ))}
+                                )) : (
+                                  <span className="col-span-2 px-3 py-3 text-[11px] text-slate-400 text-center">Belum ada data</span>
+                                )}
                               </div>
                             </motion.div>
                           )}
@@ -185,7 +199,7 @@ export function MobileMenu({
               </div>
             </div>
 
-            {/* --- FOOTer CONVERSION SECTION --- */}
+            {/* --- FOOTER CONVERSION SECTION --- */}
             <div className="p-6 bg-white border-t border-slate-100 mt-auto">
               <Link
                 href="/contact"
