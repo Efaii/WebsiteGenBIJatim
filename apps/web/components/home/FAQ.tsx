@@ -22,8 +22,6 @@ import { cn } from "@/lib/utils";
  * - Performance: Hardware-accelerated transitions via GPU transform to prevent reflow lag.
  */
 export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
-  if (!faqs || faqs.length === 0) return null;
-
   /* --- COMPONENT STATE MANAGEMENT --- */
   // Separated indices to prevent UI conflicts between responsive breakpoints
   const [activeMasterIndex, setActiveMasterIndex] = useState<number | null>(null);
@@ -41,6 +39,24 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
       document.body.style.overflow = "unset";
     };
   }, [mobileActiveIndex]);
+
+  if (!faqs || faqs.length === 0) {
+    return (
+      <section className="relative bg-slate-50 py-16 md:py-24">
+        <div className="container mx-auto max-w-7xl px-6 lg:px-8 xl:px-12">
+          <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-sm md:px-10">
+            <MessageCircleQuestion className="mx-auto mb-5 h-12 w-12 text-blue-600" />
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+              Pertanyaan yang Sering Diajukan
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-slate-600">
+              Informasi FAQ akan segera tersedia.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 md:py-24 bg-slate-50 relative">

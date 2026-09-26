@@ -42,8 +42,8 @@ export function Portal() {
     <section className="py-16 md:py-24 bg-white relative overflow-hidden">
       
       {/* --- SECTION CONTENT WRAPPER --- */}
-      <div className="container px-6 lg:px-8 xl:px-12 relative z-10 max-w-7xl">
-        <div className="w-full lg:px-6 xl:px-10">
+      <div className="container mx-auto w-full max-w-none px-6 lg:px-8 xl:px-12 relative z-10">
+        <div className="w-full">
           
           {/* --- HEADER SECTION --- */}
           {/* Manages section titling and brief narrative context */}
@@ -62,27 +62,27 @@ export function Portal() {
 
           {/* --- INTERACTIVE GRID CONTAINER --- */}
           {/* Implements responsive column logic and standardized row heights */}
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 md:auto-rows-[280px]">
+          <StaggerContainer className="grid w-full grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 md:auto-rows-[280px] items-stretch">
             {items.map((item, idx) => {
               const Icon = ICON_MAP[item.iconName] || LayoutDashboard;
               const iconName = item.iconName as string;
 
               return (
-                <FadeIn key={idx} delay={0.3 + idx * 0.15} className="h-50 lg:h-full">
+                <FadeIn key={idx} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
                   <Link
                     href={item.link}
                     className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
                   >
                     {/* --- CARD HEADER: NAVIGATION & ICONOGRAPHY --- */}
                     <div className="relative z-10 flex justify-between items-start mb-4 md:mb-6">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center bg-white border border-slate-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 relative overflow-hidden">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-white border border-slate-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 relative overflow-hidden">
                         <Icon
-                          className="w-5 h-5 md:w-6 md:h-6 relative z-10"
+                          className="w-8 h-8 md:w-10 md:h-10 relative z-10"
                           strokeWidth={1.5}
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-blue-600 transition-all duration-300" />
+                        <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-blue-600 transition-all duration-300" />
                       </div>
                     </div>
 
@@ -116,10 +116,10 @@ export function Portal() {
 
                     {/* --- CARD NARRATIVE LAYER --- */}
                     <div className="relative z-10">
-                      <h3 className="text-sm md:text-lg font-bold text-slate-900 mb-1 md:mb-2 group-hover:text-blue-700 transition-colors">
+                      <h3 className="text-base md:text-xl font-bold text-slate-900 mb-1 md:mb-2 group-hover:text-blue-700 transition-colors">
                         {item.title}
                       </h3>
-                      <p className="text-slate-900 text-[11px] md:text-sm leading-relaxed line-clamp-2 md:line-clamp-none">
+                      <p className="text-slate-900 text-xs md:text-base leading-relaxed line-clamp-2 md:line-clamp-none">
                         {item.desc}
                       </p>
                     </div>

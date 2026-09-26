@@ -24,14 +24,12 @@ type NavItem = {
 };
 
 type NavbarLinksProps = {
-  scrolled: boolean;
   pathname: string;
   navItems: NavItem[];
   commissariatLinks: CommissariatLink[];
 };
 
 export function NavbarLinks({
-  scrolled,
   pathname,
   navItems,
   commissariatLinks,
@@ -58,8 +56,11 @@ export function NavbarLinks({
                   className={cn(
                     "text-sm font-medium transition-colors flex items-center gap-1",
                     isDropdownActive
-                      ? "text-blue-600 font-bold"
-                      : "text-slate-900 hover:text-blue-700",
+                      ? cn(
+                          "font-bold relative after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:bg-current",
+                          "text-blue-600",
+                        )
+                      : "text-blue-900 hover:text-blue-600",
                   )}
                 >
                   {link.label}
@@ -116,12 +117,13 @@ export function NavbarLinks({
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-blue-600",
+                "text-sm font-medium transition-colors relative after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:transition-opacity",
                 pathname === link.href
-                  ? "text-blue-600 font-bold"
-                  : scrolled
-                    ? "text-slate-900"
-                    : "text-slate-900",
+                  ? cn(
+                      "font-bold after:opacity-100",
+                      "text-blue-600 after:bg-blue-600",
+                    )
+                  : "text-blue-900 hover:text-blue-600 after:opacity-0",
               )}
             >
               {link.label}

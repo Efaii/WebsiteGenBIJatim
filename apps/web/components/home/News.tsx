@@ -1,194 +1,112 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
-import { ArrowRight, Calendar, ArrowUpRight } from "lucide-react";
-import { homeContent } from "@/content/home";
+import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import { AdminNewsItem } from "@/services/news.service";
 
-/**
- * NewsGrid Component
- * * Purpose: Renders a preview of updates with a strict, dependency-based appearance sequence.
- * Architecture:
- * - Sync Engine: Secondary cards are gated by the 'isMainVisible' state.
- * - Sequential Integrity: Ensures secondary elements never trigger before the featured card, 
- * effectively neutralizing inconsistencies caused by varying scroll speeds.
- * - Interaction: Combines viewport observation with manual interaction fallbacks.
- */
 export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
-  const { description } = homeContent.newsPreview;
+  const newsItems = (initialNews || []).slice(0, 3);
 
-  /* --- STATE MANAGEMENT & VISUAL GATING --- */
-  // Acts as the master trigger for the staggered animation sequence
-  const [isMainVisible, setIsMainVisible] = useState(false);
-
-  const finalItems = initialNews || [];
-  const [featured, ...others] = finalItems;
-
-  /* --- DATA TRANSFORMATION HELPERS --- */
   const getImageUrl = (url: string) =>
     url.startsWith("/uploads") ? `http://localhost:5000${url}` : url;
 
-  const formatDate = (item: AdminNewsItem) =>
+  const formatMonth = (item: AdminNewsItem) =>
     new Date(item.createdAt).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
+      month: "long",
       year: "numeric",
     });
 
   const getExcerpt = (item: AdminNewsItem) =>
-    item.content.length > 120 ? item.content.slice(0, 120) + "..." : item.content;
-
-  const getTag = () => "LIPUTAN TERBARU";
+    item.content.length > 155 ? `${item.content.slice(0, 155)}...` : item.content;
 
   return (
-    <section className="py-16 md:py-24 bg-white relative overflow-hidden">
-      <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative z-10 max-w-7xl">
-        <div className="w-full lg:px-6 xl:px-10">
-          
-          {/* --- NARRATIVE HEADER SECTION --- */}
-          <div className="flex flex-col justify-between items-start mb-6 w-full max-w-2xl mx-auto md:mx-0 md:text-left text-center">
-            <div className="w-full">
-              <FadeIn delay={0.2}>
-                <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-[1.15] mb-6">
-                  Berita <span className="text-blue-600">& Kegiatan</span>
-                </h2>
-              </FadeIn>
-              <FadeIn delay={0.3}>
-                <p className="text-slate-900 text-lg max-w-lg leading-relaxed mx-auto md:mx-0">
-                  {description}
-                </p>
-              </FadeIn>
-            </div>
-          </div>
+    <section className="bg-white px-6 py-16 md:px-10 md:py-24">
+      <div className="mx-auto max-w-329">
+        <FadeIn className="mb-12 flex items-center justify-between gap-6" amount={0.2}>
+          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-blue-700 md:text-[34px]">
+            Berita Kegiatan
+          </h2>
+          <Link
+            href="/news"
+            className="group flex shrink-0 items-center gap-3 rounded-full bg-blue-700 px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(30,64,175,0.18)] transition-all hover:bg-blue-800 hover:shadow-[0_10px_24px_rgba(30,64,175,0.26)]"
+          >
+            Lainnya
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+          </Link>
+        </FadeIn>
 
-          {/* --- BENTO GRID ANIMATION ENGINE --- */}
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 auto-rows-[260px]">
-            
-            {/* FEATURED CONTENT: Primary Sequence Trigger */}
-            {featured && (
-              <div 
-                className="col-span-1 md:col-span-2 row-span-1 md:row-span-2 h-full"
-                onPointerOver={() => !isMainVisible && setIsMainVisible(true)}
-              >
-                <FadeIn
-                  delay={0.1}
-                  // Callback initiates the gated sequence for all subordinate cards
-                  onViewportEnter={() => setIsMainVisible(true)}
-                  className="h-full"
-                >
+        {newsItems.length > 0 ? (
+          <StaggerContainer className="grid grid-cols-1 gap-6 lg:grid-cols-3" staggerDelay={0.12} amount={0.15}>
+            {newsItems.map((news) => {
+              const galleryImages: Array<string | null> = [news.image, null, null, null];
+
+              return (
+                <FadeIn key={news.id} className="min-w-0" delay={0.1} amount={0.15}>
                   <Link
-                    href={`/news/${featured.slug}`}
-                    className="block w-full h-full relative group overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition-all duration-300"
+                    href={`/news/${news.slug}`}
+                    className="group block overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_5px_20px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)]"
                   >
-                    <Image
-                      src={getImageUrl(featured.image)}
-                      alt={featured.title}
-                      fill
-                      unoptimized
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-80 group-hover:opacity-90" />
+                    <div className="relative aspect-[1.95/1] overflow-hidden">
+                      <Image
+                        src={getImageUrl(news.image)}
+                        alt={news.title}
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
 
-                    <div className="absolute bottom-0 left-0 p-5 md:p-6 w-full flex flex-col justify-end">
-                      <div className="mb-2">
-                        <span className="inline-block px-3 py-1 bg-blue-600 text-white text-[10px] sm:text-xs font-bold rounded-full">
-                          {getTag()}
+                    <div className="grid grid-cols-4 gap-3 px-5 pt-5">
+                      {galleryImages.map((image, index) => (
+                        <div key={`${news.id}-${index}`} className="relative aspect-square min-w-0 overflow-hidden rounded-lg bg-slate-100">
+                          {image && (
+                            <Image
+                              src={getImageUrl(image)}
+                              alt=""
+                              fill
+                              unoptimized
+                              className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="px-5 pb-6 pt-7">
+                      <h3 className="line-clamp-1 text-xl font-extrabold leading-tight text-slate-950 transition-colors group-hover:text-blue-700">
+                        {news.title}
+                      </h3>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-slate-600" />
+                          {formatMonth(news)}
+                        </span>
+                        <span className="text-slate-400">•</span>
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-slate-600" />
+                          {news.author || "GenBI Jawa Timur"}
                         </span>
                       </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-white mb-2 leading-tight group-hover:text-blue-300">
-                        {featured.title}
-                      </h3>
-                      <p className="text-white text-sm line-clamp-2 w-full md:w-5/6 mb-3">
-                        {getExcerpt(featured)}
+                      <p className="mt-5 line-clamp-3 text-[15px] leading-7 text-slate-800">
+                        {getExcerpt(news)}
                       </p>
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-2 text-white/80 text-xs font-medium">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {formatDate(featured)}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-blue-300 group-hover:text-white">
-                          <span>Baca Lengkap</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
                     </div>
                   </Link>
                 </FadeIn>
-              </div>
-            )}
-
-            {/* SECONDARY FEED: Gated Sequential Cards */}
-            {others.slice(0, 3).map((news, i) => (
-              <div key={news.id || i} className="col-span-1 row-span-1 h-full">
-                {isMainVisible && (
-                  <FadeIn
-                    delay={0.3}
-                    className="h-full"
-                  >
-                    <Link
-                      href={`/news/${news.slug}`}
-                      className="flex flex-col w-full h-full group overflow-hidden rounded-2xl bg-slate-50/50 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all duration-200"
-                    >
-                      <div className="relative h-32 w-full overflow-hidden shrink-0">
-                        <Image
-                          src={getImageUrl(news.image)}
-                          alt={news.title}
-                          fill
-                          unoptimized
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute top-4 left-4">
-                          <span className="px-2.5 py-1 text-[10px] font-bold text-blue-600 bg-white/95 rounded-full uppercase">
-                            {getTag()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="p-4 md:p-5 flex-1 flex flex-col justify-between bg-white">
-                        <div>
-                          <div className="flex items-center gap-2 text-slate-900 text-[11px] font-medium mb-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {formatDate(news)}
-                          </div>
-                          <h3 className="text-[14px] font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-blue-600">
-                            {news.title}
-                          </h3>
-                        </div>
-                        <div className="flex justify-between items-center border-t border-slate-100 pt-2">
-                          <span className="text-[11px] font-bold text-slate-900 group-hover:text-blue-600">Baca Lengkap</span>
-                          <ArrowUpRight className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-600" />
-                        </div>
-                      </div>
-                    </Link>
-                  </FadeIn>
-                )}
-              </div>
-            ))}
-
-            {/* ARCHIVE CTA: Final Sequence Conversion Card */}
-            <div className="col-span-1 row-span-1 h-full">
-              {isMainVisible && (
-                <FadeIn delay={0.6} className="h-full">
-                  <Link
-                    href="/news"
-                    className="relative w-full h-full group overflow-hidden rounded-2xl bg-blue-600 hover:bg-blue-700 transition-all duration-200 flex flex-col justify-center items-center text-center px-4 shadow-md"
-                  >
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 text-blue-600 z-10 group-hover:scale-110 transition-transform">
-                      <ArrowRight className="w-5 h-5" strokeWidth={2.5} />
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1.5 z-10">Arsip Lengkap</h3>
-                    <p className="text-[12px] text-white leading-relaxed max-w-[170px] z-10">
-                      Jelajahi seluruh rilis berita & dokumentasi.
-                    </p>
-                  </Link>
-                </FadeIn>
-              )}
-            </div>
+              );
+            })}
           </StaggerContainer>
-        </div>
+        ) : (
+          <FadeIn amount={0.2}>
+            <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 text-center">
+              <p className="text-lg font-semibold text-slate-600 md:text-xl">
+                Nantikan Berita menarik dari Kami
+              </p>
+            </div>
+          </FadeIn>
+        )}
       </div>
     </section>
   );

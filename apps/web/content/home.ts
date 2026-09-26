@@ -9,8 +9,8 @@ export const homeContent = {
   hero: {
     badge: "GenBI Jawa Timur",
     heading: {
-      line1: "Energi Baru",
-      line2: "Untuk Indonesia",
+      line1: "Generasi Baru",
+      line2: "untuk Indonesia",
     },
     description:
       "Komunitas penerima Beasiswa Bank Indonesia di Jawa Timur. Menjadi garda terdepan transformasi bangsa sebagai",
@@ -22,9 +22,9 @@ export const homeContent = {
   },
   stats: [
     { label: "Komisariat", suffix: "", isDynamic: true },
-    { label: "Anggota", number: 500, suffix: "+" },
-    { label: "Proker", number: 50, suffix: "+" },
-    { label: "Dampak", value: "∞" },
+    { label: "Anggota", number: 619, suffix: "" },
+    { label: "Program Kerja", number: 139, suffix: "" },
+    { label: "Tahun Berkarya", number: 12, suffix: "+" },
   ],
   portalGrid: {
     title: "Akses Platform Digital",
@@ -38,9 +38,9 @@ export const homeContent = {
         iconName: "LayoutDashboard" as const,
       },
       {
-        title: "Pusat Dokumen",
-        desc: "Unduh SOP, Panduan, dan Template surat.",
-        link: "/docs",
+        title: "Database Program Kerja",
+        desc: "Jelajahi program kerja GenBI se-Jatim.",
+        link: "/commissariat",
         color: "from-slate-600 to-slate-800",
         iconName: "FileText" as const,
       },
@@ -52,7 +52,7 @@ export const homeContent = {
         iconName: "GraduationCap" as const,
       },
       {
-        title: "Kabar & Berita",
+        title: "Pengumuman & Berita",
         desc: "Informasi kegiatan terbaru GenBI Jatim.",
         link: "/news",
         color: "from-blue-800 to-indigo-900",
