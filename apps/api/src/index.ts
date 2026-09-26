@@ -25,6 +25,7 @@ import membershipRoutes from './routes/membership.route';
 import { assertRuntimeConfig } from './lib/runtime-config';
 import masterRoutes from './routes/master.route';
 import programRoutes from './routes/program.route';
+import publicPeriodRoutes from './routes/public-periods.route';
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use('/api/v1/membership-imports', membershipImportRoutes);
 app.use('/api/v1/memberships', membershipRoutes);
 app.use('/api/v1/masters', masterRoutes);
 app.use('/api/v1/programs', programRoutes);
+app.use('/api/v1/periods', publicPeriodRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
