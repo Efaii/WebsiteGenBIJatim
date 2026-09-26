@@ -1,215 +1,149 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { FadeIn, SlideUp } from "@/components/MotionWrapper";
-import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
-import { getAwardees } from "@/lib/services/awardee.service";
-import type { Awardee } from "@repo/types";
+import { getPublicAwardees } from "@/lib/services/awardee.service";
+import { getPublicPeriods, periodFromSlug, periodSlug } from "@/lib/services/period.service";
 
-export default function AwardeePage() {
-  const [awardees, setAwardees] = useState<Awardee[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCommissariat, setSelectedCommissariat] = useState("Semua");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 10;
+export default async function AwardeePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periode?: string; q?: string }>;
+}) {
+  const { periode, q } = await searchParams;
 
-  useEffect(() => {
-    let cancelled = false;
-    getAwardees()
-      .then((data) => {
-        if (!cancelled) setAwardees(data);
-      })
-      .catch(() => {
-        if (!cancelled) setError("Data awardee belum dapat dimuat.");
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { periods, defaultPeriod } = await getPublicPeriods();
+  const period = (periode && periodFromSlug(periode, periods)) || periods[0] || defaultPeriod;
 
-  const commissariats = useMemo(
-    () => [
-      "Semua",
-      ...Array.from(new Set(awardees.map((awardee) => awardee.commissariat.name))).sort(),
-    ],
-    [awardees],
-  );
+  const { awardees, summary } = period
+    ? await getPublicAwardees(period)
+    : { awardees: [], summary: { total: 0, byCommissariat: [] } };
 
-  const filteredAwardees = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    return awardees.filter((awardee) => {
-      const haystack = [
-        awardee.name,
-        awardee.studyProgram,
-        awardee.position,
-        awardee.division,
-        awardee.commissariat.name,
-      ]
-        .join(" ")
-        .toLowerCase();
-      const matchesSearch = !query || haystack.includes(query);
-      const matchesCommissariat =
-        selectedCommissariat === "Semua" ||
-        awardee.commissariat.name === selectedCommissariat;
-      return matchesSearch && matchesCommissariat;
-    });
-  }, [awardees, searchTerm, selectedCommissariat]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredAwardees.length / itemsPerPage));
-  const safePage = Math.min(currentPage, totalPages);
-  const indexOfFirstItem = (safePage - 1) * itemsPerPage;
-  const currentItems = filteredAwardees.slice(indexOfFirstItem, indexOfFirstItem + itemsPerPage);
-
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(Math.min(Math.max(pageNumber, 1), totalPages));
-    window.scrollTo({ top: 300, behavior: "smooth" });
-  };
+  const query = (q ?? "").trim();
+  const normalizedQuery = query.toLowerCase();
+  const filtered = normalizedQuery
+    ? awardees.filter((awardee) =>
+        [awardee.name, awardee.commissariat.name, awardee.division, awardee.studyProgram]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : awardees;
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-clip bg-transparent font-sans text-white selection:bg-cyan-500 selection:text-white">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <Navbar />
-      <div className="pointer-events-none absolute right-0 top-0 h-[500px] w-[500px] animate-blob rounded-full bg-blue-500/20 opacity-30 mix-blend-screen blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 left-0 h-[500px] w-[500px] animate-blob rounded-full bg-cyan-500/10 opacity-30 mix-blend-screen blur-3xl animation-delay-2000" />
 
-      <main className="relative z-10 w-full flex-1">
-        <section className="relative overflow-hidden py-20">
-          <div className="container relative mx-auto px-6 text-center">
-            <SlideUp>
-              <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-                Penerima Beasiswa{" "}
-                <span className="bg-gradient-to-r from-cyan-400 to-blue-200 bg-clip-text text-transparent">
-                  GenBI Jatim
-                </span>
-              </h1>
-              <p className="mx-auto max-w-2xl text-lg leading-relaxed text-blue-100/70">
-                Data penerima beasiswa Bank Indonesia periode 2025/2026 dari sembilan komisariat GenBI Jawa Timur.
-              </p>
-            </SlideUp>
+      <main className="flex-1 container mx-auto max-w-6xl px-6 py-20">
+        <header className="mb-10 text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-blue-600 md:text-4xl">
+            Penerima Beasiswa GenBI Jatim
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+            Data penerima beasiswa Bank Indonesia periode {period} dari sembilan komisariat GenBI Jawa Timur.
+          </p>
+        </header>
+
+        {/* --- PERIOD FILTER --- */}
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-2">
+          <span className="mr-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Periode</span>
+          {periods.map((item) => (
+            <Link
+              key={item}
+              href={`/awardee?periode=${periodSlug(item)}`}
+              className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+                item === period
+                  ? "border-blue-600 bg-blue-600 text-white"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
+              }`}
+            >
+              {item}
+            </Link>
+          ))}
+        </div>
+
+        {/* --- SUMMARY --- */}
+        <section className="mb-10">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-baseline gap-3">
+              <span className="text-4xl font-bold text-slate-900">{summary.total}</span>
+              <span className="text-sm font-semibold text-slate-500">awardee pada periode {period}</span>
+            </div>
+            {summary.byCommissariat.length > 0 && (
+              <ul className="mt-5 flex flex-wrap gap-2">
+                {summary.byCommissariat.map((entry) => (
+                  <li
+                    key={entry.slug}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
+                  >
+                    {entry.name} <span className="text-blue-600">{entry.count}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
 
-        <section className="container mx-auto px-6 py-12">
-          <FadeIn delay={0.2} className="w-full">
-            <div className="relative z-20 mb-10 flex flex-col items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur-md md:flex-row">
-              <div className="relative w-full md:w-96">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-200/50">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Cari nama, prodi, jabatan..."
-                  className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-12 pr-4 font-medium text-white placeholder:text-blue-200/40 focus:border-cyan-400/50 focus:outline-none"
-                  value={searchTerm}
-                  onChange={(event) => {
-                    setSearchTerm(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                />
-              </div>
+        {/* --- SEARCH --- */}
+        <form method="get" className="mb-6 flex flex-wrap items-center gap-3">
+          <input type="hidden" name="periode" value={periodSlug(period)} />
+          <input
+            type="search"
+            name="q"
+            defaultValue={query}
+            placeholder="Cari nama, komisariat, divisi, atau prodi..."
+            className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-blue-700"
+          >
+            Cari
+          </button>
+          {query && (
+            <Link href={`/awardee?periode=${periodSlug(period)}`} className="text-sm font-semibold text-slate-500 hover:text-blue-600">
+              Reset
+            </Link>
+          )}
+        </form>
 
-              <div className="relative w-full md:w-auto">
-                <button
-                  onClick={() => setIsDropdownOpen((open) => !open)}
-                  className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/5 px-6 py-3 pr-10 text-left font-bold text-white hover:bg-white/10 md:w-64"
-                >
-                  <span className="truncate">{selectedCommissariat}</span>
-                  <span className={isDropdownOpen ? "rotate-180 text-blue-200/60" : "text-blue-200/60"}>▼</span>
-                </button>
-                {isDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
-                    <div className="absolute left-0 top-full z-50 mt-2 flex max-h-60 w-full flex-col gap-1 overflow-y-auto rounded-2xl border border-white/10 bg-blue-950/90 p-2 shadow-2xl backdrop-blur-2xl md:w-64">
-                      {commissariats.map((commissariat) => (
-                        <button
-                          key={commissariat}
-                          onClick={() => {
-                            setSelectedCommissariat(commissariat);
-                            setCurrentPage(1);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full rounded-full px-4 py-3 text-left text-base font-medium ${selectedCommissariat === commissariat ? "bg-cyan-500/20 font-bold text-cyan-200" : "text-blue-100/80 hover:bg-white/10 hover:text-white"}`}
-                        >
-                          {commissariat}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+        {/* --- TABLE --- */}
+        {filtered.length > 0 ? (
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Nama</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Komisariat</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Divisi</th>
+                    <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Prodi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.map((awardee) => (
+                    <tr key={awardee.id} className="hover:bg-slate-50/60">
+                      <td className="px-5 py-3 text-sm font-semibold text-slate-900">{awardee.name}</td>
+                      <td className="px-5 py-3 text-sm text-slate-600">{awardee.commissariat.name}</td>
+                      <td className="px-5 py-3 text-sm text-slate-600">{awardee.division}</td>
+                      <td className="px-5 py-3 text-sm text-slate-600">{awardee.studyProgram}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
+        ) : (
+          <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-center text-sm text-slate-500">
+            {query ? `Tidak ada awardee yang cocok dengan "${query}".` : `Data awardee periode ${period} belum tersedia.`}
+          </p>
+        )}
 
-            <Card className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-xl backdrop-blur-md">
-              {isLoading ? (
-                <div className="p-12 text-center text-blue-100/70">Memuat data awardee...</div>
-              ) : error ? (
-                <div className="p-12 text-center text-red-200">{error}</div>
-              ) : (
-                <>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse text-left">
-                      <thead>
-                        <tr className="border-b border-white/10 bg-white/10">
-                          <th className="p-6 text-xs font-bold uppercase tracking-widest text-blue-200">Nama Lengkap</th>
-                          <th className="hidden p-6 text-xs font-bold uppercase tracking-widest text-blue-200 md:table-cell">Komisariat</th>
-                          <th className="hidden p-6 text-xs font-bold uppercase tracking-widest text-blue-200 sm:table-cell">Prodi</th>
-                          <th className="p-6 text-center text-xs font-bold uppercase tracking-widest text-blue-200">Periode</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5">
-                        {currentItems.length > 0 ? currentItems.map((item) => (
-                          <tr key={item.id} className="group transition-colors hover:bg-white/5">
-                            <td className="p-6 font-semibold text-white transition-colors group-hover:text-cyan-200">
-                              <div className="flex items-center gap-3">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/10 text-[10px] font-bold text-cyan-200">
-                                  {item.name.substring(0, 2).toUpperCase()}
-                                </div>
-                                <div>
-                                  <div>{item.name}</div>
-                                  <div className="mt-1 text-xs font-normal text-blue-100/50">{item.position} · {item.division}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="hidden p-6 font-medium text-blue-100/70 md:table-cell">{item.commissariat.name}</td>
-                            <td className="hidden p-6 text-blue-100/70 sm:table-cell">{item.studyProgram}</td>
-                            <td className="p-6 text-center">
-                              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold text-blue-200">{item.period}</span>
-                            </td>
-                          </tr>
-                        )) : (
-                          <tr><td colSpan={4} className="p-12 text-center text-slate-400">Data tidak ditemukan untuk pencarian ini.</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {filteredAwardees.length > 0 && (
-                    <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 p-6 sm:flex-row">
-                      <span className="text-sm text-blue-200/60">Menampilkan {indexOfFirstItem + 1} - {Math.min(indexOfFirstItem + itemsPerPage, filteredAwardees.length)} dari {filteredAwardees.length} data</span>
-                      <div className="flex items-center gap-2">
-                        <Button variant="secondary" size="sm" className="h-8 md:h-9" onClick={() => handlePageChange(safePage - 1)} disabled={safePage === 1}>Previous</Button>
-                        <span className="rounded-lg border border-white/10 bg-white/10 px-3 py-1.5 text-sm font-bold text-cyan-200">Page {safePage} of {totalPages}</span>
-                        <Button variant="secondary" size="sm" className="h-8 md:h-9" onClick={() => handlePageChange(safePage + 1)} disabled={safePage === totalPages}>Next</Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </Card>
-
-            {!isLoading && !error && <div className="mt-6 text-center text-sm text-slate-400">Menampilkan {filteredAwardees.length} dari {awardees.length} data aktif dan terpublikasi.</div>}
-          </FadeIn>
-        </section>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Menampilkan {filtered.length} dari {awardees.length} awardee.
+        </p>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 -z-10 bg-blue-950/50 backdrop-blur-3xl" />
+      <div className="border-t border-slate-200 bg-white">
         <Footer />
       </div>
     </div>
