@@ -122,6 +122,24 @@ _Avoid_: Menganggap arsip komisariat sebagai sumber akses Proposal/LPJ.
 Galeri foto atau dokumentasi kegiatan yang melekat pada satu Program kerja. Dokumentasi ini tetap dapat ditampilkan pada detail Program kerja dan berbeda dari arsip komisariat serta halaman Dokumen umum.
 _Avoid_: Menghapus dokumentasi Program kerja ketika menghapus halaman Dokumen umum.
 
+## Batas Permukaan
+
+**Permukaan publik**:
+Bagian situs yang dapat dilihat tanpa login: seluruh route publik di `apps/web/app` (Beranda, Profil, Komisariat, Program kerja, Awardee, Berita, Kalender, Dokumen, Kontak) beserta komponen bersama yang dipakainya (Navbar, Footer, Card, Button). Kualitas permukaan ini diukur dari perilaku di browser, bukan dari keberhasilan build.
+_Avoid_: Menyamakan permukaan publik dengan seluruh aplikasi, atau menganggap komponen bersama sebagai milik CMS.
+
+**Permukaan CMS**:
+Bagian situs dan kontrak yang hanya dipakai operator terautentikasi: seluruh route `/admin/*`, alur approval, impor, dan pengelolaan konten. Permukaan ini berada di luar release frontend publik dan perbaikannya tidak boleh memblokir pekerjaan permukaan publik.
+_Avoid_: Mencampur temuan CMS ke dalam definisi selesai permukaan publik.
+
+**Konten statis disengaja**:
+Teks atau angka yang memang ditulis tetap di dalam kode karena nilainya stabil dan disetujui, misalnya metrik Beranda (ADR 0001) dan narasi profil. Nilai ini bukan mock, boleh tampil apa adanya, dan sumbernya dicatat di komentar.
+_Avoid_: Menyebut konten statis sebagai mock, atau menuntut semua konten diambil dari API.
+
+**Data mock**:
+Data karangan yang menyerupai data nyata tetapi tidak berasal dari database atau sumber resmi: file fixture, array hardcoded yang berpura-pura menjadi hasil query, dan fallback yang mengarang isi saat API gagal. Data mock tidak boleh tampil di permukaan publik.
+_Avoid_: Menyamakan mock dengan konten statis, atau membiarkan mock sebagai "fallback" demi halaman terlihat penuh.
+
 ## Presentasi Publik
 
 **Beranda**:

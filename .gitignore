@@ -30,6 +30,27 @@ ts-debug.log*
 # Turbo
 .turbo
 
+# Bukti audit visual disimpan lokal, bukan di repo
+tests/visual/
+
+# Generated TypeScript output that sits beside its sources (tsc artifacts).
+# Webpack dev resolves .js before .ts, so stale artifacts shadow real source.
+# Build output in dist/ stays trackable (explicitly re-included below).
+apps/web/**/*.js
+apps/web/**/*.js.map
+apps/web/**/*.d.ts
+apps/web/**/*.d.ts.map
+apps/api/**/*.js
+apps/api/**/*.js.map
+apps/api/**/*.d.ts
+apps/api/**/*.d.ts.map
+packages/types/**/*.js
+packages/types/**/*.js.map
+packages/types/**/*.d.ts
+packages/types/**/*.d.ts.map
+!apps/api/dist/**
+!packages/types/dist/**
+
 # Migration evidence is generated locally and stored in secure artifact storage.
 artifacts/migration/
 artifacts/promotion/
