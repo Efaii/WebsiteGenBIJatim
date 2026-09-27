@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { FadeIn, SlideUp } from "@/components/MotionWrapper";
+import { HeroVideo } from "@/components/home/HeroVideo";
 import CountUp from "@/components/CountUp";
 import { homeContent } from "@/content/home";
 import { COMMISSARIAT_DATA } from "@/content/commissariatData";
@@ -30,18 +31,14 @@ export function Hero() {
           priority
           className="object-cover object-center lg:object-center"
         />
-        
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          poster="/assets/images/raker.jpg"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          aria-label="Aktivitas GenBI Jawa Timur"
-        >
-          <source src="/assets/videos/hero.mp4" type="video/mp4" />
-        </video>
+
+        {homeContent.hero.video.enabled && (
+          <HeroVideo
+            src={homeContent.hero.video.src}
+            type={homeContent.hero.video.type}
+            poster={homeContent.hero.video.poster}
+          />
+        )}
 
         <div className="absolute inset-0 bg-blue-900/65" />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-950/80 via-blue-900/45 to-blue-800/30" />

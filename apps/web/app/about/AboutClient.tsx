@@ -15,7 +15,6 @@ import {
 import { PageBackground } from "@/components/PageBackground";
 import Image from "next/image";
 import { BPHMember } from "@/components/MemberDetailModal";
-import { KorkomData, EventItem } from "@/app/types"; // Should come from shared types
 import {
   Crown,
   Shield,
@@ -79,36 +78,12 @@ const MemberListItem = ({
   );
 };
 
-interface AboutClientProps {
-  korkomData: KorkomData;
-  sharedEvents: EventItem[];
-}
-
-export default function AboutClient({
-  korkomData,
-  sharedEvents,
-}: AboutClientProps) {
+export default function AboutClient() {
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
   const [selectedMember, setSelectedMember] = useState<BPHMember | null>(null);
   const [activeTab, setActiveTab] = useState<"struktur" | "proker" | "arsip">(
     "struktur",
   );
-
-  // Pagination State for Proker
-  const [prokerPage, setProkerPage] = useState(1);
-  const prokerItemsPerPage = 6;
-  const indexOfLastProker = prokerPage * prokerItemsPerPage;
-  const indexOfFirstProker = indexOfLastProker - prokerItemsPerPage;
-  const currentProkers = sharedEvents.slice(
-    indexOfFirstProker,
-    indexOfLastProker,
-  );
-  const totalProkerPages = Math.ceil(sharedEvents.length / prokerItemsPerPage);
-
-  // Helper to filter divisions
-  const getDivisionMembers = (divName: string) => {
-    return korkomData.divisions.filter((m: any) => m.division === divName);
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative">

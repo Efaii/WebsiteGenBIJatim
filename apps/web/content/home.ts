@@ -16,8 +16,27 @@ export const homeContent = {
       "Komunitas penerima Beasiswa Bank Indonesia di Jawa Timur. Menjadi garda terdepan transformasi bangsa sebagai",
     highlights: ["Front-liner, Agent of Change,", "Future Leaders."],
     cta: {
-      primary: { label: "Profil Lengkap", href: "/about" },
+      primary: { label: "Profil Lengkap", href: "/profil" },
       secondary: { label: "Data Komisariat", href: "/commissariat" },
+    },
+    /**
+     * Latar video hero (opsional).
+     *
+     * Cara mengaktifkan:
+     * 1. Taruh file di `apps/web/public/assets/videos/hero.mp4`.
+     * 2. Ubah `enabled` menjadi true.
+     *
+     * Panduan encode agar tetap cepat (target ≤ 2 MB):
+     * ffmpeg -i sumber.mp4 -vf "scale=1280:-2" -an -c:v libx264 -crf 26 \
+     *   -preset slow -movflags +faststart -t 8 hero.mp4
+     * (1280x720, tanpa audio, loop 8 detik, faststart agar bisa diputar sebelum
+     * file selesai diunduh). Poster tetap `/assets/images/raker.jpg`.
+     */
+    video: {
+      enabled: false,
+      src: "/assets/videos/hero.mp4",
+      type: "video/mp4",
+      poster: "/assets/images/raker.jpg",
     },
   },
   stats: [

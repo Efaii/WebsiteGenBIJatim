@@ -13,10 +13,8 @@ import {
   Home,
   Users2,
   MapPin,
-  CalendarDays,
   Medal,
   Newspaper,
-  FileText,
   PhoneCall,
   LayoutGrid
 } from "lucide-react";
@@ -91,6 +89,7 @@ export function MobileMenu({
                 </div>
                 <button
                   onClick={onClose}
+                  aria-label="Tutup menu"
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-900 hover:bg-red-50 hover:text-red-500 transition-colors"
                 >
                   <X size={18} />
@@ -116,10 +115,8 @@ export function MobileMenu({
                   if (link.href === "/") IconComponent = <Home size={18} />;
                   else if (link.href === "/profil") IconComponent = <Users2 size={18} />;
                   else if (link.href === "/commissariat") IconComponent = <MapPin size={18} />;
-                  else if (link.href === "/calendar") IconComponent = <CalendarDays size={18} />;
                   else if (link.href === "/awardee") IconComponent = <Medal size={18} />;
                   else if (link.href === "/news") IconComponent = <Newspaper size={18} />;
-                  else if (link.href === "/docs") IconComponent = <FileText size={18} />;
                   else if (link.href === "/contact") IconComponent = <PhoneCall size={18} />;
 
                   return (

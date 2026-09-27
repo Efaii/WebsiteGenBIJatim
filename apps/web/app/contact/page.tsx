@@ -3,6 +3,7 @@ import { Footer } from "@/components/footer";
 import { Card } from "@/components/Card";
 import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import { ContactForm } from "@/components/features/contact/ContactForm";
+import { Instagram, Mail, MapPin } from "lucide-react";
 
 export const metadata = {
   title: "Hubungi Kami - GenBI Jatim",
@@ -48,9 +49,9 @@ export default function ContactPage() {
               <div className="space-y-8">
                 <FadeIn delay={0.2}>
                   <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8">
-                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                      <span className="text-3xl">📍</span> Sekretariat
-                    </h3>
+                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                      <MapPin className="w-6 h-6 text-cyan-300" aria-hidden="true" /> Sekretariat
+                    </h2>
                     <address className="not-italic text-blue-200/80 space-y-4 leading-relaxed">
                       <p className="font-semibold text-white">
                         GenBI Jawa Timur
@@ -67,7 +68,7 @@ export default function ContactPage() {
                     <div className="mt-8 pt-8 border-t border-white/10 space-y-4">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-300">
-                          ✉️
+                          <Mail className="w-5 h-5" aria-hidden="true" />
                         </div>
                         <div>
                           <p className="text-xs text-blue-300 uppercase font-bold tracking-wider">
@@ -83,7 +84,7 @@ export default function ContactPage() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-300">
-                          📱
+                          <Instagram className="w-5 h-5" aria-hidden="true" />
                         </div>
                         <div>
                           <p className="text-xs text-blue-300 uppercase font-bold tracking-wider">
@@ -92,6 +93,7 @@ export default function ContactPage() {
                           <a
                             href="https://instagram.com/genbijatim"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-white hover:text-cyan-400 transition-colors"
                           >
                             @genbijatim
