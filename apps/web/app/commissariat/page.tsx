@@ -17,6 +17,16 @@ import {
   type CommissariatSummary,
 } from "@/lib/services/commissariat.service";
 
+/**
+ * next/image throws "Invalid URL" when a src is neither site-relative nor an
+ * absolute URL, and the API can return junk (e.g. a test row with
+ * logo_univ="test"). Fall back to the GenBI mark for anything unusable.
+ */
+const toLogoSrc = (src: string | null | undefined): string =>
+  typeof src === "string" && (src.startsWith("/") || /^https?:\/\//.test(src))
+    ? src
+    : "/assets/logos/genbi.svg";
+
 export default function CommissariatPage() {
   const [data, setData] = useState<CommissariatSummary[]>([]);
   const [stats, setStats] = useState({
@@ -146,7 +156,7 @@ export default function CommissariatPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 overflow-hidden shadow-inner font-bold text-blue-600 text-xl">
                         <Image
-                          src={comm.logo_univ || "/assets/logos/genbi.svg"}
+                          src={toLogoSrc(comm.logo_univ)}
                           alt={`${comm.name} Logo`}
                           width={48}
                           height={48}

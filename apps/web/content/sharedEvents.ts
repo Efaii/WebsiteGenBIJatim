@@ -105,7 +105,7 @@ export const SHARED_EVENTS: ProkerData[] = [
     description:
       "Program rutin bulanan untuk mengapresiasi capaian anggota GenBI Jatim di berbagai bidang.",
     description_long:
-      "Ge-Nius (GenBI in Us) adalah inisiatif Divisi PR-Medkom untuk memantik semangat berprestasi. Setiap akhir bulan, kami mengkurasi dan mempublikasikan capaian anggota—mulai dari juara lomba, publikasi ilmiah, hingga partisipasi event internasional—dalam format visual yang estetik di Instagram.",
+      "Ge-Nius (GenBI in Us) adalah inisiatif Divisi PR-Medkom untuk memantik semangat berprestasi. Setiap akhir bulan, kami mengkurasi dan mempublikasikan capaian anggota, mulai dari juara lomba, publikasi ilmiah, hingga partisipasi event internasional, dalam format visual yang estetik di Instagram.",
     objectives: [
       "Membangun budaya apresiasi yang suportif.",
       "Database prestasi anggota GenBI Jatim.",

@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { BPHMember, Document, EventItem, KorkomData } from "@/app/types";
+import { KorkomData } from "@/app/types";
 
 export const getKorkomData = async (): Promise<KorkomData> => {
     try {
@@ -15,15 +15,5 @@ export const getKorkomData = async (): Promise<KorkomData> => {
             divisions: [],
             documents: []
         };
-    }
-}
-
-export const getSharedEvents = async (): Promise<EventItem[]> => {
-    try {
-        const response = await api.get<EventItem[]>("/events");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching shared events:", error);
-        return [];
     }
 }

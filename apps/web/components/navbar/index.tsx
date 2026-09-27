@@ -92,6 +92,8 @@ export function Navbar() {
             <div className="md:hidden relative z-[110]">
               <button
                 onClick={() => setIsOpen(!isOpen)}
+                aria-label="Menu"
+                aria-expanded={isOpen}
                 className={cn(
                   "w-10 h-10 flex items-center justify-center transition-all duration-300 rounded-xl border active:scale-95",
                   isOpen

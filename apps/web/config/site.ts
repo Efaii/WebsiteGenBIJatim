@@ -12,8 +12,6 @@ const navItems: NavItem[] = [
   { label: "Komisariat", href: "/commissariat", dropdown: "commissariat" },
   { label: "Awardee", href: "/awardee" },
   { label: "Berita", href: "/news" },
-  { label: "Kalender", href: "/calendar" },
-  { label: "Dokumen", href: "/docs" },
   { label: "Hubungi Kami", href: "/contact" },
 ];
 
