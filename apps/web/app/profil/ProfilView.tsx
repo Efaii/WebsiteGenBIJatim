@@ -1,17 +1,12 @@
 import Link from "next/link";
 import AboutClient from "../about/AboutClient";
-import { getKorkomData, getSharedEvents } from "@/lib/services/profile.service";
 import { getPeriodHasData, getPublicPeriods, periodSlug } from "@/lib/services/period.service";
 
 export default async function ProfilView({ period }: { period: string | null }) {
   const { periods } = await getPublicPeriods();
   const active = period ?? periods[0] ?? null;
 
-  const [korkomData, sharedEvents, hasData] = await Promise.all([
-    getKorkomData(),
-    getSharedEvents(),
-    active ? getPeriodHasData(active) : Promise.resolve(false),
-  ]);
+  const hasData = active ? await getPeriodHasData(active) : false;
 
   return (
     <div>
@@ -41,7 +36,7 @@ export default async function ProfilView({ period }: { period: string | null }) 
         </div>
       </section>
 
-      <AboutClient korkomData={korkomData} sharedEvents={sharedEvents} />
+      <AboutClient />
     </div>
   );
 }

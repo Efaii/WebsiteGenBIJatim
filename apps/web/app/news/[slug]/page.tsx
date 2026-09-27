@@ -108,14 +108,14 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
             {related.length > 0 && (
               <div className="lg:col-span-4 space-y-8">
                 <div className="bg-blue-950/20 border border-white/10 rounded-2xl p-6 sticky top-24">
-                  <h4 className="text-lg font-bold text-white mb-4">Berita Terkait</h4>
+                  <h2 className="text-lg font-bold text-white mb-4">Berita Terkait</h2>
                   <ul className="space-y-4">
                     {related.map((item) => (
                       <li key={item.id} className="group">
                         <Link href={`/news/${item.slug}`} className="block">
-                          <h5 className="text-blue-100 group-hover:text-cyan-400 transition-colors text-sm font-medium mb-1">
+                          <h3 className="text-blue-100 group-hover:text-cyan-400 transition-colors text-sm font-medium mb-1">
                             {item.title}
-                          </h5>
+                          </h3>
                           {formatDate(item.publishedAt) && (
                             <span className="text-xs text-blue-500/60">{formatDate(item.publishedAt)}</span>
                           )}

@@ -19,6 +19,7 @@ import {
 } from "@/components/MotionWrapper";
 import { PageBackground } from "@/components/PageBackground";
 import { NewsItem } from "@/app/types"; // Ensure types are imported
+import { ArrowRight, Calendar, Search } from "lucide-react";
 
 interface NewsClientProps {
   initialNews: NewsItem[];
@@ -155,7 +156,9 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
                     </div>
                     <CardHeader className="p-6 pb-2">
                       <div className="text-xs font-medium text-blue-200/60 mb-2 flex items-center gap-2">
-                        <span>📅 {news.date}</span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" aria-hidden="true" /> {news.date}
+                        </span>
                       </div>
                       <CardTitle className="text-xl font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
                         {news.title}
@@ -168,7 +171,7 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
                     </CardContent>
                     <CardFooter className="p-6 pt-0 mt-auto">
                       <span className="text-sm font-semibold text-cyan-200 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Baca Selengkapnya <span>→</span>
+                        Baca Selengkapnya <ArrowRight className="w-4 h-4" aria-hidden="true" />
                       </span>
                     </CardFooter>
                   </Card>
@@ -178,8 +181,8 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
           </StaggerContainer>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-blue-200/50 mb-4 text-3xl">
-              🔍
+            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-blue-200/50 mb-4">
+              <Search className="w-7 h-7" aria-hidden="true" />
             </div>
             <h3 className="text-lg font-semibold text-white">
               Tidak ada berita ditemukan

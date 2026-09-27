@@ -20,10 +20,8 @@ export const footerConfig = {
       id: "jelajahi",
       title: "Jelajahi",
       links: [
-        { label: "Tentang Kami", href: "/about" },
+        { label: "Tentang Kami", href: "/profil" },
         { label: "Komisariat & Kampus", href: "/commissariat" },
-        { label: "Kalender Kegiatan", href: "/calendar" },
-        { label: "Panduan & Dokumen", href: "/docs" },
         { label: "Database Awardee", href: "/awardee" },
         { label: "Berita Terkini", href: "/news" },
       ],

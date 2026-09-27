@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { ArrowRight, MailCheck } from "lucide-react";
 import { submitContactForm } from "@/actions/contact";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -21,9 +22,9 @@ export function ContactForm() {
       <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
         <div className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in zoom-in duration-500">
           <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center text-3xl mb-4">
-            ✅
+            <MailCheck className="w-8 h-8" aria-hidden="true" />
           </div>
-          <h4 className="text-xl font-bold text-white mb-2">Pesan Terkirim!</h4>
+          <h2 className="text-xl font-bold text-white mb-2">Pesan Terkirim!</h2>
           <p className="text-blue-200/70">
             {state.message ||
               "Terima kasih, tim Humas kami akan segera membalas email Anda."}
@@ -43,7 +44,7 @@ export function ContactForm() {
 
   return (
     <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
-      <h3 className="text-2xl font-bold text-white mb-2">Kirim Pesan</h3>
+      <h2 className="text-2xl font-bold text-white mb-2">Kirim Pesan</h2>
       <p className="text-blue-200/60 mb-8 text-sm">
         Silakan isi formulir di bawah ini untuk mengajukan pertanyaan, tawaran
         kerjasama media partner, atau sponsorship.
@@ -162,9 +163,7 @@ export function ContactForm() {
           ) : (
             <span className="flex items-center justify-center gap-2">
               Kirim Pesan{" "}
-              <span className="group-hover:translate-x-1 transition-transform">
-                →
-              </span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </span>
           )}
         </Button>
