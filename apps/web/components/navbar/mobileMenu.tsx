@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -55,6 +55,47 @@ export function MobileMenu({
   periodLinks,
 }: MobileMenuProps) {
   const [openDropdown, setOpenDropdown] = useState<NavDropdown | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Drawer accessibility: Escape menutup panel dan fokus tetap terkunci di
+   * dalamnya selama terbuka. Ditulis tanpa dependency tambahan.
+   */
+  useEffect(() => {
+    if (!isOpen) return;
+    const panel = panelRef.current;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !panel) return;
+
+      const focusable = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || active === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    panel?.focus();
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>
@@ -71,11 +112,16 @@ export function MobileMenu({
 
           {/* --- NAVIGATION PANEL ARCHITECTURE --- */}
           <motion.div
+            ref={panelRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu navigasi"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[130] w-[85vw] max-w-sm bg-slate-50 md:hidden flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 bottom-0 z-[130] w-[85vw] max-w-sm bg-slate-50 md:hidden flex flex-col shadow-2xl focus:outline-none"
           >
             {/* --- BRANDING & HEADER SECTION --- */}
             <div className="relative p-6 px-6 overflow-hidden shrink-0 bg-white border-b border-slate-100">

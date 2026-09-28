@@ -62,9 +62,5 @@ export const footerConfig = {
   },
   bottom: {
     copyright: `© ${new Date().getFullYear()} Generasi Baru Indonesia Korkom Jawa Timur. All rights reserved.`,
-    links: [
-      { label: "Privacy Policy", href: "#" },
-      { label: "Syarat & Ketentuan", href: "#" },
-    ],
   },
 };

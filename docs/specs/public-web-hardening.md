@@ -36,6 +36,8 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 
 **Kebijakan bukti**: `tests/visual/` disimpan **lokal saja** dan masuk `.gitignore`. Yang masuk repo hanya ringkasan temuan (komentar issue dan laporan).
 
+**Catatan kriteria mode gagal**: saat API benar-benar mati, browser tetap mencatat `ERR_CONNECTION_REFUSED` untuk request yang gagal — itu perilaku browser, bukan kode kita. Karena itu kriteria mode gagal adalah **UI error eksplisit + tidak ada unhandled rejection**, bukan "0 error console" (kriteria 0 error console berlaku saat API hidup).
+
 ## 4. Inventaris temuan
 
 | Kode | Severity | Temuan | Bukti |
@@ -59,10 +61,10 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | S4 | — | **Selesai**: service dihapus bersama S5, jadi fallback karangan itu hilang | dihapus |
 | S5 | — | **Selesai (dihapus)**: `/api/profile` ternyata **mock hardcoded** (BPH "Fathir"/"Alya", dokumen `url: "#"`) tanpa konsumen. Route, mount di `index.ts`/`server.ts`, dan `lib/services/profile.service.ts` dihapus | dihapus |
 | S6 | — | **Selesai**: `generateStaticParams` di `program/[id]` dan `commissariat/[slug]` mengembalikan daftar kosong bila API mati, sehingga build tidak lagi hard-fail dan route dirender on-demand | log build |
-| N1 | High | `/program` menampilkan 139 kartu sekaligus tanpa pencarian/paginasi | matriks audit |
-| N2 | Medium | Footer merender "Privacy Policy" dan "Syarat & Ketentuan" sebagai `<span>` dengan `cursor-pointer`: terlihat bisa diklik tetapi tidak melakukan apa pun | `footerBottom.tsx:21-28` |
-| N3 | Low | `/commissariat` tidak punya `<h1>` | matriks audit |
-| N4 | Medium | Drawer mobile belum punya focus trap dan belum bisa ditutup dengan Escape | `mobileMenu.tsx` |
+| N1 | — | **Selesai**: `/program` punya pencarian + paginasi URL (`?q=&page=`) dengan **8 kartu per halaman**; 139 program terbagi 18 halaman | gate Fase 3 |
+| N2 | — | **Selesai**: teks legal palsu dihapus dari `footerBottom.tsx` **dan** dari `config/footer.ts`; footer kini hanya memuat copyright | gate Fase 3 |
+| N3 | — | **Selesai**: `/commissariat` memakai `<h1>` sebagai judul, baik di state normal maupun state gagal | gate Fase 3 |
+| N4 | — | **Selesai**: drawer ber-`role="dialog"`/`aria-modal`, fokus terkunci selama terbuka, ditutup dengan Escape, dan fokus kembali ke tombol pemicu. Tanpa dependency baru | gate Fase 3 |
 | A1 | Medium | `useScrollPosition` non-passive dan memicu re-render navbar setiap frame scroll | `hooks/useScrollPosition.ts` |
 | A2 | Medium | Form kontak belum mengumumkan error/sukses dan belum memakai `aria-invalid` | `ContactForm.tsx` |
 | A3 | Low | `next/image` `fill` tanpa `sizes` di 3 tempat | Hero, mobileMenu, CommissariatDetail |
@@ -75,6 +77,7 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | P1 | Medium | Galeri dokumentasi program (431 file) belum diuji beban dan `sizes` belum diatur | source |
 | P2 | Low | Video hero belum aktif (menunggu aset) | `content/home.ts` |
 | S8 | Low | Selama pengerjaan Fase 1, MySQL (Laragon) sempat mati sehingga `/api/v1/news` dan `/api/home` mengembalikan 500 dan halaman tetap 200 tanpa pesan. Bukti tambahan untuk S1, bukan bug baru | log dev server |
+| S9 | — | **Selesai (regresi Fase 2)**: navbar memanggil `getPublicPeriods().then()` tanpa `.catch()`, sehingga sejak service melempar setiap halaman mencatat unhandled rejection saat API mati. Kini gagal secara diam dan submenu Profil cukup kehilangan daftar periode | uji mode gagal Fase 3 |
 | P3 | Low | `next.config.ts` `remotePatterns` masih hanya localhost | `next.config.ts` |
 
 ## 5. Fase
