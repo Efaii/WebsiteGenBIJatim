@@ -75,9 +75,9 @@ export default function CommissariatPage() {
       <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
         <Navbar />
         <main className="flex-1 container mx-auto max-w-3xl px-4 py-24">
-          <h2 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight text-center">
             Pusat Data Komisariat
-          </h2>
+          </h1>
           <StateMessage
             tone="error"
             title="Data komisariat gagal dimuat"
@@ -110,9 +110,9 @@ export default function CommissariatPage() {
         {/* Header & Stats Dashboard */}
         <section className="mb-12">
           <div className="text-center items-center mx-auto flex flex-col mb-12 relative z-10 max-w-4xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight">
               Pusat Data Komisariat
-            </h2>
+            </h1>
             <div className="mt-4">
               <p className="text-lg text-slate-600 leading-relaxed mx-auto max-w-2xl">
                 Ringkasan 9 Komisariat GenBI di Jawa Timur beserta jumlah anggota
