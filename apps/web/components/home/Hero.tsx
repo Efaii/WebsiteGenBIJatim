@@ -26,6 +26,7 @@ export function Hero() {
           alt="GenBI Activities"
           fill
           priority
+          sizes="100vw"
           className="object-cover object-center lg:object-center"
         />
 
@@ -77,8 +78,8 @@ export function Hero() {
             {/* Orchestrates real-time data display with responsive alignment synchronization */}
             <FadeIn delay={0.8} className="w-full flex justify-center">
               <div className="grid w-full max-w-2xl grid-cols-2 divide-x divide-y divide-slate-200 rounded-[2rem] border border-white/70 bg-white px-3 py-3 shadow-xl shadow-blue-950/20 sm:grid-cols-4 sm:divide-y-0 sm:rounded-[6rem] sm:px-6 sm:py-5">
-                {homeContent.stats.map((stat, i) => (
-                  <div key={i} className="flex min-w-0 flex-col items-center gap-1 px-2 py-2 first:pl-0 last:pr-0 sm:px-4 sm:py-0 [&:nth-child(odd)]:border-r [&:nth-child(-n+2)]:border-b sm:border-0">
+                {homeContent.stats.map((stat) => (
+                  <div key={stat.label} className="flex min-w-0 flex-col items-center gap-1 px-2 py-2 first:pl-0 last:pr-0 sm:px-4 sm:py-0 [&:nth-child(odd)]:border-r [&:nth-child(-n+2)]:border-b sm:border-0">
                       <div className="text-xl font-black text-blue-900 flex items-baseline lg:text-2xl">
                       <CountUp
                         to={stat.number}

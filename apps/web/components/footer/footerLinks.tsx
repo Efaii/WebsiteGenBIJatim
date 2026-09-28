@@ -63,7 +63,7 @@ export function FooterLinks({
                     "text-blue-600 hover:text-blue-700 font-bold text-[12px] uppercase tracking-wider mt-1",
                 )}
               >
-                {link.label} {link.isBold}
+                {link.label}
               </Link>
             </li>
           ))}

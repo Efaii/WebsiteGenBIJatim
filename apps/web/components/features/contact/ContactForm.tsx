@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { ArrowRight, MailCheck } from "lucide-react";
+import { ArrowRight, MailCheck, TriangleAlert } from "lucide-react";
 import { submitContactForm } from "@/actions/contact";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -20,7 +20,11 @@ export function ContactForm() {
   if (state.status === "success") {
     return (
       <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
-        <div className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in zoom-in duration-500">
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in zoom-in duration-500"
+        >
           <div className="w-16 h-16 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center text-3xl mb-4">
             <MailCheck className="w-8 h-8" aria-hidden="true" />
           </div>
@@ -42,6 +46,8 @@ export function ContactForm() {
     );
   }
 
+  const hasFieldErrors = Boolean(state.errors && Object.keys(state.errors).length > 0);
+
   return (
     <Card className="bg-white/5 backdrop-blur-md border-white/10 p-8 h-full">
       <h2 className="text-2xl font-bold text-white mb-2">Kirim Pesan</h2>
@@ -49,6 +55,17 @@ export function ContactForm() {
         Silakan isi formulir di bawah ini untuk mengajukan pertanyaan, tawaran
         kerjasama media partner, atau sponsorship.
       </p>
+
+      {/* Ringkasan kegagalan yang tidak terikat satu field (mis. jaringan). */}
+      {state.status === "error" && !hasFieldErrors && (
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+        >
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{state.message}</span>
+        </div>
+      )}
 
       <form action={formAction} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -64,11 +81,15 @@ export function ContactForm() {
               name="name"
               type="text"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all"
+              aria-invalid={state.errors?.name ? true : undefined}
+              aria-describedby={state.errors?.name ? "name-error" : undefined}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all aria-[invalid=true]:border-red-400/60"
               placeholder="Jhon Doe"
             />
             {state.errors?.name && (
-              <p className="text-red-400 text-xs">{state.errors.name[0]}</p>
+              <p id="name-error" role="alert" className="text-red-400 text-xs">
+                {state.errors.name[0]}
+              </p>
             )}
           </div>
           <div className="space-y-2">
@@ -83,11 +104,15 @@ export function ContactForm() {
               name="email"
               type="email"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all"
+              aria-invalid={state.errors?.email ? true : undefined}
+              aria-describedby={state.errors?.email ? "email-error" : undefined}
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all aria-[invalid=true]:border-red-400/60"
               placeholder="email@example.com"
             />
             {state.errors?.email && (
-              <p className="text-red-400 text-xs">{state.errors.email[0]}</p>
+              <p id="email-error" role="alert" className="text-red-400 text-xs">
+                {state.errors.email[0]}
+              </p>
             )}
           </div>
         </div>
@@ -102,7 +127,9 @@ export function ContactForm() {
           <select
             id="subject"
             name="subject"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer"
+            aria-invalid={state.errors?.subject ? true : undefined}
+            aria-describedby={state.errors?.subject ? "subject-error" : undefined}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all appearance-none cursor-pointer aria-[invalid=true]:border-red-400/60"
           >
             <option value="Pertanyaan Umum" className="bg-blue-950 text-white">
               Pertanyaan Umum
@@ -124,7 +151,9 @@ export function ContactForm() {
             </option>
           </select>
           {state.errors?.subject && (
-            <p className="text-red-400 text-xs">{state.errors.subject[0]}</p>
+            <p id="subject-error" role="alert" className="text-red-400 text-xs">
+              {state.errors.subject[0]}
+            </p>
           )}
         </div>
 
@@ -140,11 +169,15 @@ export function ContactForm() {
             name="message"
             rows={5}
             required
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all resize-none"
+            aria-invalid={state.errors?.message ? true : undefined}
+            aria-describedby={state.errors?.message ? "message-error" : undefined}
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all resize-none aria-[invalid=true]:border-red-400/60"
             placeholder="Tuliskan detail keperluan Anda di sini..."
           ></textarea>
           {state.errors?.message && (
-            <p className="text-red-400 text-xs">{state.errors.message[0]}</p>
+            <p id="message-error" role="alert" className="text-red-400 text-xs">
+              {state.errors.message[0]}
+            </p>
           )}
         </div>
 

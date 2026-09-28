@@ -43,7 +43,7 @@ export default function CommissariatDetail({ data, periods, period, structure, a
       {/* --- HEADER --- */}
       <section className="relative overflow-hidden bg-blue-950 pb-16 pt-28 text-white">
         {data.cover_image && (
-          <Image src={data.cover_image} alt={data.name} fill className="object-cover opacity-25" priority />
+          <Image src={data.cover_image} alt={data.name} fill sizes="100vw" className="object-cover opacity-25" priority />
         )}
         <div className="container relative z-10 mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
