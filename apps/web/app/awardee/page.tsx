@@ -1,8 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { getPublicAwardees } from "@/lib/services/awardee.service";
 import { getPublicPeriods, periodFromSlug, periodSlug } from "@/lib/services/period.service";
+
+export const metadata: Metadata = {
+  title: "Database Awardee GenBI Jatim",
+  description:
+    "Daftar penerima beasiswa Bank Indonesia (awardee) dari sembilan komisariat GenBI Jawa Timur, lengkap dengan komisariat, divisi, dan program studi.",
+  openGraph: {
+    title: "Database Awardee GenBI Jatim",
+    description:
+      "Daftar penerima beasiswa Bank Indonesia (awardee) dari sembilan komisariat GenBI Jawa Timur.",
+  },
+};
 
 export default async function AwardeePage({
   searchParams,

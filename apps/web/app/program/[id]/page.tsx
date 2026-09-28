@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,6 +25,27 @@ import {
 } from "@/lib/services/program.service";
 import { SlideUp, FadeIn } from "@/components/MotionWrapper";
 import { isPublicProgramItem, programDateLabel, programGalleryItems } from "@/lib/program-presentation.mjs";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const program = await getProgramById(id);
+  if (!program) return { title: "Program kerja tidak ditemukan | GenBI Jatim" };
+
+  const description =
+    typeof program.description === "string" && program.description.length > 0
+      ? program.description.slice(0, 160)
+      : `Program kerja GenBI Jatim: ${program.title}.`;
+
+  return {
+    title: `${program.title} | Program Kerja GenBI Jatim`,
+    description,
+    openGraph: { title: program.title, description },
+  };
+}
 
 export async function generateStaticParams() {
   // Build produksi tidak boleh gagal hanya karena API mati (S6): kembalikan

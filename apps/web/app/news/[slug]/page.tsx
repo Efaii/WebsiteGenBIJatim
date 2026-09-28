@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -14,6 +15,27 @@ const formatDate = (value: string | null | undefined) => {
     ? ""
     : date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const news = await getNewsBySlug(slug);
+  if (!news) return { title: "Berita tidak ditemukan | GenBI Jatim" };
+
+  const cover = newsAssetUrl(news.coverImage);
+  return {
+    title: `${news.title} | GenBI Jatim`,
+    description: news.excerpt,
+    openGraph: {
+      title: news.title,
+      description: news.excerpt,
+      images: cover ? [cover] : undefined,
+    },
+  };
+}
 
 export default async function NewsDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

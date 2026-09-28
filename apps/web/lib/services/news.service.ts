@@ -1,5 +1,4 @@
 import api from "@/lib/api";
-import { NewsItem } from "@/app/types";
 
 const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/api\/?$/, "");
 
@@ -33,10 +32,16 @@ const isNotFound = (error: unknown): boolean =>
  * bisa menampilkan state gagal yang jujur. Slug yang tidak ada bukan error,
  * jadi mengembalikan `null` tanpa menulis apa pun ke console.
  */
-export const getAllNews = async (): Promise<NewsItem[]> => {
-  const response = await api.get<{ data?: NewsItem[] }>("/v1/news");
-  const resData = response.data;
-  return Array.isArray(resData.data) ? resData.data : [];
+/**
+ * Daftar berita terbit untuk halaman `/news`.
+ * API membatasi `pageSize` maksimum 100; paginasi daftar berita menyusul di
+ * pekerjaan terpisah (lihat spec §4 temuan baru bila diperlukan).
+ */
+export const getAllNews = async (): Promise<PublicNewsSummary[]> => {
+  const response = await api.get<{ data?: PublicNewsSummary[] }>("/v1/news", {
+    params: { pageSize: 100 },
+  });
+  return Array.isArray(response.data.data) ? response.data.data : [];
 };
 
 /** Latest published news summaries for the Beranda and related-news sidebar. */

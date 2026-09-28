@@ -129,7 +129,7 @@ export function MobileMenu({
               <div className="relative flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 relative">
-                    <Image src="/assets/logos/genbi.svg" alt="GenBI Logo" fill className="object-contain" />
+                    <Image src="/assets/logos/genbi.svg" alt="GenBI Logo" fill sizes="32px" className="object-contain" />
                   </div>
                   <span className="text-sm font-bold text-slate-900 tracking-tight">Menu Utama</span>
                 </div>

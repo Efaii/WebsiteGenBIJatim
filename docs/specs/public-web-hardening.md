@@ -65,20 +65,22 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | N2 | — | **Selesai**: teks legal palsu dihapus dari `footerBottom.tsx` **dan** dari `config/footer.ts`; footer kini hanya memuat copyright | gate Fase 3 |
 | N3 | — | **Selesai**: `/commissariat` memakai `<h1>` sebagai judul, baik di state normal maupun state gagal | gate Fase 3 |
 | N4 | — | **Selesai**: drawer ber-`role="dialog"`/`aria-modal`, fokus terkunci selama terbuka, ditutup dengan Escape, dan fokus kembali ke tombol pemicu. Tanpa dependency baru | gate Fase 3 |
-| A1 | Medium | `useScrollPosition` non-passive dan memicu re-render navbar setiap frame scroll | `hooks/useScrollPosition.ts` |
-| A2 | Medium | Form kontak belum mengumumkan error/sukses dan belum memakai `aria-invalid` | `ContactForm.tsx` |
-| A3 | Low | `next/image` `fill` tanpa `sizes` di 3 tempat | Hero, mobileMenu, CommissariatDetail |
-| A4 | Low | `NewsClient.tsx` memakai `<img>` mentah | `NewsClient.tsx:135` |
-| A5 | Low | `index` sebagai `key` pada list yang bisa berubah urutan | statistik Hero, galeri detail program, AboutClient |
-| A6 | Low | `{link.isBold}` dirender sebagai boolean tanpa efek | `footerLinks.tsx:66` |
-| E1 | High | Metadata khusus hanya ada di `commissariat/[slug]`, `program`, `contact`; sisanya judul default "GenBI Jatim" | grep `generateMetadata` |
-| E2 | Medium | Tidak ada `sitemap.ts`, `robots.ts`, atau OG image | glob |
+| A1 | — | **Selesai**: hook menyimpan boolean (bukan `scrollY`), dibaca lewat `requestAnimationFrame` dengan listener `passive`; state hanya berubah saat nilainya berubah | gate Fase 4 |
+| A2 | — | **Selesai**: `aria-invalid` + `aria-describedby` per field, tiap pesan error `role="alert"`, kartu sukses `role="status"`, dan kegagalan non-field tampil sebagai ringkasan `role="alert"` | uji jalur error |
+| A3 | — | **Selesai**: `sizes` ditambahkan di Hero (100vw), logo drawer (32px), dan cover komisariat (100vw); galeri detail program tetap menunggu P1 | gate Fase 4 |
+| A4 | — | **Selesai**: memakai `next/image`. Catatan: Next membuang atribut `sizes` selama `unoptimized` dipasang, sehingga manfaat `sizes` di sini belum aktif | terverifikasi dengan data uji |
+| A5 | — | **Selesai (sebagian)**: statistik Hero memakai label sebagai key; list lain sudah memakai key stabil (src/gambar) sejak Fase 1 | gate Fase 4 |
+| A6 | — | **Selesai**: node teks liar itu dihapus; kelas CSS `isBold` tetap dipakai | gate Fase 4 |
+| E1 | — | **Selesai**: title/description/openGraph unik untuk `/`, `/profil`, `/profil/[periode]`, `/commissariat`, `/awardee`, `/news`, `/news/[slug]`, dan `/program/[id]` (ditemukan lewat verifikasi). `/commissariat` memakai layout segmen karena halamannya client component | gate Fase 4 |
+| E2 | — | **Selesai**: `app/sitemap.ts` (**157 entri**: 7 statis + 9 komisariat + 139 program + 2 periode), `app/robots.ts`, OG image via `next/og`, dan `metadataBase` dari `SITE_URL` | gate Fase 4 |
 | S7 | — | **Selesai**: slug berita yang tidak ada mengembalikan `null` tanpa menulis apa pun; gate mode normal kini 0 error console di route itu | gate Playwright |
 | P1 | Medium | Galeri dokumentasi program (431 file) belum diuji beban dan `sizes` belum diatur | source |
 | P2 | Low | Video hero belum aktif (menunggu aset) | `content/home.ts` |
 | S8 | Low | Selama pengerjaan Fase 1, MySQL (Laragon) sempat mati sehingga `/api/v1/news` dan `/api/home` mengembalikan 500 dan halaman tetap 200 tanpa pesan. Bukti tambahan untuk S1, bukan bug baru | log dev server |
 | S9 | — | **Selesai (regresi Fase 2)**: navbar memanggil `getPublicPeriods().then()` tanpa `.catch()`, sehingga sejak service melempar setiap halaman mencatat unhandled rejection saat API mati. Kini gagal secara diam dan submenu Profil cukup kehilangan daftar periode | uji mode gagal Fase 3 |
 | P3 | Low | `next.config.ts` `remotePatterns` masih hanya localhost | `next.config.ts` |
+| M11 | — | **Selesai**: `NewsClient` memakai bentuk data lama (`image`, `image_color`, `snippet`, slug dari judul) padahal API publik mengirim `coverImage`/`excerpt`/`publishedAt`/`slug`; kini memakai bentuk publik | terverifikasi dengan data uji |
+| A7 | Low | `sizes` tidak berpengaruh selama gambar berita memakai `unoptimized`; keputusan mengaktifkan optimizer ditunda bersama P3 | gate Fase 4 |
 
 ## 5. Fase
 
