@@ -18,11 +18,15 @@ import {
   StaggerItem,
 } from "@/components/MotionWrapper";
 import { PageBackground } from "@/components/PageBackground";
-import { NewsItem } from "@/app/types"; // Ensure types are imported
+import Image from "next/image";
+import {
+  newsAssetUrl,
+  type PublicNewsSummary,
+} from "@/lib/services/news.service";
 import { ArrowRight, Calendar, Search } from "lucide-react";
 
 interface NewsClientProps {
-  initialNews: NewsItem[];
+  initialNews: PublicNewsSummary[];
 }
 
 export default function NewsClient({ initialNews }: NewsClientProps) {
@@ -123,19 +127,22 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
             {filteredNews.map((news) => (
               <StaggerItem key={news.id}>
                 <Link
-                  href={`/news/${news.title.toLowerCase().replace(/ /g, "-")}`}
+                  href={`/news/${news.slug}`}
                   className="block h-full"
                 >
                   <Card className="group bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer">
                     <div
-                      className={`h-48 w-full ${news.image_color} relative overflow-hidden flex items-center justify-center`}
+                      className="h-48 w-full bg-blue-900/40 relative overflow-hidden flex items-center justify-center"
                     >
                       {/* Image or Placeholder */}
-                      {news.image ? (
-                        <img
-                          src={news.image}
+                      {news.coverImage ? (
+                        <Image
+                          src={newsAssetUrl(news.coverImage) ?? news.coverImage}
                           alt={news.title}
-                          className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                          fill
+                          unoptimized
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover transform group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
                         <div className="text-primary/20 transform group-hover:scale-110 transition-transform duration-500">
@@ -157,7 +164,14 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
                     <CardHeader className="p-6 pb-2">
                       <div className="text-xs font-medium text-blue-200/60 mb-2 flex items-center gap-2">
                         <span className="inline-flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" aria-hidden="true" /> {news.date}
+                          <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
+                          {news.publishedAt
+                            ? new Date(news.publishedAt).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })
+                            : "GenBI Jawa Timur"}
                         </span>
                       </div>
                       <CardTitle className="text-xl font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
@@ -166,7 +180,7 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
                     </CardHeader>
                     <CardContent className="p-6 pt-2 flex-1">
                       <p className="text-blue-100/70 text-sm leading-relaxed line-clamp-3">
-                        {news.snippet}
+                        {news.excerpt}
                       </p>
                     </CardContent>
                     <CardFooter className="p-6 pt-0 mt-auto">

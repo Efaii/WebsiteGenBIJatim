@@ -10,6 +10,13 @@ import { FAQ } from "@/components/home/FAQ";
 import { StateMessage } from "@/components/StateMessage";
 import { getHomeData, STATIC_COMMISSARIATS } from "@/services/home.service";
 import { getRecentNews } from "@/lib/services/news.service";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "GenBI Jatim | Energi Baru untuk Indonesia",
+  description:
+    "Komunitas penerima Beasiswa Bank Indonesia di Jawa Timur: profil organisasi, sembilan komisariat, program kerja, database awardee, dan berita terbaru.",
+};
 
 /**
  * Beranda.
