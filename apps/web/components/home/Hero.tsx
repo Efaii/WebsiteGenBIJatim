@@ -5,7 +5,6 @@ import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import CountUp from "@/components/CountUp";
 import { homeContent } from "@/content/home";
-import { COMMISSARIAT_DATA } from "@/content/commissariatData";
 
 /**
  * HeroSection Component
@@ -16,8 +15,6 @@ import { COMMISSARIAT_DATA } from "@/content/commissariatData";
  * - Data: Synchronized organizational metrics driven by dynamic counters.
  */
 export function Hero() {
-  const commissariatCount = Object.keys(COMMISSARIAT_DATA).length;
-
   return (
     <section className="relative w-full h-[100svh] min-h-[600px] flex flex-col overflow-hidden bg-blue-950">
       
@@ -83,16 +80,10 @@ export function Hero() {
                 {homeContent.stats.map((stat, i) => (
                   <div key={i} className="flex min-w-0 flex-col items-center gap-1 px-2 py-2 first:pl-0 last:pr-0 sm:px-4 sm:py-0 [&:nth-child(odd)]:border-r [&:nth-child(-n+2)]:border-b sm:border-0">
                       <div className="text-xl font-black text-blue-900 flex items-baseline lg:text-2xl">
-                      {stat.isDynamic ? (
-                        <CountUp to={commissariatCount} />
-                      ) : "value" in stat && typeof stat.value === "string" ? (
-                        stat.value
-                      ) : (
-                        <CountUp
-                          to={stat.number || 0}
-                          suffix={stat.suffix || ""}
-                        />
-                      )}
+                      <CountUp
+                        to={stat.number}
+                        suffix={stat.suffix}
+                      />
                     </div>
                     <div className="text-center text-[9px] font-bold uppercase tracking-[0.12em] text-blue-800 sm:tracking-widest lg:text-[10px]">
                       {stat.label}

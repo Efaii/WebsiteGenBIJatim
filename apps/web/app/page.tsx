@@ -8,7 +8,7 @@ import { Portal } from "@/components/home/Portal";
 import { News } from "@/components/home/News";
 import { FAQ } from "@/components/home/FAQ";
 import { getHomeData } from "@/services/home.service";
-import { getLatestNews } from "@/services/news.service";
+import { getRecentNews } from "@/lib/services/news.service";
 
 /**
  * Landing Page Root Component
@@ -22,7 +22,7 @@ export default async function Home() {
   /* --- ASYNCHRONOUS DATA ORCHESTRATION --- */
   // Executes parallel data retrieval for organizational metrics and site content
   const homeData = await getHomeData();
-  const latestNews = await getLatestNews();
+  const latestNews = await getRecentNews(3);
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-200 selection:text-blue-900">

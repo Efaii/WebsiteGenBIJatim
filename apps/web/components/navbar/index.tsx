@@ -6,7 +6,6 @@ import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { siteConfig } from "@/config/site";
-import { COMMISSARIAT_DATA } from "@/content/commissariatData";
 import { getPublicPeriods, periodSlug } from "@/lib/services/period.service";
 
 import { NavbarLogo } from "./navbarLogo";
@@ -51,12 +50,7 @@ export function Navbar() {
   }, [isOpen]);
 
   {/* --- DATA ARCHITECTURE: COMMISSARIAT RESOLVER --- */}
-  const COMMISSARIAT_LINKS = Object.values(COMMISSARIAT_DATA)
-    .map((c) => ({
-      name: c.name.replace("GenBI Komisariat ", ""),
-      slug: c.slug,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const COMMISSARIAT_LINKS = siteConfig.commissariatLinks;
 
   const PERIOD_LINKS = periods.map((period) => ({
     name: period,
