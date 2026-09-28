@@ -55,7 +55,7 @@ export function FooterSocials() {
           <Image
             src={identity.support.logo}
             alt="Supporting Organization Logo"
-            fill
+            fill sizes="128px"
             className="object-contain object-left"
           />
         </div>

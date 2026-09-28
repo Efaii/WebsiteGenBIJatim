@@ -63,7 +63,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
 
           <div className="absolute inset-0 z-0 bg-[#0f1016]">
             {cover && (
-              <Image src={cover} alt={news.title} fill unoptimized className="object-cover brightness-50" />
+              <Image src={cover} alt={news.title} fill sizes="100vw" unoptimized className="object-cover brightness-50" />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] via-[#0f1016]/50 to-transparent"></div>
           </div>

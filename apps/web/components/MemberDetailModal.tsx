@@ -72,7 +72,7 @@ export const MemberDetailModal = ({
               <Image
                 src={member.image}
                 alt={member.name}
-                fill
+                fill sizes="128px"
                 className="object-cover"
               />
             </div>

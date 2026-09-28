@@ -49,7 +49,7 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
                         <Image
                           src={cover}
                           alt={news.title}
-                          fill
+                          fill sizes="(max-width: 1024px) 100vw, 33vw"
                           unoptimized
                           className="object-cover transition-transform duration-700 group-hover:scale-105"
                         />
