@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { siteConfig } from "@/config/site";
 import { getPublicPeriods, periodSlug } from "@/lib/services/period.service";
 
@@ -25,13 +25,20 @@ export function Navbar() {
   const scrolled = useScrollPosition();
   const [isOpen, setIsOpen] = useState(false);
   const [periods, setPeriods] = useState<string[]>([]);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   {/* --- DATA ARCHITECTURE: PUBLIC PERIODS --- */}
   useEffect(() => {
     let cancelled = false;
-    getPublicPeriods().then((data) => {
-      if (!cancelled) setPeriods(data.periods);
-    });
+    getPublicPeriods()
+      .then((data) => {
+        if (!cancelled) setPeriods(data.periods);
+      })
+      .catch(() => {
+        // Navigasi tetap terpakai walau label periode gagal dimuat: submenu
+        // Profil cukup kehilangan daftar periode, bukan membuat halaman error.
+        if (!cancelled) setPeriods([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -85,6 +92,7 @@ export function Navbar() {
             {/* --- MOBILE INTERACTION TRIGGER --- */}
             <div className="md:hidden relative z-[110]">
               <button
+                ref={menuButtonRef}
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Menu"
                 aria-expanded={isOpen}
@@ -107,7 +115,12 @@ export function Navbar() {
       {/* --- MOBILE NAVIGATION OVERLAY SYSTEM --- */}
       <MobileMenu
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={() => {
+          setIsOpen(false);
+          // Kembalikan fokus ke tombol pemicu supaya pengguna keyboard tidak
+          // terlempar ke awal halaman.
+          menuButtonRef.current?.focus();
+        }}
         pathname={pathname}
         commissariatLinks={COMMISSARIAT_LINKS}
         periodLinks={PERIOD_LINKS}
