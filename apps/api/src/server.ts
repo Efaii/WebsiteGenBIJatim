@@ -8,13 +8,11 @@ const app: Express = express();
 const port = process.env.PORT || 5000;
 
 import newsRoutes from './routes/news';
-import profileRoutes from './routes/profile';
 
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/news', newsRoutes);
-app.use('/api/profile', profileRoutes);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('GenBI Jatim API Server');

@@ -2,7 +2,7 @@ import { HomeDataResponse } from "../types/home.types";
 
 // Logo Komisariat adalah aset statis yang jarang berubah.
 // Best practice: ambil dari folder /assets, bukan dari database.
-const STATIC_COMMISSARIATS = [
+export const STATIC_COMMISSARIATS = [
   { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.svg" },
   { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.svg" },
   { id: "its", name: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.svg" },
@@ -17,30 +17,22 @@ const STATIC_COMMISSARIATS = [
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export const getHomeData = async (): Promise<HomeDataResponse> => {
-  try {
-    // Menarik data seluruh konten homepage via endpoint publik tunggal
-    // Ini menghindari isu 'Access Denied' pada endpoint admin /faqs dan /testimonials
-    const response = await fetch(`${API_BASE}/home`, {
-      next: { revalidate: 60 } 
-    });
+  // Endpoint publik tunggal untuk konten Beranda (menghindari endpoint admin).
+  // Kegagalan dilempar: Beranda menangkapnya per bagian dan menampilkan state
+  // gagal, bukan area kosong.
+  const response = await fetch(`${API_BASE}/home`, {
+    next: { revalidate: 60 }
+  });
 
-    if (!response.ok) {
-      throw new Error(`API respond with status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      faqs: data.faqs || [],
-      testimonials: data.testimonials || [],
-      commissariats: STATIC_COMMISSARIATS, // Tetap menggunakan aset statis untuk logo
-    };
-  } catch (error) {
-    console.error('API Fetch Error:', error);
-    return {
-      testimonials: [],
-      faqs: [],
-      commissariats: STATIC_COMMISSARIATS,
-    };
+  if (!response.ok) {
+    throw new Error(`Home API responded with status: ${response.status}`);
   }
+
+  const data = await response.json();
+
+  return {
+    faqs: data.faqs || [],
+    testimonials: data.testimonials || [],
+    commissariats: STATIC_COMMISSARIATS, // Logo komisariat tetap aset statis
+  };
 };
