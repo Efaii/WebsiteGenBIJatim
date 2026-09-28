@@ -35,14 +35,19 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
     "All",
   );
 
+  // Nilai kategori HARUS sama dengan enum NewsCategory di API (huruf besar),
+  // kalau tidak filter tidak akan pernah cocok.
   const categories = [
     "All",
-    "Kegiatan",
-    "Webinar",
-    "Sosial",
-    "Edukasi",
-    "Pelatihan",
+    "KEGIATAN",
+    "WEBINAR",
+    "SOSIAL",
+    "EDUKASI",
+    "PELATIHAN",
   ];
+
+  const categoryLabel = (value: string) =>
+    value === "All" ? "Semua" : value.charAt(0) + value.slice(1).toLowerCase();
 
   const filteredNews = initialNews.filter((news) => {
     const matchesSearch = news.title
@@ -85,7 +90,7 @@ export default function NewsClient({ initialNews }: NewsClientProps) {
                     : "bg-white/5 text-blue-100/80 hover:bg-white/10 hover:text-white border border-white/10"
                 }`}
               >
-                {cat}
+                {categoryLabel(cat)}
               </button>
             ))}
           </div>

@@ -9,11 +9,6 @@ export const metadata: Metadata = {
   title: "Database Awardee GenBI Jatim",
   description:
     "Daftar penerima beasiswa Bank Indonesia (awardee) dari sembilan komisariat GenBI Jawa Timur, lengkap dengan komisariat, divisi, dan program studi.",
-  openGraph: {
-    title: "Database Awardee GenBI Jatim",
-    description:
-      "Daftar penerima beasiswa Bank Indonesia (awardee) dari sembilan komisariat GenBI Jawa Timur.",
-  },
 };
 
 export default async function AwardeePage({
