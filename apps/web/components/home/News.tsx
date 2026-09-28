@@ -4,22 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
-import { AdminNewsItem } from "@/services/news.service";
+import { newsAssetUrl, type PublicNewsSummary } from "@/lib/services/news.service";
 
-export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
+export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
   const newsItems = (initialNews || []).slice(0, 3);
 
-  const getImageUrl = (url: string) =>
-    url.startsWith("/uploads") ? `http://localhost:5000${url}` : url;
-
-  const formatMonth = (item: AdminNewsItem) =>
-    new Date(item.createdAt).toLocaleDateString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
-
-  const getExcerpt = (item: AdminNewsItem) =>
-    item.content.length > 155 ? `${item.content.slice(0, 155)}...` : item.content;
+  const formatMonth = (item: PublicNewsSummary) =>
+    item.publishedAt
+      ? new Date(item.publishedAt).toLocaleDateString("id-ID", {
+          month: "long",
+          year: "numeric",
+        })
+      : "GenBI Jawa Timur";
 
   return (
     <section className="bg-white px-6 py-16 md:px-10 md:py-24">
@@ -40,7 +36,7 @@ export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
         {newsItems.length > 0 ? (
           <StaggerContainer className="grid grid-cols-1 gap-6 lg:grid-cols-3" staggerDelay={0.12} amount={0.15}>
             {newsItems.map((news) => {
-              const galleryImages: Array<string | null> = [news.image, null, null, null];
+              const cover = newsAssetUrl(news.coverImage);
 
               return (
                 <FadeIn key={news.id} className="min-w-0" delay={0.1} amount={0.15}>
@@ -48,31 +44,17 @@ export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
                     href={`/news/${news.slug}`}
                     className="group block overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_5px_20px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)]"
                   >
-                    <div className="relative aspect-[1.95/1] overflow-hidden">
-                      <Image
-                        src={getImageUrl(news.image)}
-                        alt={news.title}
-                        fill
-                        unoptimized
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-3 px-5 pt-5">
-                      {galleryImages.map((image, index) => (
-                        <div key={`${news.id}-${index}`} className="relative aspect-square min-w-0 overflow-hidden rounded-lg bg-slate-100">
-                          {image && (
-                            <Image
-                              src={getImageUrl(image)}
-                              alt=""
-                              fill
-                              unoptimized
-                              className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    {cover && (
+                      <div className="relative aspect-[1.95/1] overflow-hidden bg-slate-100">
+                        <Image
+                          src={cover}
+                          alt={news.title}
+                          fill
+                          unoptimized
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                    )}
 
                     <div className="px-5 pb-6 pt-7">
                       <h3 className="line-clamp-1 text-xl font-extrabold leading-tight text-slate-950 transition-colors group-hover:text-blue-700">
@@ -80,17 +62,17 @@ export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
                       </h3>
                       <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700">
                         <span className="flex items-center gap-1.5">
-                          <Calendar className="h-4 w-4 text-slate-600" />
+                          <Calendar className="h-4 w-4 text-slate-600" aria-hidden="true" />
                           {formatMonth(news)}
                         </span>
                         <span className="text-slate-400">•</span>
                         <span className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-slate-600" />
-                          {news.author || "GenBI Jawa Timur"}
+                          <MapPin className="h-4 w-4 text-slate-600" aria-hidden="true" />
+                          {news.byline || "GenBI Jawa Timur"}
                         </span>
                       </div>
                       <p className="mt-5 line-clamp-3 text-[15px] leading-7 text-slate-800">
-                        {getExcerpt(news)}
+                        {news.excerpt}
                       </p>
                     </div>
                   </Link>
@@ -102,7 +84,7 @@ export function News({ initialNews }: { initialNews: AdminNewsItem[] }) {
           <FadeIn amount={0.2}>
             <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 text-center">
               <p className="text-lg font-semibold text-slate-600 md:text-xl">
-                Nantikan Berita menarik dari Kami
+                Belum ada berita terbit. Nantikan kabar terbaru dari kami.
               </p>
             </div>
           </FadeIn>

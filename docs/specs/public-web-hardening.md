@@ -43,7 +43,10 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | K1 | High | Artefak kompilasi `.js`/`.d.ts` bersebelahan dengan sumber di `apps/api` (39 file berpasangan `.ts` + 1 script scratch tanpa sumber) dan `packages/types` (3 file sisa lama; tsconfig-nya sudah benar, `outDir: dist`) | `apps/api/temp.js`, `apps/api/prisma/seed.js`, `packages/types/src/index.js`, dll. |
 | K2 | — | **Selesai**: dua rencana lama dipindah ke `docs/archive/` | `docs/archive/` |
 | V1 | Medium | `scripts/e2e-smoke.mjs` belum pernah dijalankan di audit terakhir | `package.json:13` |
-| M1 | High | Beranda: jumlah Komisariat dihitung dari mock `COMMISSARIAT_DATA`; metrik lain statis sesuai ADR 0001 | `Hero.tsx:18`, `content/commissariatData.ts` |
+| M1 | — | **Selesai**: `COMMISSARIAT_DATA` dihapus. Ternyata punya **tiga** konsumen (Hero, dropdown Komisariat di navbar, fallback mock `program.service`), bukan satu seperti catatan awal. Metrik Beranda kini konstanta statis berlabel sumber sesuai ADR 0001 | `content/home.ts`, `config/site.ts` |
+| M8 | — | **Selesai**: `content/sharedEvents.ts` juga korpus mock (KPI karangan seperti "500 Peserta", "90% Tingkat Kepuasan") dan menjadi mati setelah fallback mock dihapus | dihapus |
+| M9 | — | **Selesai (bug)**: tautan UPN memakai slug mock `upn-veteran-jatim` di navbar dan footer, sedangkan API melayani `upnvjt`; keduanya 404. Kini keduanya `upnvjt` dan halaman detailnya 200 | `config/site.ts`, `config/footer.ts` |
+| M10 | — | **Selesai**: kartu berita Beranda merender tiga kotak galeri kosong padahal API publik hanya menyediakan satu `coverImage`; baris galeri dihapus | `components/home/News.tsx` |
 | M2 | High | Beranda mengambil berita lewat service CMS (`services/news.service.ts` → `/news`), bukan service publik (`lib/services/news.service.ts` → `/v1/news`); tipe `AdminNewsItem` bocor ke komponen Beranda | `app/page.tsx:11`, `components/home/News.tsx:7` |
 | M3 | Medium | Dua service berita hidup berdampingan. **Keputusan**: permukaan publik hanya memakai service v1; service kedua tetap untuk admin (bukan dihapus) | `lib/services/news.service.ts`, `services/news.service.ts` |
 | M4 | Low | `lib/services/google.ts` tidak punya importer | dikonfirmasi via grep |
@@ -71,6 +74,7 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | S7 | Medium | Halaman not-found berita tetap menulis `console.error` dari service saat slug tidak ada, sehingga 404 yang sah tercatat sebagai error console | gate Playwright Fase 0 |
 | P1 | Medium | Galeri dokumentasi program (431 file) belum diuji beban dan `sizes` belum diatur | source |
 | P2 | Low | Video hero belum aktif (menunggu aset) | `content/home.ts` |
+| S8 | Low | Selama pengerjaan Fase 1, MySQL (Laragon) sempat mati sehingga `/api/v1/news` dan `/api/home` mengembalikan 500 dan halaman tetap 200 tanpa pesan. Bukti tambahan untuk S1, bukan bug baru | log dev server |
 | P3 | Low | `next.config.ts` `remotePatterns` masih hanya localhost | `next.config.ts` |
 
 ## 5. Fase
@@ -88,14 +92,17 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 
 ### Fase 1 — Hapus mock dari permukaan publik
 
-**Lingkup**: M1, M2, M3, M4
+**Lingkup**: M1, M2, M3, M4, M8, M9, M10 (selesai)
 **Deliverable**:
-- M1: hapus pemakaian `COMMISSARIAT_DATA` dari `Hero.tsx`, ganti konstanta tunggal berlabel. Metrik Beranda **tetap statis** sesuai ADR 0001 dan diberi komentar sumber.
-- M2: Beranda pindah ke `lib/services/news.service.ts` (`/v1/news`); tipe `AdminNewsItem` tidak lagi diimpor komponen publik.
-- M3: `services/news.service.ts` tetap ada untuk admin, diberi komentar batasnya (CMS-only).
+Semua dikerjakan:
+- M1 + M8: mock dihapus; `Hero` memakai konstanta statis dari `content/home.ts`, dropdown Komisariat memakai `siteConfig.commissariatLinks` (nama + slug canonical), `program.service` tidak lagi punya fallback mock, dan `content/commissariatData.ts` serta `content/sharedEvents.ts` dihapus.
+- M2: Beranda memakai `getRecentNews(3)` dari `lib/services/news.service.ts`; `components/home/News.tsx` memakai tipe publik (`coverImage`/`publishedAt`/`excerpt`/`byline`) + `newsAssetUrl` (menghapus URL localhost hardcoded).
+- M3: `services/news.service.ts` diberi header CMS-only dan fungsi publik mati `getLatestNews` dihapus.
 - M4: `lib/services/google.ts` dihapus.
+- M9: slug UPN diperbaiki ke `upnvjt` (navbar + footer).
+- M10: baris galeri kosong di kartu berita dihapus.
 
-**Exit criteria**: `content/commissariatData.ts` terhapus; tidak ada file mock di jalur import halaman publik; komponen publik tidak mengimpor tipe/service CMS; gate §3 lulus.
+**Exit criteria (terpenuhi)**: `content/commissariatData.ts` dan `content/sharedEvents.ts` terhapus; tidak ada file mock di jalur import halaman publik; `components/home/News.tsx` tidak lagi mengimpor tipe/service CMS; gate §3 lulus (11/12 route bersih, pengecualian N3 dan S7 yang sudah tercatat).
 **Blocked by**: Fase 0.
 
 ### Fase 2 — State jujur: loading, empty, error
