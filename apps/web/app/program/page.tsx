@@ -10,10 +10,6 @@ import { programDateLabel, publicProgramItems } from "@/lib/program-presentation
 export const metadata: Metadata = {
   title: "Program Kerja | GenBI Jatim",
   description: "Daftar program kerja GenBI Jawa Timur",
-  openGraph: {
-    title: "Program Kerja | GenBI Jatim",
-    description: "Daftar program kerja GenBI Jawa Timur",
-  },
 };
 
 const PAGE_SIZE = 8;

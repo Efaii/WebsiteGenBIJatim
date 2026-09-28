@@ -13,10 +13,6 @@ export async function generateMetadata({
   return {
     title: `Profil GenBI Jatim ${label}`,
     description: `Profil, visi, misi, nilai, dan pilar GenBI Jawa Timur pada periode kepengurusan ${label}.`,
-    openGraph: {
-      title: `Profil GenBI Jatim ${label}`,
-      description: `Profil, visi, misi, nilai, dan pilar GenBI Jawa Timur pada periode kepengurusan ${label}.`,
-    },
   };
 }
 

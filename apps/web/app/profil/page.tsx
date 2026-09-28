@@ -5,11 +5,6 @@ export const metadata: Metadata = {
   title: "Profil GenBI Jawa Timur",
   description:
     "Profil, visi, misi, nilai, dan pilar GenBI Jawa Timur lintas periode kepengurusan.",
-  openGraph: {
-    title: "Profil GenBI Jawa Timur",
-    description:
-      "Profil, visi, misi, nilai, dan pilar GenBI Jawa Timur lintas periode kepengurusan.",
-  },
 };
 
 export default function ProfilIndexPage() {

@@ -261,7 +261,7 @@ export default function AboutClient() {
                     ].map((item, index) => (
                       <SlideUp
                         once={false}
-                        key={index}
+                        key={item}
                         className="flex items-start gap-4"
                       >
                         <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-sm font-bold mt-1 flex-shrink-0">
@@ -312,8 +312,8 @@ export default function AboutClient() {
                   icon: <Crown className="w-10 h-10" strokeWidth={1.5} />,
                   color: "from-amber-500 to-yellow-600",
                 },
-              ].map((value, i) => (
-                <StaggerItem key={i}>
+              ].map((value) => (
+                <StaggerItem key={value.title}>
                   <Card
                     variant="default"
                     className="h-full flex flex-col items-center text-center p-8 pt-12 group cursor-default relative overflow-hidden border-slate-200 shadow-sm hover:border-blue-200 hover:shadow-lg"

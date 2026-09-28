@@ -6,11 +6,6 @@ export const metadata: Metadata = {
   title: "Berita & Kegiatan | GenBI Jatim",
   description:
     "Kabar terbaru seputar kegiatan, program, dan prestasi GenBI Jawa Timur.",
-  openGraph: {
-    title: "Berita & Kegiatan | GenBI Jatim",
-    description:
-      "Kabar terbaru seputar kegiatan, program, dan prestasi GenBI Jawa Timur.",
-  },
 };
 
 export default async function NewsPage() {
