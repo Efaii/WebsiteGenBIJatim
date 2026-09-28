@@ -53,12 +53,12 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | M5 | — | **Selesai**: `/calendar`, `/calendar/[id]`, `lib/services/calendar.service.ts`, `/api/events` + `routes/events.ts` dihapus. Navigasi bersih | keputusan pemilik produk |
 | M6 | — | **Selesai**: `/docs` publik dan `/api/docs` dihapus (page, client, service, route, mount, tautan navigasi). Dokumen jadi urusan sekretaris/CMS | keputusan pemilik produk |
 | M7 | — | **Selesai**: `apps/api/.env` menunjuk `genbi_jatim_initial_production` selama hardening. Awardee menampilkan 619 baris dan struktur komisariat terisi | `apps/api/.env` |
-| S1 | High | Error API ditelan menjadi `[]` sehingga halaman tampak kosong tanpa pesan. **Terbukti saat API mati**: `/` tetap 200 dan log hanya menulis `API Fetch Error: ECONNREFUSED` | news/docs-service, log dev server |
-| S2 | Medium | Tidak ada `loading.tsx`/`error.tsx` per route publik | hanya root |
-| S3 | Medium | `app/error.tsx` memakai `window.location.href` untuk navigasi internal | `app/error.tsx:44` |
-| S4 | Medium | `profile.service.ts` punya fallback yang **mengarang nama organisasi** ("GenBI Koordinator Komisariat Jawa Timur") dan menelan error | `lib/services/profile.service.ts:11-17` |
-| S5 | Medium | Rantai profil kini **tanpa konsumen**: `getKorkomData` tidak dipakai lagi oleh halaman mana pun (Profil tidak pernah menampilkan data itu). `/api/profile` + service-nya perlu dihapus atau dipertahankan dengan alasan jelas | grep `profile.service` |
-| S6 | Medium | **`next build` bergantung pada API yang hidup**: tanpa API, build gagal di `Collecting page data for /program/[id]` (`ECONNREFUSED`). Ditemukan saat Fase 0 | log `npm run build` |
+| S1 | — | **Selesai**: service publik melempar (news dengan 404 → `null`, periode, feed Beranda). Beranda menangkap per bagian, dan `/commissariat` (halaman client) tidak lagi menyamarkan kegagalan sebagai "data belum tersedia" | gate mode gagal |
+| S2 | — | **Selesai**: `loading.tsx` + `error.tsx` untuk enam segmen route berdata (`program`, `program/[id]`, `commissariat/[slug]`, `profil/[periode]`, `awardee`, `news/[slug]`) lewat komponen bersama `RouteState` | 12 file route |
+| S3 | — | **Selesai**: `app/error.tsx` memakai boundary bersama (`reset()` + tautan Beranda), tanpa `window.location` | lint warning hilang |
+| S4 | — | **Selesai**: service dihapus bersama S5, jadi fallback karangan itu hilang | dihapus |
+| S5 | — | **Selesai (dihapus)**: `/api/profile` ternyata **mock hardcoded** (BPH "Fathir"/"Alya", dokumen `url: "#"`) tanpa konsumen. Route, mount di `index.ts`/`server.ts`, dan `lib/services/profile.service.ts` dihapus | dihapus |
+| S6 | — | **Selesai**: `generateStaticParams` di `program/[id]` dan `commissariat/[slug]` mengembalikan daftar kosong bila API mati, sehingga build tidak lagi hard-fail dan route dirender on-demand | log build |
 | N1 | High | `/program` menampilkan 139 kartu sekaligus tanpa pencarian/paginasi | matriks audit |
 | N2 | Medium | Footer merender "Privacy Policy" dan "Syarat & Ketentuan" sebagai `<span>` dengan `cursor-pointer`: terlihat bisa diklik tetapi tidak melakukan apa pun | `footerBottom.tsx:21-28` |
 | N3 | Low | `/commissariat` tidak punya `<h1>` | matriks audit |
@@ -71,7 +71,7 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | A6 | Low | `{link.isBold}` dirender sebagai boolean tanpa efek | `footerLinks.tsx:66` |
 | E1 | High | Metadata khusus hanya ada di `commissariat/[slug]`, `program`, `contact`; sisanya judul default "GenBI Jatim" | grep `generateMetadata` |
 | E2 | Medium | Tidak ada `sitemap.ts`, `robots.ts`, atau OG image | glob |
-| S7 | Medium | Halaman not-found berita tetap menulis `console.error` dari service saat slug tidak ada, sehingga 404 yang sah tercatat sebagai error console | gate Playwright Fase 0 |
+| S7 | — | **Selesai**: slug berita yang tidak ada mengembalikan `null` tanpa menulis apa pun; gate mode normal kini 0 error console di route itu | gate Playwright |
 | P1 | Medium | Galeri dokumentasi program (431 file) belum diuji beban dan `sizes` belum diatur | source |
 | P2 | Low | Video hero belum aktif (menunggu aset) | `content/home.ts` |
 | S8 | Low | Selama pengerjaan Fase 1, MySQL (Laragon) sempat mati sehingga `/api/v1/news` dan `/api/home` mengembalikan 500 dan halaman tetap 200 tanpa pesan. Bukti tambahan untuk S1, bukan bug baru | log dev server |
@@ -177,6 +177,8 @@ Playwright MCP headless terhadap dev server:
 2. Untuk interaksi: klik/ketik nyata, lalu verifikasi URL, teks state, dan isi DB bila relevan.
 3. Bukti disimpan lokal di `tests/visual/` dan `tests/visual/snapshots/`.
 4. Uji kegagalan: matikan API, ulangi langkah 1 untuk memastikan state error tampil.
+
+**Bukti mode gagal (Fase 2)**: dengan web berjalan tanpa API, 9 route menampilkan pesan "Konten gagal dimuat", Beranda menampilkan fallback per bagian ("belum dapat dimuat"), `/commissariat` menampilkan pesan gagal + tombol Coba Lagi, dan `/contact` tetap normal.
 
 ## 8. Risiko
 

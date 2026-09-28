@@ -26,7 +26,16 @@ import { SlideUp, FadeIn } from "@/components/MotionWrapper";
 import { isPublicProgramItem, programDateLabel, programGalleryItems } from "@/lib/program-presentation.mjs";
 
 export async function generateStaticParams() {
-  return getAllProgramIds();
+  // Build produksi tidak boleh gagal hanya karena API mati (S6): kembalikan
+  // daftar kosong dan biarkan route dirender on-demand.
+  try {
+    return await getAllProgramIds();
+  } catch {
+    console.warn(
+      "[program/[id]] generateStaticParams: API tidak tersedia, route dirender on-demand.",
+    );
+    return [];
+  }
 }
 
 // Custom parser component to automatically render bullet points and numbered lists
