@@ -22,7 +22,7 @@ export function FooterIdentity() {
             <Image
               src={identity.logo}
               alt={`${identity.name} Logo`}
-              fill
+              fill sizes="128px"
               className="object-contain"
             />
           </div>

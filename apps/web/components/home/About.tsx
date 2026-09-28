@@ -42,7 +42,7 @@ export function About({
                     <Image
                       src={src}
                       alt={alt}
-                      fill
+                      fill sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>

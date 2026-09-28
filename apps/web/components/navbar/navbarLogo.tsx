@@ -22,7 +22,7 @@ export function NavbarLogo() {
         <Image
           src="/assets/logos/genbi.svg"
           alt="GenBI Jatim Logo"
-          fill
+          fill sizes="40px"
           className="object-contain"
           priority
         />

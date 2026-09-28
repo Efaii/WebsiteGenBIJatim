@@ -208,3 +208,19 @@ Playwright MCP headless terhadap dev server:
 | N2 | Tautan legal dihapus (bukan dibuatkan halaman) sampai konten legal benar-benar ada. |
 | V1 | Tanpa dependency baru: verifikasi lewat loop MCP yang didokumentasikan. |
 | Bukti | Screenshot disimpan lokal (`tests/visual/`, gitignored). |
+
+## 10. Status akhir (Fase 5)
+
+**Fase 5 selesai.** Ringkasan hasil dan temuan yang masih terbuka:
+
+| Kode | Status | Catatan |
+|---|---|---|
+| P1 | Selesai | Semua `next/image` ber-`fill` kini punya `sizes` (**0** tanpa sizes, sebelumnya 13). Galeri dokumentasi memakai `sizes` grid dan lazy default; hero detail program memakai `priority`. Peringatan `missing "sizes"` dan peringatan LCP di console **hilang**. Diukur di mode produksi: `/program/[id]` FCP **164 ms**, load **589 ms**, CLS **0**, total 640 KB (6 gambar, 165 KB); beranda FCP 216 ms, CLS 0; `/awardee` (tabel 619 baris) load 383 ms, 46 KB |
+| P2 | Selesai (tanpa perubahan) | Aset video hero tidak ada, jadi tetap `enabled: false`; tidak ada permintaan 404 di console. Bila aset tersedia: taruh `public/assets/videos/hero.mp4`, ubah `enabled` jadi `true` |
+| P3 | Selesai | `next.config.ts` membangun `remotePatterns` dari `NEXT_PUBLIC_API_URL` (protocol, host, port ikut env; port default 80/443 tidak ditulis), sehingga domain staging/produksi tidak perlu edit kode |
+| V1 | Selesai | Loop verifikasi Playwright MCP didokumentasikan di §7; **tanpa dependency baru** (`@playwright/test` tidak ditambahkan). `scripts/e2e-smoke.mjs` tetap belum dijalankan penuh karena membutuhkan kredensial + DB scratch |
+| P4 | **Terbuka** | **Aset gambar publik terlalu besar.** `raker.jpg` sudah dioptimasi **7.270 KB → 322 KB (−96 %)**, tetapi logo SVG komisariat masih sangat besar: `unesa.svg` 4,7 MB, `uinMadura.svg` 1,4 MB, `unair.svg` 1,2 MB, `genbiJatim.svg` 906 KB, `unugiri.svg` 501 KB, `utm.svg` 425 KB; juga `bnsp.JPG` 416 KB. SVG dilewatkan tanpa optimasi oleh `next/image`, jadi Beranda mentransfer ±3,2 MB gambar. **Rekomendasi**: kompres/ekspor ulang SVG (svgo atau ekspor desainer) atau ganti ke PNG/WebP kecil; pertimbangkan menyajikan `raker.jpg` versi `.webp` |
+| A7 | Terbuka (Low) | `sizes` inert selama gambar berita memakai `unoptimized`; keputusan mengaktifkan optimizer menunggu domain produksi (P3) |
+| A5 (sisa) | Diterima | Dua list AboutClient tetap memakai indeks karena statis tanpa identitas stabil |
+
+**Pekerjaan lanjutan yang sudah diputuskan pemilik produk (belum dikerjakan, menunggu contoh)**: Berita hanya 5-6 item; setiap berita punya 4-6 gambar yang bisa digeser kiri-kanan lalu isi berita; halaman detail dua kolom (kiri berita + gambarnya, kanan tautan berita lain); **tanpa paginasi**. Butuh API publik mengekspos aset gambar berita (kini hanya satu `coverImage`).
