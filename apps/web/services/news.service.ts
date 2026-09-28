@@ -1,4 +1,8 @@
-// apps/web/services/news.service.ts
+// CMS-only service (permukaan CMS).
+//
+// Permukaan publik memakai `@/lib/services/news.service.ts` yang membaca
+// `/api/v1/news`. File ini memakai endpoint legacy `/news` dan hanya boleh
+// dipakai halaman `/admin/*`. Jangan impor dari komponen publik.
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 export interface AdminNewsItem {
   id: string;
@@ -29,15 +33,6 @@ export const getAdminNews = async (): Promise<AdminNewsItem[]> => {
     if (response.status === 401 || response.status === 403) throw new Error('Unauthorized');
     throw new Error('Failed to fetch News');
   }
-  return response.json();
-};
-
-// Public Fetch (Latest 4)
-export const getLatestNews = async (): Promise<AdminNewsItem[]> => {
-  const response = await fetch(`${API_BASE}/news/latest`, {
-    next: { revalidate: 60 } // Next.js ISR: Revalidate every 60 seconds
-  });
-  if (!response.ok) throw new Error('Failed to fetch Latest News');
   return response.json();
 };
 

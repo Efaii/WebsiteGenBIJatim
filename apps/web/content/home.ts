@@ -39,8 +39,19 @@ export const homeContent = {
       poster: "/assets/images/raker.jpg",
     },
   },
+  /**
+   * Metrik Beranda. Nilainya statis dan disengaja (ADR 0001): harus persis sama
+   * dengan yang ditampilkan daftar publik, bukan angka karangan atau pembulatan.
+   * Perbarui ketika sumber datanya berubah.
+   *
+   * Sumber tiap angka:
+   * - Komisariat   : jumlah baris Commissariat di API (9)
+   * - Anggota      : Membership ACTIVE + PUBLISHED (619)
+   * - Program Kerja: ProgramKerja dengan publicationStatus PUBLISHED (139)
+   * - Tahun Berkarya: sejak 2014, tidak ada di API jadi konstanta
+   */
   stats: [
-    { label: "Komisariat", suffix: "", isDynamic: true },
+    { label: "Komisariat", number: 9, suffix: "" },
     { label: "Anggota", number: 619, suffix: "" },
     { label: "Program Kerja", number: 139, suffix: "" },
     { label: "Tahun Berkarya", number: 12, suffix: "+" },

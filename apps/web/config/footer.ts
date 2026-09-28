@@ -33,7 +33,7 @@ export const footerConfig = {
         { label: "Universitas Airlangga", href: "/commissariat/unair" },
         { label: "Institut Teknologi Sepuluh Nopember", href: "/commissariat/its" },
         { label: "Universitas Negeri Surabaya", href: "/commissariat/unesa" },
-        { label: "UPN Veteran Jatim", href: "/commissariat/upn-veteran-jatim" },
+        { label: "UPN Veteran Jatim", href: "/commissariat/upnvjt" },
         { label: "Lihat Semua (9) →", href: "/commissariat", isBold: true },
       ],
     },
