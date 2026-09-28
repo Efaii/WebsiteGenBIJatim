@@ -33,6 +33,8 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 6. Alur interaktif yang tersentuh fase diuji dengan klik/ketik nyata, bukan hanya snapshot.
 7. Screenshot diperbarui di `tests/visual/`.
 8. Tidak ada nilai mock atau data hardcoded **baru** yang masuk ke permukaan publik.
+9. Setiap route publik punya `og:image` dan `twitter:card`, bukan hanya `og:title`.
+10. Daftar dengan identitas stabil memakai key stabil (bukan indeks).
 
 **Kebijakan bukti**: `tests/visual/` disimpan **lokal saja** dan masuk `.gitignore`. Yang masuk repo hanya ringkasan temuan (komentar issue dan laporan).
 
@@ -69,7 +71,7 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | A2 | — | **Selesai**: `aria-invalid` + `aria-describedby` per field, tiap pesan error `role="alert"`, kartu sukses `role="status"`, dan kegagalan non-field tampil sebagai ringkasan `role="alert"` | uji jalur error |
 | A3 | — | **Selesai**: `sizes` ditambahkan di Hero (100vw), logo drawer (32px), dan cover komisariat (100vw); galeri detail program tetap menunggu P1 | gate Fase 4 |
 | A4 | — | **Selesai**: memakai `next/image`. Catatan: Next membuang atribut `sizes` selama `unoptimized` dipasang, sehingga manfaat `sizes` di sini belum aktif | terverifikasi dengan data uji |
-| A5 | — | **Selesai (sebagian)**: statistik Hero memakai label sebagai key; list lain sudah memakai key stabil (src/gambar) sejak Fase 1 | gate Fase 4 |
+| A5 | — | **Selesai**: key stabil di statistik Hero, galeri detail program (`key={img}`), Portal (`key={item.title}`), dan dua list AboutClient (`key={item}`, `key={value.title}`). Dua list AboutClient lain tetap memakai indeks karena statis dan tanpa identitas stabil — bukan daftar yang bisa berubah urutan | gate Fase 4.1 |
 | A6 | — | **Selesai**: node teks liar itu dihapus; kelas CSS `isBold` tetap dipakai | gate Fase 4 |
 | E1 | — | **Selesai**: title/description/openGraph unik untuk `/`, `/profil`, `/profil/[periode]`, `/commissariat`, `/awardee`, `/news`, `/news/[slug]`, dan `/program/[id]` (ditemukan lewat verifikasi). `/commissariat` memakai layout segmen karena halamannya client component | gate Fase 4 |
 | E2 | — | **Selesai**: `app/sitemap.ts` (**157 entri**: 7 statis + 9 komisariat + 139 program + 2 periode), `app/robots.ts`, OG image via `next/og`, dan `metadataBase` dari `SITE_URL` | gate Fase 4 |
@@ -81,6 +83,8 @@ Permukaan publik situs GenBI Jatim berjalan lancar menyeluruh:
 | P3 | Low | `next.config.ts` `remotePatterns` masih hanya localhost | `next.config.ts` |
 | M11 | — | **Selesai**: `NewsClient` memakai bentuk data lama (`image`, `image_color`, `snippet`, slug dari judul) padahal API publik mengirim `coverImage`/`excerpt`/`publishedAt`/`slug`; kini memakai bentuk publik | terverifikasi dengan data uji |
 | A7 | Low | `sizes` tidak berpengaruh selama gambar berita memakai `unoptimized`; keputusan mengaktifkan optimizer ditunda bersama P3 | gate Fase 4 |
+| E4 | — | **Selesai**: blok `openGraph` yang ditambahkan Fase 4 menggantikan objek OG dari root sehingga `og:image` hilang di hampir semua halaman; blok itu dihapus (og:title/description tetap diturunkan otomatis) dan `/news/[slug]` hanya mengisi `openGraph` bila ada cover. Ditemukan lewat analisa pasca-Fase 4, bukan oleh gate saat itu | gate Fase 4.1: og:image ada di 11 route |
+| M12 | — | **Selesai**: filter kategori `/news` membandingkan label Title Case dengan enum API yang HURUF BESAR (`EDUKASI`, `WEBINAR`, ...) sehingga kategori selain "All" selalu nol hasil. Kini memakai nilai enum + label tampilan | uji dengan data: Edukasi → 1, Webinar → 1, Semua → 2 |
 
 ## 5. Fase
 
@@ -165,6 +169,8 @@ Semua dikerjakan:
 
 **Exit criteria**: matriks 11 route × 2 viewport bersih; screenshot final tersimpan lokal; laporan akhir memuat temuan tersisa beserta alasannya.
 **Blocked by**: Fase 3, Fase 4.
+
+**Rencana pemilik produk untuk Berita (belum dikerjakan, menunggu contoh)**: hanya 5-6 berita; tiap berita punya **4-6 gambar yang bisa digeser** kiri-kanan, lalu isi berita di bawahnya; halaman detail memakai dua kolom — kiri berita + gambarnya, kanan tautan ke berita lain. **Tanpa paginasi.** Ini memerlukan API publik mengekspos aset cover berita (saat ini hanya satu `coverImage`), jadi dicatat sebagai pekerjaan lanjutan, bukan bagian Fase 5.
 
 ## 6. Non-goals
 

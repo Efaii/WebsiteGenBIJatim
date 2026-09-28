@@ -68,7 +68,7 @@ export function Portal() {
               const iconName = item.iconName as string;
 
               return (
-                <FadeIn key={idx} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
+                <FadeIn key={item.title} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
                   <Link
                     href={item.link}
                     className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 overflow-hidden"

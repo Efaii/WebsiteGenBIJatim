@@ -43,7 +43,6 @@ export async function generateMetadata({
   return {
     title: `${program.title} | Program Kerja GenBI Jatim`,
     description,
-    openGraph: { title: program.title, description },
   };
 }
 
@@ -232,14 +231,14 @@ export default async function ProgramDetailPage({
                     
                     {gallery.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
-                        {gallery.map((img, idx) => (
+                        {gallery.map((img, index) => (
                           <div
-                            key={idx}
+                            key={img}
                             className="group relative aspect-square rounded-xl overflow-hidden border border-slate-200/80 bg-slate-50 hover:border-blue-300/80 transition-all shadow-2xs"
                           >
                             <Image
                               src={normalizeAssetUrl(img)}
-                              alt={`Gallery ${idx + 1}`}
+                              alt={`Gallery ${index + 1}`}
                               fill
                               className="object-cover transition-transform duration-500 group-hover:scale-105"
                             />

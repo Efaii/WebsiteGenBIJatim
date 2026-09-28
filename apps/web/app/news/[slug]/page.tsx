@@ -29,11 +29,9 @@ export async function generateMetadata({
   return {
     title: `${news.title} | GenBI Jatim`,
     description: news.excerpt,
-    openGraph: {
-      title: news.title,
-      description: news.excerpt,
-      images: cover ? [cover] : undefined,
-    },
+    // openGraph diisi hanya bila ada cover: mendefinisikannya tanpa images akan
+    // menggantikan objek OG dari root dan menghilangkan og:image default.
+    ...(cover ? { openGraph: { title: news.title, description: news.excerpt, images: [cover] } } : {}),
   };
 }
 
@@ -108,7 +106,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
               >
                 {paragraphs.length > 0 ? (
                   paragraphs.map((paragraph, index) => (
-                    <p key={index} className={index === 0 ? "font-medium text-white text-xl" : undefined}>
+                    <p key={paragraph.slice(0, 40)} className={index === 0 ? "font-medium text-white text-xl" : undefined}>
                       {paragraph}
                     </p>
                   ))
