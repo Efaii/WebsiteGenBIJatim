@@ -24,10 +24,18 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  const commissariats = await getAllCommissariats();
-  return commissariats.map((c) => ({
-    slug: c.slug,
-  }));
+  // Build produksi tidak boleh gagal hanya karena API mati (S6).
+  try {
+    const commissariats = await getAllCommissariats();
+    return commissariats.map((c) => ({
+      slug: c.slug,
+    }));
+  } catch {
+    console.warn(
+      "[commissariat/[slug]] generateStaticParams: API tidak tersedia, route dirender on-demand.",
+    );
+    return [];
+  }
 }
 
 export default async function Page({

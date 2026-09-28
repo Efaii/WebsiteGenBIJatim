@@ -20,26 +20,29 @@ export type PublicNewsSummary = {
 
 export type PublicNewsDetail = PublicNewsSummary & { content: string };
 
+const isNotFound = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "response" in error &&
+  (error as { response?: { status?: number } }).response?.status === 404;
+
+/**
+ * Service berita publik (`/api/v1/news`).
+ *
+ * Tidak ada fallback senyap: kegagalan dilempar ke pemanggil supaya halaman
+ * bisa menampilkan state gagal yang jujur. Slug yang tidak ada bukan error,
+ * jadi mengembalikan `null` tanpa menulis apa pun ke console.
+ */
 export const getAllNews = async (): Promise<NewsItem[]> => {
-  try {
-    const response = await api.get<{ data?: NewsItem[] }>("/v1/news");
-    const resData = response.data;
-    return Array.isArray(resData.data) ? resData.data : [];
-  } catch (error) {
-    console.error("Error fetching news:", error);
-    return [];
-  }
+  const response = await api.get<{ data?: NewsItem[] }>("/v1/news");
+  const resData = response.data;
+  return Array.isArray(resData.data) ? resData.data : [];
 };
 
-/** Latest published news summaries for the related-news sidebar. */
+/** Latest published news summaries for the Beranda and related-news sidebar. */
 export const getRecentNews = async (pageSize = 4): Promise<PublicNewsSummary[]> => {
-  try {
-    const response = await api.get<{ data?: PublicNewsSummary[] }>("/v1/news", { params: { pageSize } });
-    return Array.isArray(response.data.data) ? response.data.data : [];
-  } catch (error) {
-    console.error("Error fetching recent news:", error);
-    return [];
-  }
+  const response = await api.get<{ data?: PublicNewsSummary[] }>("/v1/news", { params: { pageSize } });
+  return Array.isArray(response.data.data) ? response.data.data : [];
 };
 
 export const getNewsBySlug = async (slug: string): Promise<PublicNewsDetail | null> => {
@@ -47,7 +50,7 @@ export const getNewsBySlug = async (slug: string): Promise<PublicNewsDetail | nu
     const response = await api.get<{ data?: PublicNewsDetail }>(`/v1/news/${slug}`);
     return response.data.data ?? null;
   } catch (error) {
-    console.error(`Error fetching news with slug ${slug}:`, error);
-    return null;
+    if (isNotFound(error)) return null;
+    throw error;
   }
 };

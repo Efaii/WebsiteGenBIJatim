@@ -7,22 +7,42 @@ import { Story } from "@/components/home/Story";
 import { Portal } from "@/components/home/Portal";
 import { News } from "@/components/home/News";
 import { FAQ } from "@/components/home/FAQ";
-import { getHomeData } from "@/services/home.service";
+import { StateMessage } from "@/components/StateMessage";
+import { getHomeData, STATIC_COMMISSARIATS } from "@/services/home.service";
 import { getRecentNews } from "@/lib/services/news.service";
 
 /**
- * Landing Page Root Component
- * * Purpose: Acts as the primary entry point and layout orchestrator for the GenBI Jatim landing page.
- * Architecture:
- * - Data Fetching: Implements asynchronous server-side fetching to populate dynamic sections (News, FAQ, Testimonials).
- * - Layout: Composes modular sections into a unified scrollable experience with consistent global branding.
- * - UX: Defines global selection styles and background containers to ensure visual continuity.
+ * Beranda.
+ *
+ * Setiap bagian dinamis punya fallback sendiri: kalau API untuk bagian itu
+ * gagal, bagian lain tetap tampil dan bagian yang gagal menjelaskan keadaannya
+ * (tidak ada area kosong misterius).
  */
+function SectionFallback({ title, message }: { title: string; message: string }) {
+  return (
+    <section className="bg-white px-6 py-16 md:px-10 md:py-24">
+      <div className="mx-auto max-w-329">
+        <h2 className="font-heading text-3xl font-extrabold tracking-tight text-blue-700 md:text-[34px]">
+          {title}
+        </h2>
+        <StateMessage
+          tone="error"
+          title={message}
+          description="Bagian lain di halaman ini tetap dapat dibaca."
+          className="mt-8"
+        />
+      </div>
+    </section>
+  );
+}
+
 export default async function Home() {
   /* --- ASYNCHRONOUS DATA ORCHESTRATION --- */
-  // Executes parallel data retrieval for organizational metrics and site content
-  const homeData = await getHomeData();
-  const latestNews = await getRecentNews(3);
+  // Setiap sumber data gagal secara terpisah; null berarti "gagal dimuat".
+  const [homeData, latestNews] = await Promise.all([
+    getHomeData().catch(() => null),
+    getRecentNews(3).catch(() => null),
+  ]);
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-blue-200 selection:text-blue-900">
@@ -35,7 +55,7 @@ export default async function Home() {
         <Hero />
 
         {/* Organizational Context & Metrics */}
-        <About commissariats={homeData.commissariats} />
+        <About commissariats={homeData?.commissariats ?? STATIC_COMMISSARIATS} />
 
         {/* Three Strategic Roles */}
         <Pilar />
@@ -47,11 +67,21 @@ export default async function Home() {
         <Portal />
 
         {/* Dynamic Content & Updates */}
-        <News initialNews={latestNews} />
+        {latestNews ? (
+          <News initialNews={latestNews} />
+        ) : (
+          <SectionFallback title="Berita Kegiatan" message="Berita belum dapat dimuat." />
+        )}
 
         {/* Knowledge Base & Support */}
-        <FAQ faqs={homeData.faqs} />
-
+        {homeData ? (
+          <FAQ faqs={homeData.faqs} />
+        ) : (
+          <SectionFallback
+            title="Pertanyaan yang Sering Diajukan"
+            message="FAQ belum dapat dimuat."
+          />
+        )}
       </main>
 
       {/* --- GLOBAL FOOTER ARCHITECTURE --- */}

@@ -11,6 +11,7 @@ import {
 } from "@/components/MotionWrapper";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { StateMessage } from "@/components/StateMessage";
 import {
   getAllCommissariats,
   getGlobalCommissariatStats,
@@ -35,9 +36,13 @@ export default function CommissariatPage() {
     totalMembers: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      setFailed(false);
       try {
         const [commData, statsData] = await Promise.all([
           getAllCommissariats(),
@@ -46,19 +51,50 @@ export default function CommissariatPage() {
         setData(commData);
         setStats(statsData);
       } catch (error) {
+        // Kegagalan tidak boleh menyamar jadi "data belum tersedia".
         console.error("Error fetching data:", error);
+        setFailed(true);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [reloadToken]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col bg-slate-50 items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+        <Navbar />
+        <main className="flex-1 container mx-auto max-w-3xl px-4 py-24">
+          <h2 className="text-3xl md:text-4xl font-bold text-blue-600 tracking-tight leading-tight text-center">
+            Pusat Data Komisariat
+          </h2>
+          <StateMessage
+            tone="error"
+            title="Data komisariat gagal dimuat"
+            description="Server data sedang tidak dapat dihubungi, jadi angka dan daftar di halaman ini belum bisa ditampilkan."
+            className="mt-8"
+          />
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setReloadToken((token) => token + 1)}
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
