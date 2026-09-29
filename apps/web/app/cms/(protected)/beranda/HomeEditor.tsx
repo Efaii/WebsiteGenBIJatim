@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -13,7 +14,9 @@ import { News } from "@/components/home/News";
 import { FAQ } from "@/components/home/FAQ";
 import { buildHomeSections } from "@/lib/home-content";
 import {
+  clearHomeMedia,
   updateHomeContent,
+  uploadHomeMedia,
   type HomeContentResponse,
 } from "@/lib/services/home-content.service";
 import type { PublicNewsSummary } from "@/lib/services/news.service";
@@ -69,8 +72,11 @@ export function HomeEditor({
     "idle",
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [mediaBusy, setMediaBusy] = useState<string | null>(null);
+  const [mediaMessage, setMediaMessage] = useState<string | null>(null);
 
   const hero = draft.hero ?? EMPTY_HERO;
+  const poster = hero.poster;
   const heroWords = wordCount(hero.description);
   const heroValid =
     hero.heading.line1.trim().length > 0 &&
@@ -93,16 +99,98 @@ export function HomeEditor({
     setMessage(null);
   };
 
+  const applyMediaResponse = (updated: HomeContentResponse) => {
+    // Unggahan hanya mengganti slot media hero; teks yang sedang diedit di
+    // draft tidak boleh tertimpa. `videoEnabled` dari server dipaksa ke draft
+    // hanya saat server menonaktifkannya (video dikosongkan).
+    setDraft((prev) =>
+      prev.hero
+        ? {
+            ...prev,
+            hero: {
+              ...prev.hero,
+              poster: updated.hero?.poster ?? null,
+              video: updated.hero?.video ?? null,
+              videoEnabled:
+                updated.hero?.videoEnabled === false
+                  ? false
+                  : prev.hero.videoEnabled,
+            },
+          }
+        : prev,
+    );
+    setSaved((prev) =>
+      prev.hero
+        ? {
+            ...prev,
+            hero: {
+              ...prev.hero,
+              poster: updated.hero?.poster ?? null,
+              video: updated.hero?.video ?? null,
+              videoEnabled:
+                updated.hero?.videoEnabled ?? prev.hero.videoEnabled,
+            },
+          }
+        : prev,
+    );
+  };
+
+  const onUploadMedia = async (
+    slot: "hero.poster" | "hero.video",
+    files: FileList | null,
+  ) => {
+    const file = files?.[0];
+    if (!file) return;
+    setMediaBusy(slot);
+    setMediaMessage(null);
+    try {
+      const updated = await uploadHomeMedia(slot, file);
+      applyMediaResponse(updated);
+      setMediaMessage(
+        slot === "hero.poster"
+          ? "Poster tersimpan dan sudah tayang di Beranda."
+          : 'Video tersimpan. Aktifkan "Tampilkan di hero" lalu Simpan untuk menayangkannya.',
+      );
+    } catch (error) {
+      setMediaMessage(extractErrorMessage(error));
+    } finally {
+      setMediaBusy(null);
+    }
+  };
+
+  const onClearMedia = async (slot: "hero.poster" | "hero.video") => {
+    setMediaBusy(slot);
+    setMediaMessage(null);
+    try {
+      const updated = await clearHomeMedia(slot);
+      applyMediaResponse(updated);
+      setMediaMessage(
+        slot === "hero.poster"
+          ? "Poster dikembalikan ke bawaan (aset statis)."
+          : "Video dihapus dan dinonaktifkan.",
+      );
+    } catch (error) {
+      setMediaMessage(extractErrorMessage(error));
+    } finally {
+      setMediaBusy(null);
+    }
+  };
+
   const onSave = async () => {
     setStatus("saving");
     setMessage(null);
     try {
+      const posterAlt = poster?.alt ?? "";
+      const savedPosterAlt = saved.hero?.poster?.alt ?? "";
       const updated = await updateHomeContent({
         hero: {
           heading: hero.heading,
           description: hero.description,
           videoEnabled: hero.videoEnabled,
         },
+        ...(poster && posterAlt !== savedPosterAlt
+          ? { media: { "hero.poster": { alt: posterAlt } } }
+          : {}),
       });
       setDraft(updated);
       setSaved(updated);
@@ -188,6 +276,132 @@ export function HomeEditor({
                 : ""}
             </p>
           </div>
+        </div>
+
+        <div className="mt-6 border-t border-slate-200 pt-5">
+          <h2 className="text-sm font-semibold text-slate-700">Media hero</h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            Unggahan menggantikan slot langsung di database (tanpa draft per
+            media). Poster langsung tayang; video baru tampil setelah diaktifkan
+            lalu Simpan.
+          </p>
+
+          <div className="mt-4 space-y-5">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Poster</p>
+              <div className="mt-2 flex items-start gap-3">
+                <Image
+                  src={sections.hero.poster.src}
+                  alt={sections.hero.poster.alt}
+                  width={112}
+                  height={64}
+                  className="h-16 w-28 rounded-md border border-slate-200 object-cover"
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <label
+                    className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                  >
+                    {mediaBusy === "hero.poster"
+                      ? "Mengunggah..."
+                      : "Ganti poster"}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={mediaBusy !== null}
+                      onChange={(event) => {
+                        void onUploadMedia("hero.poster", event.target.files);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void onClearMedia("hero.poster")}
+                    disabled={mediaBusy !== null}
+                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Kosongkan
+                  </button>
+                </div>
+              </div>
+              {poster && (
+                <div className="mt-2">
+                  <label
+                    className="block text-xs font-medium text-slate-600"
+                    htmlFor="hero-poster-alt"
+                  >
+                    Alt poster
+                  </label>
+                  <input
+                    id="hero-poster-alt"
+                    value={poster.alt}
+                    onChange={(event) => {
+                      if (poster)
+                        updateHero({
+                          poster: { ...poster, alt: event.target.value },
+                        });
+                    }}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-slate-700">
+                Video (opsional, maks 2 MB)
+              </p>
+              <p className="mt-1 break-all text-xs text-slate-500">
+                {hero.video
+                  ? `${hero.video.src} (${hero.video.mimeType ?? "video"})`
+                  : "Belum ada video."}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <label
+                  className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                >
+                  {mediaBusy === "hero.video"
+                    ? "Mengunggah..."
+                    : "Unggah video"}
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    className="hidden"
+                    disabled={mediaBusy !== null}
+                    onChange={(event) => {
+                      void onUploadMedia("hero.video", event.target.files);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => void onClearMedia("hero.video")}
+                  disabled={mediaBusy !== null || !hero.video}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Kosongkan
+                </button>
+                <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={hero.videoEnabled}
+                    onChange={(event) =>
+                      updateHero({ videoEnabled: event.target.checked })
+                    }
+                  />
+                  Tampilkan di hero (Simpan untuk menerapkan)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {mediaMessage && (
+            <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">
+              {mediaMessage}
+            </p>
+          )}
         </div>
 
         {message && (

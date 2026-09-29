@@ -5,6 +5,19 @@ import type { PilarContent } from "@/components/home/Pilar";
 import type { StoryContent } from "@/components/home/Story";
 import type { HomeContentResponse } from "@/lib/services/home-content.service";
 
+const API_ORIGIN = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+).replace(/\/api\/?$/, "");
+
+/**
+ * Path media yang dikelola API (`/uploads/home/...`) dijadikan absolut supaya
+ * `next/image` dan `<video>` mengambil dari server API. Path aset statis web
+ * (`/assets/...`, `/uploads/proker/...`) dibiarkan apa adanya karena dilayani
+ * oleh web sendiri.
+ */
+const mediaSrc = (src: string) =>
+  src.startsWith("/uploads/home/") ? `${API_ORIGIN}${src}` : src;
+
 export type HomeSections = {
   hero: HeroContent;
   about: AboutContent;
@@ -50,14 +63,14 @@ export const buildHomeSections = (
     description: text(data.hero?.description, fallbackHero.description),
     highlights: fallbackHero.highlights,
     poster: {
-      src: data.hero?.poster?.src ?? fallbackHero.poster.src,
+      src: mediaSrc(data.hero?.poster?.src ?? fallbackHero.poster.src),
       alt: text(data.hero?.poster?.alt, fallbackHero.poster.alt),
     },
     video: {
       enabled: data.hero?.videoEnabled ?? fallbackHero.video.enabled,
-      src: data.hero?.video?.src ?? fallbackHero.video.src,
+      src: mediaSrc(data.hero?.video?.src ?? fallbackHero.video.src),
       type: data.hero?.video?.mimeType ?? fallbackHero.video.type,
-      poster: data.hero?.poster?.src ?? fallbackHero.video.poster,
+      poster: mediaSrc(data.hero?.poster?.src ?? fallbackHero.video.poster),
     },
     stats: fallbackHero.stats,
   };
@@ -71,7 +84,7 @@ export const buildHomeSections = (
     images: fallbackAbout.images.map((fallbackImage, index) => {
       const image = data.about?.images?.[index];
       return {
-        src: image?.src ?? fallbackImage.src,
+        src: mediaSrc(image?.src ?? fallbackImage.src),
         alt: text(image?.alt, fallbackImage.alt),
       };
     }),
@@ -89,7 +102,7 @@ export const buildHomeSections = (
         title: text(item?.title, fallbackItem.title),
         description: text(item?.description, fallbackItem.description),
         points: item?.points?.length === 3 ? item.points : fallbackItem.points,
-        image: item?.image?.src ?? fallbackItem.image,
+        image: mediaSrc(item?.image?.src ?? fallbackItem.image),
         imageAlt: text(item?.image?.alt, fallbackItem.imageAlt),
       };
     }),

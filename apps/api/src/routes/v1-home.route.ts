@@ -5,9 +5,12 @@ import {
   requireCmsRole,
   requireCmsSession,
 } from "../middlewares/cms-session.middleware";
+import { uploadHomeMediaFile } from "../middlewares/upload.middleware";
 import {
+  deleteHomeMedia,
   getHomeContent,
   updateHomeContent,
+  uploadHomeMedia,
 } from "../controllers/v1-home.controller";
 
 /*
@@ -20,6 +23,19 @@ router.patch(
   requireCmsSession,
   requireCmsRole(CmsRole.ADMIN_GLOBAL),
   asyncHandler(updateHomeContent),
+);
+router.post(
+  "/media/:slot",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  uploadHomeMediaFile.single("file"),
+  asyncHandler(uploadHomeMedia),
+);
+router.delete(
+  "/media/:slot",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  asyncHandler(deleteHomeMedia),
 );
 
 export default router;

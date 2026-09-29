@@ -3,6 +3,11 @@ import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/api-error";
 import { CmsRequest } from "../middlewares/cms-session.middleware";
 import { sendSuccess } from "../middlewares/request-context.middleware";
+import {
+  clearHomeMedia,
+  saveHomeImage,
+  saveHomeVideo,
+} from "../services/home-media.service";
 
 /*
  * Konten Beranda v1 (ADR 0013).
@@ -383,5 +388,33 @@ export const updateHomeContent = async (req: CmsRequest, res: Response) => {
     }
   });
 
+  return sendSuccess(res, await readContent());
+};
+
+/*
+ * Unggah/penggantian dan pengosongan media slot hero. Berkas langsung
+ * tersimpan di slot (tanpa draft per media, sesuai ADR 0013 keputusan 5);
+ * responsnya berisi konten penuh agar editor dapat menyegarkan draft.
+ */
+export const uploadHomeMedia = async (req: CmsRequest, res: Response) => {
+  const slot = String(req.params.slot ?? "");
+  if (!req.file) {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Berkas tidak ditemukan pada permintaan.",
+      400,
+    );
+  }
+  if (slot === "hero.video") {
+    await saveHomeVideo(slot, req.file);
+  } else {
+    await saveHomeImage(slot, req.file);
+  }
+  return sendSuccess(res, await readContent());
+};
+
+export const deleteHomeMedia = async (req: CmsRequest, res: Response) => {
+  const slot = String(req.params.slot ?? "");
+  await clearHomeMedia(slot);
   return sendSuccess(res, await readContent());
 };

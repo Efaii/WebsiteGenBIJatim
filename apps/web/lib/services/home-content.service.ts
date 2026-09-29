@@ -67,6 +67,8 @@ export type HomeHeroUpdate = {
 
 export type HomeContentUpdate = {
   hero?: HomeHeroUpdate;
+  /** Perubahan teks media per slot (mis. alt); unggahan berkas lewat endpoint terpisah. */
+  media?: Record<string, { src?: string; alt?: string }>;
 };
 
 /**
@@ -87,5 +89,43 @@ export const updateHomeContent = async (
   );
   if (!response.data.data)
     throw new Error("Respons simpan tidak berisi konten.");
+  return response.data.data;
+};
+
+/**
+ * Unggah/pengganti berkas media pada satu slot (`POST /api/v1/home/media/:slot`).
+ *
+ * Gambar dikonversi ke WebP di server; video dibatasi 2 MB. Respons berisi
+ * konten penuh sehingga editor dapat menyegarkan draft.
+ */
+export const uploadHomeMedia = async (
+  slot: string,
+  file: File,
+): Promise<HomeContentResponse> => {
+  const form = new FormData();
+  form.append("file", file);
+  const response = await api.post<{ data?: HomeContentResponse }>(
+    `/v1/home/media/${slot}`,
+    form,
+    {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
+  if (!response.data.data)
+    throw new Error("Respons unggah tidak berisi konten.");
+  return response.data.data;
+};
+
+/** Kosongkan slot media (kembali ke bawaan statis / menghapus video). */
+export const clearHomeMedia = async (
+  slot: string,
+): Promise<HomeContentResponse> => {
+  const response = await api.delete<{ data?: HomeContentResponse }>(
+    `/v1/home/media/${slot}`,
+    { withCredentials: true },
+  );
+  if (!response.data.data)
+    throw new Error("Respons hapus tidak berisi konten.");
   return response.data.data;
 };
