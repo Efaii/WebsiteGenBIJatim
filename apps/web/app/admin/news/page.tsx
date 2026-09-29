@@ -15,6 +15,7 @@ import {
   createNews,
   updateNews,
   deleteNews,
+  setAdminNewsFeaturedOrder,
   AdminNewsItem,
 } from "@/services/news.service";
 import { useRouter } from "next/navigation";
@@ -146,6 +147,27 @@ export default function AdminNewsPage() {
     }
   };
 
+  /**
+   * Mengatur slot beranda (1-3) atau melepasnya. Server melepas slot yang sama
+   * dari berita lain, jadi state lokal mengikuti aturan itu juga.
+   */
+  const handleFeaturedChange = async (item: AdminNewsItem, value: string) => {
+    const featuredOrder = value === "" ? null : Number(value);
+    try {
+      await setAdminNewsFeaturedOrder(item.id, featuredOrder);
+      setItems((current) =>
+        current.map((row) => {
+          if (row.id === item.id) return { ...row, featuredOrder };
+          if (featuredOrder !== null && row.featuredOrder === featuredOrder)
+            return { ...row, featuredOrder: null };
+          return row;
+        }),
+      );
+    } catch {
+      alert("Gagal mengubah slot beranda. Coba lagi.");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -181,6 +203,7 @@ export default function AdminNewsPage() {
                 <th className="px-6 py-4 w-32">Cover</th>
                 <th className="px-6 py-4 min-w-[300px]">Judul & Slug</th>
                 <th className="px-6 py-4 w-40">Penulis</th>
+                <th className="px-6 py-4 w-36">Beranda</th>
                 <th className="px-6 py-4 w-32 text-right">Aksi</th>
               </tr>
             </thead>
@@ -188,7 +211,7 @@ export default function AdminNewsPage() {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-6 py-12 text-center text-slate-400"
                   >
                     <div className="inline-block w-6 h-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin mb-2"></div>
@@ -198,7 +221,7 @@ export default function AdminNewsPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-6 py-12 text-center text-slate-500 font-medium"
                   >
                     Belum ada karya jurnalistik yang terbit.
@@ -239,6 +262,19 @@ export default function AdminNewsPage() {
                     </td>
                     <td className="px-6 py-4 text-slate-700 font-medium">
                       {item.author}
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={item.featuredOrder ?? ""}
+                        onChange={(event) => handleFeaturedChange(item, event.target.value)}
+                        aria-label={`Slot beranda untuk ${item.title}`}
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 focus:border-blue-400 focus:outline-none"
+                      >
+                        <option value="">Tidak</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">

@@ -54,6 +54,8 @@ interface SourceProgram {
   status: string;
   date: string | null;
   dateLabel: string | null;
+  startDate: string | null;
+  endDate: string | null;
   format: string;
   description: string;
   kpi: string;
@@ -76,6 +78,8 @@ interface LegacyProgram {
   title: string;
   division: string;
   date: string | null;
+  startDate: string | null;
+  endDate: string | null;
   format: string;
   status: string;
   description: string;
@@ -338,7 +342,16 @@ const excelDate = (value: unknown, isoValue: unknown): string | null => {
     const [, day, month, year] = dayFirst;
     return validIsoDate(Number(year), Number(month), Number(day));
   }
-  const monthName = text.match(/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/i);
+  /*
+   * Sumber data lazim menulis nama hari di depan tanggal ("Sabtu, 9 Mei
+   * 2026", "Jum'at, 30 Januari 2026"). Awalan hari diabaikan. Pola ini tetap
+   * berjangkarkan awal-akhir, jadi rentang ("28-30 Januari 2026") dan daftar
+   * beberapa tanggal ("26 Oktober 2025 dan 29 November 2025") tidak pernah
+   * dianggap satu tanggal tunggal.
+   */
+  const monthName = text.match(
+    /^(?:[a-z']+,\s*)?(\d{1,2})\s+([a-z]+)\s+(\d{4})$/i,
+  );
   if (monthName) {
     const monthIndex = MONTH_NAMES[normalizeText(monthName[2])];
     if (monthIndex !== undefined)
@@ -404,6 +417,111 @@ const validIsoDate = (
   )
     return null;
   return date.toISOString().slice(0, 10);
+};
+
+/**
+ * Ambil rentang pelaksanaan dari jadwal teks sumber: "28-30 Januari 2026",
+ * "5 Oktober - 8 November 2025", "15 Oktober 2025, 19 November 2025, ...",
+ * "Oktober 2025 - Maret 2026", atau "Minggu ke-4 November 2025".
+ *
+ * Rentang bulanan dan rentang minggu ditandai `approximate` karena sumber tidak
+ * menyebut hari persisnya. Jadwal berkala/kondisional/relatif ("Setiap hari
+ * Senin", "Berkala") tidak menghasilkan rentang. Tanggal selesai dipakai
+ * sebagai tanggal kalender program (lihat ADR 0009).
+ */
+const extractScheduleRange = (
+  value: unknown,
+): { start: string; end: string; approximate: boolean } | null => {
+  const text = clean(value);
+  if (!text) return null;
+  const monthIndex = (name: string) => MONTH_NAMES[normalizeText(name)];
+
+  const weekWindow = text.match(/minggu\s+ke-(\d)\s+([a-z]+)\s+(\d{4})/i);
+  if (weekWindow) {
+    const month = monthIndex(weekWindow[2]);
+    const year = Number(weekWindow[3]);
+    if (month === undefined) return null;
+    const firstDayOfMonth = new Date(Date.UTC(year, month, 1)).getUTCDay();
+    const firstMonday = 1 + ((8 - firstDayOfMonth) % 7);
+    const startDay = firstMonday + (Number(weekWindow[1]) - 1) * 7;
+    const start = validIsoDate(year, month + 1, startDay);
+    const end = validIsoDate(year, month + 1, startDay + 6);
+    return start && end ? { start, end, approximate: true } : null;
+  }
+
+  const monthRange = text.match(
+    /([a-z]+)\s+(\d{4})\s*[-–]\s*([a-z]+)\s+(\d{4})/i,
+  );
+  if (monthRange) {
+    const startMonth = monthIndex(monthRange[1]);
+    const endMonth = monthIndex(monthRange[3]);
+    if (startMonth === undefined || endMonth === undefined) return null;
+    const start = validIsoDate(Number(monthRange[2]), startMonth + 1, 1);
+    const lastDay = new Date(
+      Date.UTC(Number(monthRange[4]), endMonth + 1, 0),
+    ).getUTCDate();
+    const end = validIsoDate(Number(monthRange[4]), endMonth + 1, lastDay);
+    // Rentang terbalik (mis. "Oktober 2025 - Maret 2025") bukan rentang sah;
+    // sumbernya harus dikoreksi dulu.
+    return start && end && start <= end
+      ? { start, end, approximate: true }
+      : null;
+  }
+
+  const found: string[] = [];
+  const push = (iso: string | null) => {
+    if (iso && !found.includes(iso)) found.push(iso);
+  };
+
+  // "28-30 Januari 2026", "21-24 Oktober 2025"
+  for (const match of text.matchAll(
+    /(\d{1,2})\s*[-–]\s*(\d{1,2})\s+([a-z]+)\s+(\d{4})/gi,
+  )) {
+    const month = monthIndex(match[3]);
+    if (month === undefined) continue;
+    push(validIsoDate(Number(match[4]), month + 1, Number(match[1])));
+    push(validIsoDate(Number(match[4]), month + 1, Number(match[2])));
+  }
+
+  // "5 Oktober - 8 November 2025" (tahun hanya di sisi kanan)
+  for (const match of text.matchAll(
+    /(\d{1,2})\s+([a-z]+)\s*[-–]\s*(\d{1,2})\s+([a-z]+)\s+(\d{4})/gi,
+  )) {
+    const startMonth = monthIndex(match[2]);
+    const endMonth = monthIndex(match[4]);
+    if (startMonth === undefined || endMonth === undefined) continue;
+    const end = validIsoDate(Number(match[5]), endMonth + 1, Number(match[3]));
+    let start = validIsoDate(Number(match[5]), startMonth + 1, Number(match[1]));
+    if (start && end && start > end)
+      start = validIsoDate(
+        Number(match[5]) - 1,
+        startMonth + 1,
+        Number(match[1]),
+      );
+    push(start);
+    push(end);
+  }
+
+  // "15 Oktober 2025", "25 Januari 2026"
+  for (const match of text.matchAll(/(\d{1,2})\s+([a-z]+)\s+(\d{4})/gi)) {
+    const month = monthIndex(match[2]);
+    if (month === undefined) continue;
+    push(validIsoDate(Number(match[3]), month + 1, Number(match[1])));
+  }
+
+  if (found.length < 2) return null;
+  // Urutan penyebutan dipakai lebih dulu supaya salah ketik di tengah daftar
+  // (mis. "18 Desember 2026" pada rangkaian 2025/2026) tidak menarik ujungnya.
+  const earliest = [...found].sort()[0];
+  const latest = [...found].sort()[found.length - 1];
+  const firstMentioned = found[0];
+  const lastMentioned = found[found.length - 1];
+  const useMentionOrder = firstMentioned <= lastMentioned;
+  return {
+    start: useMentionOrder ? firstMentioned : earliest,
+    end: useMentionOrder ? lastMentioned : latest,
+    approximate: false,
+  };
 };
 
 const legacyDate = (value: unknown): string | null => {
@@ -486,6 +604,7 @@ export const reconciliationRules = {
   isPublicProgram: isPublicProgramProjection,
   photoActionFor,
   excelDate,
+  extractScheduleRange,
   legacyOnlyAction(hasDocumentation: boolean): ProgramAction {
     return hasDocumentation
       ? "DOCUMENTED_DATABASE_ONLY_ARCHIVE"
@@ -966,6 +1085,16 @@ const readSourcePrograms = (): SourceProgram[] => {
           invalidRows.push(index + 2);
           return;
         }
+        const scheduleText = clean(
+          firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
+        );
+        const singleDate = excelDate(
+          firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
+          firstNonEmpty(row, ["date_iso", "tanggal_iso"]),
+        );
+        const scheduleRange = singleDate
+          ? null
+          : extractScheduleRange(scheduleText);
         programs.push({
           sourceFile: fileName,
           sourceRow: index + 2,
@@ -987,18 +1116,15 @@ const readSourcePrograms = (): SourceProgram[] => {
             "Status Excel",
             "original status",
           ]),
-          date: excelDate(
-            firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
-            firstNonEmpty(row, ["date_iso", "tanggal_iso"]),
-          ),
+          date: singleDate ?? scheduleRange?.end ?? null,
           format: clean(row.format) || "Offline",
-          dateLabel: excelDate(
-            firstNonEmpty(row, ["date", "tanggal", "Tanggal"]),
-            firstNonEmpty(row, ["date_iso", "tanggal_iso"]),
-          )
+          dateLabel: singleDate
             ? null
-            : clean(firstNonEmpty(row, ["date", "tanggal", "Tanggal"])) ||
-              "Periode 2025/2026",
+            : scheduleRange
+              ? scheduleText
+              : scheduleText || "Periode 2025/2026",
+          startDate: scheduleRange?.start ?? null,
+          endDate: scheduleRange?.end ?? null,
           description: clean(row.description),
           kpi: clean(row.kpi),
           impact: clean(row.impact),
@@ -1158,7 +1284,7 @@ const readLegacyDatabase = async () => {
       return result;
     const rows = await prisma.$queryRawUnsafe<Array<Record<string, unknown>>>(`
       SELECT p.id, p.commissariatId, c.name AS commissariat, c.slug AS commissariatSlug,
-        p.programKe, p.namaProker, p.divisi, p.tanggalProker, p.formatPelaksanaan,
+        p.programKe, p.namaProker, p.divisi, p.tanggalProker, p.startDate, p.endDate, p.formatPelaksanaan,
         p.status, p.deskripsiProker, p.kpiTukTarget, p.dampak, p.evaluasi,
         p.foto1, p.foto2, p.foto3, p.foto4, p.foto5, p.foto6
       FROM program_kerja p
@@ -1193,6 +1319,8 @@ const readLegacyDatabase = async () => {
       title: String(row.namaProker ?? ""),
       division: String(row.divisi ?? ""),
       date: legacyDate(row.tanggalProker),
+      startDate: legacyDate(row.startDate),
+      endDate: legacyDate(row.endDate),
       format: String(row.formatPelaksanaan ?? ""),
       status: String(row.status ?? ""),
       description: String(row.deskripsiProker ?? ""),
@@ -1437,6 +1565,11 @@ const plan = (
       metadataChanges.push("divisi");
     if (source.date !== legacy.date)
       metadataChanges.push("tanggalProker/dateLabel");
+    if (
+      source.startDate !== legacy.startDate ||
+      source.endDate !== legacy.endDate
+    )
+      metadataChanges.push("startDate/endDate");
     if ((source.format || "Offline") !== legacy.format)
       metadataChanges.push("formatPelaksanaan");
     if (source.description && source.description !== legacy.description)
@@ -2074,6 +2207,12 @@ const applyDataMigration = async (plans: ProgramPlan[], photos: PhotoPlan[], bac
       for (const item of plans) {
         const source = item.source;
         const date = source.date ? new Date(`${source.date}T00:00:00.000Z`) : null;
+        const startDate = source.startDate
+          ? new Date(`${source.startDate}T00:00:00.000Z`)
+          : null;
+        const endDate = source.endDate
+          ? new Date(`${source.endDate}T00:00:00.000Z`)
+          : null;
         if (
           ["SOURCE_EXCLUDED_ARCHIVE", "CANCELLED_EXISTING_ARCHIVE"].includes(
             item.action,
@@ -2101,7 +2240,9 @@ const applyDataMigration = async (plans: ProgramPlan[], photos: PhotoPlan[], bac
           namaProker: source.title,
           divisi: source.division || "BPH",
           tanggalProker: date,
-          dateLabel: date ? null : source.dateLabel || "Periode 2025/2026",
+          dateLabel: source.dateLabel,
+          startDate,
+          endDate,
           formatPelaksanaan: source.format || "Offline",
           status: displayStatus(source.status),
           executionStatus: statusToExecution(source.status) as "PLANNED" | "ONGOING" | "COMPLETED" | "CANCELLED",
@@ -2179,6 +2320,8 @@ const main = async () => {
           slug: "",
           status: legacy.status,
           date: legacy.date,
+          startDate: legacy.startDate,
+          endDate: legacy.endDate,
           dateLabel: legacy.date ? null : "Periode 2025/2026",
           format: legacy.format || "Offline",
           description: legacy.description,

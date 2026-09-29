@@ -13,8 +13,13 @@ export type PublicNewsSummary = {
   excerpt: string;
   category: string | null;
   coverImage: string | null;
+  /** Galeri berita, urut: cover dulu lalu gambar pendukung. Bisa kosong. */
+  images: string[];
   publishedAt: string | null;
-  byline: string;
+  author: string;
+  publisher: string | null;
+  /** Slot beranda 1-3 dari pilihan admin; null berarti tidak tampil di beranda. */
+  featuredOrder: number | null;
 };
 
 export type PublicNewsDetail = PublicNewsSummary & { content: string };
@@ -44,9 +49,21 @@ export const getAllNews = async (): Promise<PublicNewsSummary[]> => {
   return Array.isArray(response.data.data) ? response.data.data : [];
 };
 
-/** Latest published news summaries for the Beranda and related-news sidebar. */
+/** Latest published news summaries for the detail sidebar. */
 export const getRecentNews = async (pageSize = 4): Promise<PublicNewsSummary[]> => {
   const response = await api.get<{ data?: PublicNewsSummary[] }>("/v1/news", { params: { pageSize } });
+  return Array.isArray(response.data.data) ? response.data.data : [];
+};
+
+/**
+ * Pilihan beranda yang dikurasi admin global (`featuredOrder` 1-3, urut).
+ * Kosong berarti admin belum memilih; pemanggil memakai fallback berita
+ * terbaru supaya beranda tidak kosong.
+ */
+export const getFeaturedNews = async (pageSize = 3): Promise<PublicNewsSummary[]> => {
+  const response = await api.get<{ data?: PublicNewsSummary[] }>("/v1/news", {
+    params: { featured: 1, pageSize },
+  });
   return Array.isArray(response.data.data) ? response.data.data : [];
 };
 

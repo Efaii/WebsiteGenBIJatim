@@ -138,6 +138,34 @@ export const updateNews = async (req: Request, res: Response) => {
   res.status(200).json(updated);
 };
 
+export const setFeaturedOrder = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const existing = await prisma.news.findUnique({ where: { id } });
+  if (!existing) return res.status(404).json({ message: 'Not found' });
+
+  const raw = req.body?.featuredOrder;
+  let order: number | null;
+  if (raw === null || raw === undefined || raw === '' || raw === 0 || raw === '0') {
+    order = null;
+  } else {
+    const parsed = Number(raw);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 3) {
+      return res.status(400).json({ message: 'featuredOrder harus 1-3, atau kosong untuk tidak tampil' });
+    }
+    order = parsed;
+  }
+
+  // Satu slot beranda hanya boleh diisi satu berita: slot yang sama dilepas dulu.
+  const updated = await prisma.$transaction(async (tx) => {
+    if (order !== null) {
+      await tx.news.updateMany({ where: { featuredOrder: order, id: { not: id } }, data: { featuredOrder: null } });
+    }
+    return tx.news.update({ where: { id }, data: { featuredOrder: order } });
+  });
+
+  res.status(200).json(updated);
+};
+
 export const deleteNews = async (req: Request, res: Response) => {
   const { id } = req.params;
   

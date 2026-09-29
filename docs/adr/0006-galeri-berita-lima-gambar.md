@@ -1,6 +1,6 @@
 # 0006. Galeri Berita memakai bentuk lima gambar per berita, dijembatani data contoh
 
-- Status: accepted
+- Status: diterima; bagian galeri per berita digantikan ADR 0010 (fixture kini hanya pratinjau saat database kosong)
 - Tanggal: 2026-09-28
 - Konteks: redesain landing page GenBI Jawa Timur
 

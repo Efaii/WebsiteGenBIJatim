@@ -16,7 +16,7 @@ import {
   Medal,
   Newspaper,
   PhoneCall,
-  LayoutGrid
+  LayoutGrid,
 } from "lucide-react";
 import { siteConfig, type NavDropdown } from "@/config/site";
 
@@ -29,11 +29,6 @@ import { siteConfig, type NavDropdown } from "@/config/site";
  * - Logic: Features a route-to-icon resolution system for enhanced visual navigation.
  */
 
-type CommissariatLink = {
-  name: string;
-  slug: string;
-};
-
 type PeriodLink = {
   name: string;
   href: string;
@@ -43,7 +38,6 @@ type MobileMenuProps = {
   isOpen: boolean;
   onClose: () => void;
   pathname: string;
-  commissariatLinks: CommissariatLink[];
   periodLinks: PeriodLink[];
 };
 
@@ -51,7 +45,6 @@ export function MobileMenu({
   isOpen,
   onClose,
   pathname,
-  commissariatLinks,
   periodLinks,
 }: MobileMenuProps) {
   const [openDropdown, setOpenDropdown] = useState<NavDropdown | null>(null);
@@ -129,9 +122,17 @@ export function MobileMenu({
               <div className="relative flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 relative">
-                    <Image src="/assets/logos/genbi.svg" alt="GenBI Logo" fill sizes="32px" className="object-contain" />
+                    <Image
+                      src="/assets/logos/genbi.svg"
+                      alt="GenBI Logo"
+                      fill
+                      sizes="32px"
+                      className="object-contain"
+                    />
                   </div>
-                  <span className="text-sm font-bold text-slate-900 tracking-tight">Menu Utama</span>
+                  <span className="text-sm font-bold text-slate-900 tracking-tight">
+                    Menu Utama
+                  </span>
                 </div>
                 <button
                   onClick={onClose}
@@ -141,7 +142,9 @@ export function MobileMenu({
                   <X size={18} />
                 </button>
               </div>
-              <p className="text-[11px] font-semibold text-slate-900 uppercase tracking-widest leading-none">GenBI Jawa Timur</p>
+              <p className="text-[11px] font-semibold text-slate-900 uppercase tracking-widest leading-none">
+                GenBI Jawa Timur
+              </p>
             </div>
 
             {/* --- PRIMARY NAVIGATION ENGINE --- */}
@@ -151,19 +154,29 @@ export function MobileMenu({
                   const isActive = pathname === link.href;
                   const dropdown = link.dropdown;
                   const isAccordion = Boolean(dropdown);
-                  const isAccordionOpen = dropdown != null && openDropdown === dropdown;
-                  const submenu = dropdown === "profil"
-                    ? periodLinks.map((item) => ({ key: item.href, label: item.name, href: item.href }))
-                    : commissariatLinks.map((item) => ({ key: item.slug, label: item.name, href: `/commissariat/${item.slug}` }));
+                  const isAccordionOpen =
+                    dropdown != null && openDropdown === dropdown;
+                  const submenu = periodLinks.map((item) => ({
+                    key: item.href,
+                    label: item.name,
+                    href: item.href,
+                  }));
 
-                  {/* --- DYNAMIC ICON RESOLVER --- */}
+                  {
+                    /* --- DYNAMIC ICON RESOLVER --- */
+                  }
                   let IconComponent = <LayoutGrid size={18} />;
                   if (link.href === "/") IconComponent = <Home size={18} />;
-                  else if (link.href === "/profil") IconComponent = <Users2 size={18} />;
-                  else if (link.href === "/commissariat") IconComponent = <MapPin size={18} />;
-                  else if (link.href === "/awardee") IconComponent = <Medal size={18} />;
-                  else if (link.href === "/news") IconComponent = <Newspaper size={18} />;
-                  else if (link.href === "/contact") IconComponent = <PhoneCall size={18} />;
+                  else if (link.href === "/profil")
+                    IconComponent = <Users2 size={18} />;
+                  else if (link.href === "/commissariat")
+                    IconComponent = <MapPin size={18} />;
+                  else if (link.href === "/awardee")
+                    IconComponent = <Medal size={18} />;
+                  else if (link.href === "/news")
+                    IconComponent = <Newspaper size={18} />;
+                  else if (link.href === "/contact")
+                    IconComponent = <PhoneCall size={18} />;
 
                   return (
                     <div key={link.href} className="flex flex-col">
@@ -174,17 +187,40 @@ export function MobileMenu({
                       >
                         {isAccordion ? (
                           <button
-                            onClick={() => setOpenDropdown(isAccordionOpen ? null : dropdown!)}
+                            onClick={() =>
+                              setOpenDropdown(
+                                isAccordionOpen ? null : dropdown!,
+                              )
+                            }
                             className={cn(
                               "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border",
-                              isAccordionOpen || isActive ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
+                              isAccordionOpen || isActive
+                                ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light"
+                                : "bg-white border-slate-200/60 text-slate-900 shadow-sm",
                             )}
                           >
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isAccordionOpen || isActive ? "bg-genbi-blue text-white shadow-lg" : "bg-slate-50 text-genbi-blue")}>
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                isAccordionOpen || isActive
+                                  ? "bg-genbi-blue text-white shadow-lg"
+                                  : "bg-slate-50 text-genbi-blue",
+                              )}
+                            >
                               {IconComponent}
                             </div>
-                            <span className="font-semibold text-base flex-1 text-left">{link.label}</span>
-                            <ChevronDown size={18} className={cn("transition-transform duration-300", isAccordionOpen ? "rotate-180 text-genbi-blue" : "text-slate-900")} />
+                            <span className="font-semibold text-base flex-1 text-left">
+                              {link.label}
+                            </span>
+                            <ChevronDown
+                              size={18}
+                              className={cn(
+                                "transition-transform duration-300",
+                                isAccordionOpen
+                                  ? "rotate-180 text-genbi-blue"
+                                  : "text-slate-900",
+                              )}
+                            />
                           </button>
                         ) : (
                           <Link
@@ -192,14 +228,33 @@ export function MobileMenu({
                             onClick={onClose}
                             className={cn(
                               "flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border",
-                              isActive ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
+                              isActive
+                                ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light"
+                                : "bg-white border-slate-200/60 text-slate-900 shadow-sm",
                             )}
                           >
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-genbi-blue text-white shadow-lg shadow-genbi-blue/20" : "bg-slate-50 text-genbi-blue")}>
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                                isActive
+                                  ? "bg-genbi-blue text-white shadow-lg shadow-genbi-blue/20"
+                                  : "bg-slate-50 text-genbi-blue",
+                              )}
+                            >
                               {IconComponent}
                             </div>
-                            <span className="font-semibold text-base flex-1">{link.label}</span>
-                            <ArrowUpRight size={16} className={cn("transition-all duration-300", isActive ? "opacity-100 translate-x-0.5 -translate-y-0.5 text-genbi-bright" : "opacity-70 text-slate-900")} />
+                            <span className="font-semibold text-base flex-1">
+                              {link.label}
+                            </span>
+                            <ArrowUpRight
+                              size={16}
+                              className={cn(
+                                "transition-all duration-300",
+                                isActive
+                                  ? "opacity-100 translate-x-0.5 -translate-y-0.5 text-genbi-bright"
+                                  : "opacity-70 text-slate-900",
+                              )}
+                            />
                           </Link>
                         )}
                       </motion.div>
@@ -216,20 +271,27 @@ export function MobileMenu({
                               className="overflow-hidden"
                             >
                               <div className="grid grid-cols-2 gap-2 mt-3 px-2">
-                                {submenu.length > 0 ? submenu.map((item, index) => (
-                                  <Link
-                                    key={item.key}
-                                    href={item.href}
-                                    onClick={onClose}
-                                    className={cn(
-                                      "px-3 py-3 text-[11px] font-semibold bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm active:bg-genbi-light active:border-genbi-haze transition-all text-center flex items-center justify-center leading-tight",
-                                      index === submenu.length - 1 && submenu.length % 2 !== 0 ? "col-span-2" : ""
-                                    )}
-                                  >
-                                    {item.label}
-                                  </Link>
-                                )) : (
-                                  <span className="col-span-2 px-3 py-3 text-[11px] text-slate-400 text-center">Belum ada data</span>
+                                {submenu.length > 0 ? (
+                                  submenu.map((item, index) => (
+                                    <Link
+                                      key={item.key}
+                                      href={item.href}
+                                      onClick={onClose}
+                                      className={cn(
+                                        "px-3 py-3 text-[11px] font-semibold bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm active:bg-genbi-light active:border-genbi-haze transition-all text-center flex items-center justify-center leading-tight",
+                                        index === submenu.length - 1 &&
+                                          submenu.length % 2 !== 0
+                                          ? "col-span-2"
+                                          : "",
+                                      )}
+                                    >
+                                      {item.label}
+                                    </Link>
+                                  ))
+                                ) : (
+                                  <span className="col-span-2 px-3 py-3 text-[11px] text-slate-400 text-center">
+                                    Belum ada data
+                                  </span>
                                 )}
                               </div>
                             </motion.div>
@@ -250,8 +312,12 @@ export function MobileMenu({
                 className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl group transition-all active:scale-[0.98]"
               >
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-900">Butuh Bantuan?</span>
-                  <span className="text-[10px] text-slate-900 font-semibold">Layanan Aspirasi Pengurus</span>
+                  <span className="text-xs font-bold text-slate-900">
+                    Butuh Bantuan?
+                  </span>
+                  <span className="text-[10px] text-slate-900 font-semibold">
+                    Layanan Aspirasi Pengurus
+                  </span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-genbi-blue flex items-center justify-center shadow-sm group-hover:bg-genbi-blue group-hover:text-white transition-colors">
                   <ChevronRight size={16} />

@@ -12,7 +12,7 @@ import { FAQ } from "@/components/home/FAQ";
 import { Container } from "@/components/Container";
 import { StateMessage } from "@/components/StateMessage";
 import { getHomeData, STATIC_COMMISSARIATS } from "@/services/home.service";
-import { getRecentNews } from "@/lib/services/news.service";
+import { getFeaturedNews, getRecentNews } from "@/lib/services/news.service";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -49,10 +49,16 @@ function SectionFallback({ title, message }: { title: string; message: string })
 export default async function Home() {
   /* --- ASYNCHRONOUS DATA ORCHESTRATION --- */
   // Setiap sumber data gagal secara terpisah; null berarti "gagal dimuat".
-  const [homeData, latestNews] = await Promise.all([
+  const [homeData, latestNews, featuredNews] = await Promise.all([
     getHomeData().catch(() => null),
     getRecentNews(3).catch(() => null),
+    getFeaturedNews(3).catch(() => null),
   ]);
+  /*
+   * Beranda menampilkan pilihan admin global (`featuredOrder`). Bila admin
+   * belum memilih, jatuh ke berita terbaru supaya beranda tidak kosong.
+   */
+  const homeNews = featuredNews?.length ? featuredNews : latestNews;
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">
@@ -82,8 +88,8 @@ export default async function Home() {
         {/* Dynamic Content & Updates */}
         {/* Saat data contoh aktif (dev), galeri tetap tampil walau API berita
             sedang tidak bisa dihubungi, supaya struktur finalnya bisa ditinjau. */}
-        {latestNews || newsPreviewEnabled ? (
-          <News initialNews={latestNews ?? []} />
+        {homeNews || newsPreviewEnabled ? (
+          <News initialNews={homeNews ?? []} />
         ) : (
           <SectionFallback title="Berita Kegiatan" message="Berita belum dapat dimuat." />
         )}

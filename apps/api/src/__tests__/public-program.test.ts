@@ -6,10 +6,15 @@ assert.equal(undated.date, 'Periode 2025/2026');
 assert.equal(undated.dateLabel, 'Periode 2025/2026');
 assert.equal(undated.dateIso, null);
 
-const dated = programDate(new Date('2025-02-03T00:00:00.000Z'), 'ignored label');
+const dated = programDate(new Date('2025-02-03T00:00:00.000Z'), null);
 assert.equal(dated.dateIso, '2025-02-03');
 assert.equal(dated.dateLabel, null);
 assert.equal(dated.date, new Date('2025-02-03T00:00:00.000Z').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }));
+
+// Rentang: tanggal selesai jadi tanggal kalender, label teks tetap diteruskan.
+const ranged = programDate(new Date('2025-11-08T00:00:00.000Z'), '5 Oktober - 8 November 2025');
+assert.equal(ranged.dateIso, '2025-11-08');
+assert.equal(ranged.dateLabel, '5 Oktober - 8 November 2025');
 
 assert.deepEqual(
   programGallery(['/legacy-1.webp', null, '/legacy-2.webp', '/legacy-1.webp'], [

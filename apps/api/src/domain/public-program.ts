@@ -36,12 +36,17 @@ type PublicProgramRecord = {
 
 export const programDate = (date: Date | null, label: string | null) => {
   const periodLabel = label || 'Periode 2025/2026';
+  /*
+   * Tanggal kalender dipakai untuk kronologi (umpan, urutan). Label teks tetap
+   * diteruskan saat ada supaya rentang/rangkaian sesi tampil utuh di kartu,
+   * bukan diganti tanggal selesai saja (lihat ADR 0009).
+   */
   return {
     date: date
       ? date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
       : periodLabel,
     dateIso: date ? date.toISOString().split('T')[0] : null,
-    dateLabel: date ? null : periodLabel,
+    dateLabel: date ? label : periodLabel,
   };
 };
 

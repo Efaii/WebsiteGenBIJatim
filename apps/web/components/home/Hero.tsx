@@ -27,8 +27,16 @@ import { homeContent } from "@/content/home";
  */
 /** Tint biru di atas foto. Menyatukan warna foto kegiatan dengan palet GenBI. */
 const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/26 via-[#174AA8]/20 to-[#2DA9E6]/14";
-/** Scrim legibilitas: pita vertikal yang menjaga teks putih tetap terbaca. */
-const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.58)_28%,rgba(6,22,54,0.58)_76%,rgba(6,22,54,0.16)_100%)]";
+/**
+ * Scrim legibilitas: pita vertikal yang menjaga teks hero tetap terbaca.
+ *
+ * Pita dinaikkan dari 0.58 ke 0.66 saat baris kedua memakai aksen biru:
+ * stop biru aksen lebih rendah kontrasnya daripada putih, dan dengan 0.58
+ * kontras terburuk aksen jatuh ke ~2.8:1 di area peserta berbaju putih.
+ * Dengan 0.66 dan stop aksen yang sekarang, kontras terburuknya ~3.3:1
+ * (angka lengkapnya di HERO_HEADLINE_ACCENT).
+ */
+const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.66)_28%,rgba(6,22,54,0.66)_76%,rgba(6,22,54,0.16)_100%)]";
 /**
  * Peleburan tepi bawah hero ke section berikutnya.
  *
@@ -42,8 +50,37 @@ const HERO_FLOOR = "bg-gradient-to-t from-[#0B2551]/42 to-transparent";
  * Bayangan teks tipis. Ini TIDAK dihitung WCAG (kontras diukur dari warna teks
  * terhadap latar), tetapi menaikkan keterbacaan yang dirasakan di atas foto
  * yang tidak rata. Kontras terukurnya sendiri tetap dijaga oleh HERO_SCRIM.
+ *
+ * Aksen baris kedua tidak memakai ini karena `text-shadow` dilukis DI ATAS
+ * background yang sudah di-clip ke huruf, jadi bayangannya akan menutupi
+ * gradien. Padanannya `drop-shadow` di HERO_HEADLINE_ACCENT.
  */
 const HERO_TEXT_SHADOW = "[text-shadow:0_1px_14px_rgba(6,22,54,0.5)]";
+
+/*
+ * Aksen gradien baris kedua judul ("untuk Indonesia").
+ *
+ * Gradien vertikal DI DALAM bentuk huruf (`background-clip: text`): pita atas
+ * huruf tetap putih, pita bawah terisi biru. Ini bukan pengembalian ke "biru
+ * rata" yang dulu ditolak (#1E63FF, ~2.2:1). Dengan gradien, hanya stop
+ * terbawah yang perlu lulus ambang, dan stop itu dipilih dari keluarga
+ * `genbi-bright` yang dicerahkan supaya tetap terbaca di atas scrim+tint:
+ * - #5EA8FF / #4E97FF (stop bawah): kontras terukur 3.3:1 di titik terburuk
+ *   (bahu peserta berbaju putih) dan 3.9-7.4:1 di sebaran titik lainnya,
+ *   semuanya di atas ambang AA 3:1 untuk teks besar.
+ * - #9CC8FF / #DCEAFF / #FFFFFF: makin ke atas, kontras makin tinggi.
+ * Angka di atas dari pengukuran piksel halaman hasil render (1600x1000,
+ * prefers-reduced-motion dipaksa supaya animasi masuk tidak ikut terukur).
+ * Ini versi terpekat yang masih lulus AA; lebih gelap dari ini (mis.
+ * #3B82F6) jatuh di bawah 3:1 meskipun scrim sudah 0.66.
+ * Baris pertama tetap putih solid; aksen hanya di baris kedua.
+ *
+ * `text-shadow` dinonaktifkan di elemen ini (lihat HERO_TEXT_SHADOW) dan
+ * diganti `drop-shadow` dengan blur setara, karena drop-shadow dilukis di
+ * belakang glyph, bukan di atas background yang di-clip.
+ */
+const HERO_HEADLINE_ACCENT =
+  "bg-[linear-gradient(180deg,#FFFFFF_44%,#DCEAFF_52%,#9CC8FF_60%,#6FB2FF_68%,#5EA8FF_78%,#4E97FF_92%)] bg-clip-text [-webkit-background-clip:text] text-transparent [text-shadow:none] [filter:drop-shadow(0_1px_14px_rgba(6,22,54,0.5))]";
 
 /**
  * Hero beranda.
@@ -53,8 +90,8 @@ const HERO_TEXT_SHADOW = "[text-shadow:0_1px_14px_rgba(6,22,54,0.5)]";
  * - Tumpukan teks jadi tiga bagian: judul, subteks, lalu blok statistik yang
  *   menyatu dengan konten utama. Statistik TIDAK lagi menempel di tepi bawah
  *   hero, dan tidak memakai kapsul putih.
- * - Baris kedua judul memakai token biru yang sama dengan tombol yang dulu ada
- *   (`genbi-blue`), bukan cyan.
+ * - Baris kedua judul memakai aksen gradien putih ke biru terang DI DALAM
+ *   huruf (lihat HERO_HEADLINE_ACCENT), bukan biru rata dan bukan cyan.
  * - Overlay dinaikkan sedikit kepekatannya agar lebih sinematik tanpa membuat
  *   media latar hilang.
  *
@@ -108,22 +145,14 @@ export function Hero() {
               {heading.line1}
               <br />
               {/*
-                Baris kedua sekarang PUTIH, sama seperti baris pertama, atas
-                permintaan pemilik produk.
-
-                Sebelumnya baris ini memakai token biru tombol hero
-                (`genbi-blue` / #1E63FF). Kontrasnya diukur langsung dari
-                piksel halaman hasil render: hanya ~2.2:1 di posisi baris ini,
-                di bawah ambang AA 3:1 untuk teks besar, karena itu warna itu
-                sulit dibaca di atas foto yang bertint biru gelap. Dengan putih,
-                kontrasnya menjadi ~11:1, setara baris pertama.
-
-                Biru `genbi-blue` tetap dipakai sebagai aksen brand di tempat
-                lain (judul section, tombol, bullet, tahun timeline), jadi
-                identitas warnanya tidak hilang. Kalau baris ini ingin
-                dikembalikan ke biru, cukup ganti kelasnya.
+                Baris kedua memakai aksen gradien (lihat HERO_HEADLINE_ACCENT):
+                pita atas huruf putih, pita bawah biru terang. Riwayat: baris
+                ini pernah dicoba biru rata (`genbi-blue` / #1E63FF) dan ditolak
+                karena kontras terukurnya hanya ~2.2:1. Gradien ini menyisakan
+                sebagian besar glyph tetap putih (~11:1), dan hanya stop
+                terbawah yang perlu lulus ambang AA.
               */}
-              <span className="text-white">{heading.line2}</span>
+              <span className={HERO_HEADLINE_ACCENT}>{heading.line2}</span>
             </h1>
           </SlideUp>
 

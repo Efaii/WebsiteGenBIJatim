@@ -29,11 +29,18 @@ export function ProkerCard({
   onAction,
   hideAction,
 }: ProkerCardProps) {
-  // Date Formatting Logic: Handles "Feb 2025" (2 parts) vs "10 Jan 2025" (3 parts)
+  /*
+   * Kotak tanggal hanya boleh memecah pola tanggal yang dikenal:
+   * "10 Jan 2025" (tanggal penuh) dan "Feb 2025" (bulan-tahun). Label jadwal
+   * non-tanggal (rentang, berkala, rangkaian sesi, "Menyusul") dan label
+   * periode ditampilkan apa adanya, bukan dipecah per kata seperti sebelumnya
+   * ("Setiap hari Senin" pernah tampil sebagai "HARI / Setiap").
+   */
   const dateParts = date.split(" ");
-  const isPeriodLabel = date.startsWith("Periode ");
-  const isFullDate = dateParts.length === 3;
-  const mainDate = isFullDate ? dateParts[0] : dateParts[0]; // Day "10" OR Month "Feb"
+  const isFullDate = /^\d{1,2}\s+[A-Za-z]+\s+\d{4}$/.test(date);
+  const isMonthYear = /^[A-Za-z]+\s+\d{4}$/.test(date);
+  const isTextLabel = !isFullDate && !isMonthYear;
+  const mainDate = dateParts[0]; // Day "10" OR Month "Feb"
   const subDate = isFullDate ? `${dateParts[1]} ${dateParts[2]}` : dateParts[1]; // "Jan 2025" OR "2025"
 
   // Status Styling Logic
@@ -60,10 +67,13 @@ export function ProkerCard({
     >
       <div className={cn(
         "min-h-16 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center flex-shrink-0 group-hover:border-blue-300 transition-colors",
-        isPeriodLabel ? "w-36 px-3 text-center" : "w-16",
+        isTextLabel ? "w-36 px-3 text-center" : "w-16",
       )}>
-        {isPeriodLabel ? (
-          <span className="text-xs font-bold text-blue-600 uppercase leading-relaxed">
+        {isTextLabel ? (
+          <span
+            className="text-xs font-bold text-blue-600 uppercase leading-relaxed line-clamp-2"
+            title={date}
+          >
             {date}
           </span>
         ) : (

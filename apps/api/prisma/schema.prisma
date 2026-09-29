@@ -85,6 +85,11 @@ enum NewsAssetStatus {
   SUPERSEDED
 }
 
+enum NewsAssetRole {
+  COVER
+  GALLERY
+}
+
 model CmsAccount {
   id                 String        @id @default(uuid())
   userId             String        @unique
@@ -439,6 +444,10 @@ model News {
   content           String            @db.Text
   image             String
   author            String
+  /// Nama penerbit/komisariat yang menayangkan berita, mis. "GenBI Jatim".
+  publisher         String?
+  /// Urutan tampil di beranda (1-3); null berarti tidak tampil di beranda.
+  featuredOrder     Int?
   excerpt           String            @default("") @db.VarChar(280)
   category          NewsCategory?
   publicationStatus PublicationStatus @default(DRAFT)
@@ -488,6 +497,8 @@ model NewsCoverAsset {
   byteSize         Int
   visibility       String          @default("STAGED")
   status           NewsAssetStatus @default(STAGED)
+  role             NewsAssetRole   @default(GALLERY)
+  sortOrder        Int             @default(0)
   createdAt        DateTime        @default(now())
   supersededAt     DateTime?
 
@@ -496,6 +507,7 @@ model NewsCoverAsset {
 
   @@index([newsId, status])
   @@index([revisionId, status])
+  @@index([newsId, status, sortOrder])
 }
 
 model NewsSlugAlias {

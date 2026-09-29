@@ -1,0 +1,2479 @@
+﻿
+> genbi-jatim-monorepo@0.0.0 preflight:legacy-schema
+> node scripts/legacy-schema-preflight.mjs plan
+
+{
+  "inspection": {
+    "database": "genbi_jatim",
+    "requiredLegacyTables": [
+      "auditevent",
+      "cmsaccount",
+      "cmsassignment",
+      "cmssession",
+      "commissariat",
+      "contact_messages",
+      "division",
+      "faq",
+      "membership",
+      "membershipimportalias",
+      "membershipimportpreview",
+      "membershipimportrow",
+      "news",
+      "newscoverasset",
+      "newsrevision",
+      "newsslugalias",
+      "period",
+      "program_kerja",
+      "testimonial",
+      "user"
+    ],
+    "missingRequiredTables": [],
+    "tables": [
+      "_prisma_migrations",
+      "auditevent",
+      "cmsaccount",
+      "cmsassignment",
+      "cmssession",
+      "commissariat",
+      "contact_messages",
+      "division",
+      "faq",
+      "membership",
+      "membershipimportalias",
+      "membershipimportpreview",
+      "membershipimportrow",
+      "news",
+      "newscoverasset",
+      "newsrevision",
+      "newsslugalias",
+      "period",
+      "program_kerja",
+      "program_kerja_photo",
+      "programartifact",
+      "programkerjarevision",
+      "testimonial",
+      "user"
+    ],
+    "columns": {
+      "_prisma_migrations": [
+        {
+          "name": "id",
+          "type": "varchar(36)",
+          "nullable": "NO"
+        },
+        {
+          "name": "checksum",
+          "type": "varchar(64)",
+          "nullable": "NO"
+        },
+        {
+          "name": "finished_at",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "migration_name",
+          "type": "varchar(255)",
+          "nullable": "NO"
+        },
+        {
+          "name": "logs",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "rolled_back_at",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "started_at",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "applied_steps_count",
+          "type": "int unsigned",
+          "nullable": "NO"
+        }
+      ],
+      "auditevent": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "cmsAccountId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "action",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "entity",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "entityId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "oldStatus",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "newStatus",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "divisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "cmsaccount": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "userId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "role",
+          "type": "enum('ADMIN_GLOBAL','SEKRETARIS_UMUM','SEKRETARIS_DIVISI')",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "enum('ACTIVE','DISABLED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "mustChangePassword",
+          "type": "tinyint(1)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "cmsassignment": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "cmsAccountId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "divisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "active",
+          "type": "tinyint(1)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "activeAccountKey",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        }
+      ],
+      "cmssession": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "cmsAccountId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "tokenHash",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "revokedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "commissariat": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "university",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "logo",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "logoGenbi",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "coverImage",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "instagram",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "email",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "memberCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "contact_messages": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "email",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "subject",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "division": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "faq": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "question",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "answer",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "order",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "isActive",
+          "type": "tinyint(1)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "membership": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "divisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "position",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "studyProgram",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "publicationStatus",
+          "type": "enum('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "membershipStatus",
+          "type": "enum('ACTIVE','INACTIVE')",
+          "nullable": "NO"
+        },
+        {
+          "name": "rejectionReason",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "membershipimportalias": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "kind",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "rawValue",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "divisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "approved",
+          "type": "tinyint(1)",
+          "nullable": "NO"
+        },
+        {
+          "name": "reviewedBy",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "reviewedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "membershipimportpreview": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "cmsAccountId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "sourceFilename",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "sourceFileHash",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "enum('PREVIEW_READY','COMMITTED','SUBMITTED','APPROVED','REJECTED','STALE','EXPIRED','FAILED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "totalRows",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "newCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "unchangedCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "invalidCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "ambiguousCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "duplicateCount",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "expiresAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "committedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "finalReport",
+          "type": "json",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "membershipimportrow": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "previewId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "rowNumber",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "rawValues",
+          "type": "json",
+          "nullable": "NO"
+        },
+        {
+          "name": "normalizedValues",
+          "type": "json",
+          "nullable": "YES"
+        },
+        {
+          "name": "classification",
+          "type": "enum('NEW','UPDATED','UNCHANGED','INVALID','AMBIGUOUS_MATCH','DUPLICATE_IN_FILE')",
+          "nullable": "NO"
+        },
+        {
+          "name": "errorCode",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "errorMessage",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "matchedMembershipId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "mappedDivisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "baselineUpdatedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdMembershipId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "news": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "title",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "image",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "author",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "authorAccountId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "category",
+          "type": "enum('KEGIATAN','WEBINAR','SOSIAL','EDUKASI','PELATIHAN')",
+          "nullable": "YES"
+        },
+        {
+          "name": "deletedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "excerpt",
+          "type": "varchar(280)",
+          "nullable": "NO"
+        },
+        {
+          "name": "publicationStatus",
+          "type": "enum('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "publishedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "rejectionReason",
+          "type": "text",
+          "nullable": "YES"
+        }
+      ],
+      "newscoverasset": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "newsId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "revisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "storageKey",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "originalFilename",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "mimeType",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "byteSize",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "visibility",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "enum('STAGED','PUBLIC','SUPERSEDED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "supersededAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        }
+      ],
+      "newsrevision": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "newsId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "title",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "excerpt",
+          "type": "varchar(280)",
+          "nullable": "NO"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "category",
+          "type": "enum('KEGIATAN','WEBINAR','SOSIAL','EDUKASI','PELATIHAN')",
+          "nullable": "YES"
+        },
+        {
+          "name": "publicationStatus",
+          "type": "enum('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "publishedAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "rejectionReason",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "cancelledAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "newsslugalias": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "slug",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "newsId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "period": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "label",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "program_kerja": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "programKe",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "namaProker",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "divisi",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "tanggalProker",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "formatPelaksanaan",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "status",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "deskripsiProker",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "kpiTukTarget",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "dampak",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "evaluasi",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto1",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto2",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto3",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto4",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto5",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "foto6",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "commissariatId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "periodId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "divisionId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "publicationStatus",
+          "type": "enum('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "rejectionReason",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "authorAccountId",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "objectives",
+          "type": "json",
+          "nullable": "YES"
+        },
+        {
+          "name": "startDate",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "endDate",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "executionStatus",
+          "type": "enum('PLANNED','ONGOING','COMPLETED','CANCELLED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "dateLabel",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        }
+      ],
+      "program_kerja_photo": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "programKerjaId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "filePath",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "fileHash",
+          "type": "varchar(64)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "programartifact": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "programKerjaId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "kind",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "storageKey",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "originalFilename",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "mimeType",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "byteSize",
+          "type": "int",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "programkerjarevision": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "programKerjaId",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "namaProker",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "divisi",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "tanggalProker",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "dateLabel",
+          "type": "varchar(191)",
+          "nullable": "YES"
+        },
+        {
+          "name": "formatPelaksanaan",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "deskripsiProker",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "publicationStatus",
+          "type": "enum('DRAFT','SUBMITTED','APPROVED','PUBLISHED','REJECTED','ARCHIVED')",
+          "nullable": "NO"
+        },
+        {
+          "name": "rejectionReason",
+          "type": "text",
+          "nullable": "YES"
+        },
+        {
+          "name": "cancelledAt",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "objectives",
+          "type": "json",
+          "nullable": "YES"
+        },
+        {
+          "name": "startDate",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "endDate",
+          "type": "datetime(3)",
+          "nullable": "YES"
+        },
+        {
+          "name": "executionStatus",
+          "type": "enum('PLANNED','ONGOING','COMPLETED','CANCELLED')",
+          "nullable": "NO"
+        }
+      ],
+      "testimonial": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "role",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "quote",
+          "type": "text",
+          "nullable": "NO"
+        },
+        {
+          "name": "image",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ],
+      "user": [
+        {
+          "name": "id",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "username",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "password",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "name",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "role",
+          "type": "varchar(191)",
+          "nullable": "NO"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        },
+        {
+          "name": "updatedAt",
+          "type": "datetime(3)",
+          "nullable": "NO"
+        }
+      ]
+    },
+    "programCount": 153,
+    "programsWithLegacyPhotos": 50,
+    "legacyPhotoReferenceCount": 224,
+    "legacyPhotoColumns": [
+      "foto1",
+      "foto2",
+      "foto3",
+      "foto4",
+      "foto5",
+      "foto6"
+    ],
+    "migrationTablePresent": true,
+    "migrationHistory": [
+      {
+        "name": "20260222133426_init_genbi_schema",
+        "finishedAt": "2026-09-23 16:28:57.915",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260222142715_add_admin_user",
+        "finishedAt": "2026-09-23 16:28:59.190",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260222151833_change_faq_to_text",
+        "finishedAt": "2026-09-23 16:29:01.376",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260222152238_change_faq_to_text",
+        "finishedAt": "2026-09-23 16:29:04.163",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260921150000_canonical_domain_completion",
+        "finishedAt": "2026-09-23 16:29:08.473",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260922170000_enforce_active_cms_assignment",
+        "finishedAt": "2026-09-23 16:29:11.695",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260922180000_program_cms_artifacts",
+        "finishedAt": "2026-09-23 16:29:14.820",
+        "rolledBackAt": "",
+        "logs": ""
+      },
+      {
+        "name": "20260923120000_program_kerja_photos",
+        "finishedAt": "2026-09-23 16:29:17.474"
+      }
+    ],
+    "indexes": [
+      {
+        "tableName": "_prisma_migrations",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "auditevent",
+        "indexName": "AuditEvent_cmsAccountId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "cmsAccountId"
+      },
+      {
+        "tableName": "auditevent",
+        "indexName": "AuditEvent_cmsAccountId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "createdAt"
+      },
+      {
+        "tableName": "auditevent",
+        "indexName": "AuditEvent_entity_entityId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "entity"
+      },
+      {
+        "tableName": "auditevent",
+        "indexName": "AuditEvent_entity_entityId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "entityId"
+      },
+      {
+        "tableName": "auditevent",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "cmsaccount",
+        "indexName": "CmsAccount_userId_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "userId"
+      },
+      {
+        "tableName": "cmsaccount",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_cmsAccountId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "cmsAccountId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_commissariatId_periodId_divisionId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_commissariatId_periodId_divisionId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_commissariatId_periodId_divisionId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 3,
+        "columnName": "divisionId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_divisionId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "divisionId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_one_active_account_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "activeAccountKey"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "CmsAssignment_periodId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "cmsassignment",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "cmssession",
+        "indexName": "CmsSession_cmsAccountId_revokedAt_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "cmsAccountId"
+      },
+      {
+        "tableName": "cmssession",
+        "indexName": "CmsSession_cmsAccountId_revokedAt_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "revokedAt"
+      },
+      {
+        "tableName": "cmssession",
+        "indexName": "CmsSession_cmsAccountId_revokedAt_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 3,
+        "columnName": "expiresAt"
+      },
+      {
+        "tableName": "cmssession",
+        "indexName": "CmsSession_tokenHash_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "tokenHash"
+      },
+      {
+        "tableName": "cmssession",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "commissariat",
+        "indexName": "Commissariat_slug_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "slug"
+      },
+      {
+        "tableName": "commissariat",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "contact_messages",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "division",
+        "indexName": "Division_commissariatId_periodId_name_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "division",
+        "indexName": "Division_commissariatId_periodId_name_key",
+        "nonUnique": 0,
+        "seqInIndex": 2,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "division",
+        "indexName": "Division_commissariatId_periodId_name_key",
+        "nonUnique": 0,
+        "seqInIndex": 3,
+        "columnName": "name"
+      },
+      {
+        "tableName": "division",
+        "indexName": "Division_periodId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "division",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "faq",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_commissariatId_periodId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_commissariatId_periodId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_divisionId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "divisionId"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_periodId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_publicationStatus_membershipStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "publicationStatus"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "Membership_publicationStatus_membershipStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "membershipStatus"
+      },
+      {
+        "tableName": "membership",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_commissariatId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_divisionId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "divisionId"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_approved_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "kind"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_approved_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "rawValue"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_approved_idx",
+        "nonUnique": 1,
+        "seqInIndex": 3,
+        "columnName": "approved"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_commissariatId_periodId_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "kind"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_commissariatId_periodId_key",
+        "nonUnique": 0,
+        "seqInIndex": 2,
+        "columnName": "rawValue"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_commissariatId_periodId_key",
+        "nonUnique": 0,
+        "seqInIndex": 3,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_kind_rawValue_commissariatId_periodId_key",
+        "nonUnique": 0,
+        "seqInIndex": 4,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "MembershipImportAlias_periodId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_cmsAccountId_status_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "cmsAccountId"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_cmsAccountId_status_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "status"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_cmsAccountId_status_expiresAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 3,
+        "columnName": "expiresAt"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_commissariatId_periodId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_commissariatId_periodId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_commissariatId_periodId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 3,
+        "columnName": "createdAt"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "MembershipImportPreview_periodId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "MembershipImportRow_matchedMembershipId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "matchedMembershipId"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "MembershipImportRow_previewId_classification_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "previewId"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "MembershipImportRow_previewId_classification_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "classification"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "MembershipImportRow_previewId_rowNumber_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "previewId"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "MembershipImportRow_previewId_rowNumber_key",
+        "nonUnique": 0,
+        "seqInIndex": 2,
+        "columnName": "rowNumber"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "news",
+        "indexName": "news_authorAccountId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "authorAccountId"
+      },
+      {
+        "tableName": "news",
+        "indexName": "news_slug_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "slug"
+      },
+      {
+        "tableName": "news",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "NewsCoverAsset_newsId_status_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "newsId"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "NewsCoverAsset_newsId_status_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "status"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "NewsCoverAsset_revisionId_status_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "revisionId"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "NewsCoverAsset_revisionId_status_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "status"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "NewsCoverAsset_storageKey_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "storageKey"
+      },
+      {
+        "tableName": "newscoverasset",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "newsrevision",
+        "indexName": "NewsRevision_newsId_publicationStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "newsId"
+      },
+      {
+        "tableName": "newsrevision",
+        "indexName": "NewsRevision_newsId_publicationStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "publicationStatus"
+      },
+      {
+        "tableName": "newsrevision",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "newsslugalias",
+        "indexName": "NewsSlugAlias_newsId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "newsId"
+      },
+      {
+        "tableName": "newsslugalias",
+        "indexName": "NewsSlugAlias_slug_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "slug"
+      },
+      {
+        "tableName": "newsslugalias",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "period",
+        "indexName": "Period_commissariatId_label_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "period",
+        "indexName": "Period_commissariatId_label_key",
+        "nonUnique": 0,
+        "seqInIndex": 2,
+        "columnName": "label"
+      },
+      {
+        "tableName": "period",
+        "indexName": "Period_label_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "label"
+      },
+      {
+        "tableName": "period",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "program_kerja_authorAccountId_fkey",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "authorAccountId"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "program_kerja_commissariatId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "commissariatId"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "program_kerja_divisionId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "divisionId"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "program_kerja_periodId_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "periodId"
+      },
+      {
+        "tableName": "program_kerja",
+        "indexName": "program_kerja_tanggalProker_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "tanggalProker"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "indexName": "program_kerja_photo_programKerjaId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "programKerjaId"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "indexName": "program_kerja_photo_programKerjaId_createdAt_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "createdAt"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "indexName": "program_kerja_photo_programKerjaId_fileHash_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "programKerjaId"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "indexName": "program_kerja_photo_programKerjaId_fileHash_key",
+        "nonUnique": 0,
+        "seqInIndex": 2,
+        "columnName": "fileHash"
+      },
+      {
+        "tableName": "programartifact",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "programartifact",
+        "indexName": "ProgramArtifact_programKerjaId_kind_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "programKerjaId"
+      },
+      {
+        "tableName": "programartifact",
+        "indexName": "ProgramArtifact_programKerjaId_kind_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "kind"
+      },
+      {
+        "tableName": "programartifact",
+        "indexName": "ProgramArtifact_storageKey_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "storageKey"
+      },
+      {
+        "tableName": "programkerjarevision",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "programkerjarevision",
+        "indexName": "ProgramKerjaRevision_programKerjaId_publicationStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 1,
+        "columnName": "programKerjaId"
+      },
+      {
+        "tableName": "programkerjarevision",
+        "indexName": "ProgramKerjaRevision_programKerjaId_publicationStatus_idx",
+        "nonUnique": 1,
+        "seqInIndex": 2,
+        "columnName": "publicationStatus"
+      },
+      {
+        "tableName": "testimonial",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "user",
+        "indexName": "PRIMARY",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "id"
+      },
+      {
+        "tableName": "user",
+        "indexName": "User_username_key",
+        "nonUnique": 0,
+        "seqInIndex": 1,
+        "columnName": "username"
+      }
+    ],
+    "foreignKeys": [
+      {
+        "tableName": "auditevent",
+        "constraintName": "AuditEvent_cmsAccountId_fkey",
+        "columnName": "cmsAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmsaccount",
+        "constraintName": "CmsAccount_userId_fkey",
+        "columnName": "userId",
+        "referencedTableName": "user",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmsassignment",
+        "constraintName": "CmsAssignment_cmsAccountId_fkey",
+        "columnName": "cmsAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmsassignment",
+        "constraintName": "CmsAssignment_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmsassignment",
+        "constraintName": "CmsAssignment_divisionId_fkey",
+        "columnName": "divisionId",
+        "referencedTableName": "division",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmsassignment",
+        "constraintName": "CmsAssignment_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "cmssession",
+        "constraintName": "CmsSession_cmsAccountId_fkey",
+        "columnName": "cmsAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "division",
+        "constraintName": "Division_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "division",
+        "constraintName": "Division_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membership",
+        "constraintName": "Membership_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membership",
+        "constraintName": "Membership_divisionId_fkey",
+        "columnName": "divisionId",
+        "referencedTableName": "division",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membership",
+        "constraintName": "Membership_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "constraintName": "MembershipImportAlias_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "constraintName": "MembershipImportAlias_divisionId_fkey",
+        "columnName": "divisionId",
+        "referencedTableName": "division",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportalias",
+        "constraintName": "MembershipImportAlias_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "constraintName": "MembershipImportPreview_cmsAccountId_fkey",
+        "columnName": "cmsAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "constraintName": "MembershipImportPreview_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportpreview",
+        "constraintName": "MembershipImportPreview_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "constraintName": "MembershipImportRow_matchedMembershipId_fkey",
+        "columnName": "matchedMembershipId",
+        "referencedTableName": "membership",
+        "referencedColumnName": "id",
+        "deleteRule": "SET NULL",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "membershipimportrow",
+        "constraintName": "MembershipImportRow_previewId_fkey",
+        "columnName": "previewId",
+        "referencedTableName": "membershipimportpreview",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "news",
+        "constraintName": "news_authorAccountId_fkey",
+        "columnName": "authorAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "SET NULL",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "newscoverasset",
+        "constraintName": "NewsCoverAsset_newsId_fkey",
+        "columnName": "newsId",
+        "referencedTableName": "news",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "newscoverasset",
+        "constraintName": "NewsCoverAsset_revisionId_fkey",
+        "columnName": "revisionId",
+        "referencedTableName": "newsrevision",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "newsrevision",
+        "constraintName": "NewsRevision_newsId_fkey",
+        "columnName": "newsId",
+        "referencedTableName": "news",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "newsslugalias",
+        "constraintName": "NewsSlugAlias_newsId_fkey",
+        "columnName": "newsId",
+        "referencedTableName": "news",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "period",
+        "constraintName": "Period_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "program_kerja",
+        "constraintName": "program_kerja_authorAccountId_fkey",
+        "columnName": "authorAccountId",
+        "referencedTableName": "cmsaccount",
+        "referencedColumnName": "id",
+        "deleteRule": "SET NULL",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "program_kerja",
+        "constraintName": "program_kerja_commissariatId_fkey",
+        "columnName": "commissariatId",
+        "referencedTableName": "commissariat",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "program_kerja",
+        "constraintName": "program_kerja_divisionId_fkey",
+        "columnName": "divisionId",
+        "referencedTableName": "division",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "program_kerja",
+        "constraintName": "program_kerja_periodId_fkey",
+        "columnName": "periodId",
+        "referencedTableName": "period",
+        "referencedColumnName": "id",
+        "deleteRule": "RESTRICT",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "program_kerja_photo",
+        "constraintName": "program_kerja_photo_programKerjaId_fkey",
+        "columnName": "programKerjaId",
+        "referencedTableName": "program_kerja",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "programartifact",
+        "constraintName": "ProgramArtifact_programKerjaId_fkey",
+        "columnName": "programKerjaId",
+        "referencedTableName": "program_kerja",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      },
+      {
+        "tableName": "programkerjarevision",
+        "constraintName": "ProgramKerjaRevision_programKerjaId_fkey",
+        "columnName": "programKerjaId",
+        "referencedTableName": "program_kerja",
+        "referencedColumnName": "id",
+        "deleteRule": "CASCADE",
+        "updateRule": "CASCADE"
+      }
+    ],
+    "triggers": [
+      {
+        "triggerName": "CmsAssignment_set_active_key_insert",
+        "tableName": "cmsassignment"
+      },
+      {
+        "triggerName": "CmsAssignment_set_active_key_update",
+        "tableName": "cmsassignment"
+      }
+    ],
+    "schemaFingerprint": "5a379fe6dd878d1ab759853f5151a37489f49282b8a72eb3d08dc6a63014b2b3",
+    "migrationDiscrepancies": {
+      "missingFromDatabase": [],
+      "appliedButNotInRepository": [],
+      "failedOrRolledBack": []
+    },
+    "repositoryMigrations": [
+      "20260222133426_init_genbi_schema",
+      "20260222142715_add_admin_user",
+      "20260222151833_change_faq_to_text",
+      "20260222152238_change_faq_to_text",
+      "20260921150000_canonical_domain_completion",
+      "20260922170000_enforce_active_cms_assignment",
+      "20260922180000_program_cms_artifacts",
+      "20260923120000_program_kerja_photos"
+    ],
+    "repositorySchemaDiscrepancies": []
+  },
+  "plan": {
+    "generatedAt": "2026-09-29T15:43:27.591Z",
+    "database": "genbi_jatim",
+    "schemaFingerprint": "5a379fe6dd878d1ab759853f5151a37489f49282b8a72eb3d08dc6a63014b2b3",
+    "planHash": "95e73872514875296b9df8bbce0f4aead1253dd7f886eb276657dc2dd67cba67",
+    "destructiveOperations": 0,
+    "actions": [],
+    "migrationDiscrepancies": {
+      "missingFromDatabase": [],
+      "appliedButNotInRepository": [],
+      "failedOrRolledBack": []
+    },
+    "repositorySchemaDiscrepancies": []
+  }
+}

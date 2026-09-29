@@ -57,8 +57,16 @@ Keadaan kegiatan program kerja, terpisah dari status publikasi: `PLANNED`, `ONGO
 _Avoid_: Status approval.
 
 **Tanggal kalender tidak tersedia**:
-Program kerja pada periode yang diketahui, tetapi sumber data tidak menyediakan tanggal kalender yang dapat dipastikan. Untuk periode 2025/2026, program kerja tetap dapat berstatus `COMPLETED`; tampilan publik memakai label periode, bukan tanggal kalender rekaan.
+Program kerja pada periode yang diketahui, tetapi sumber data tidak menyediakan tanggal kalender yang dapat dipastikan. Untuk periode 2025/2026, program kerja tetap dapat berstatus `COMPLETED`; tampilan publik memakai label periode atau jadwal teks, bukan tanggal kalender rekaan.
 _Avoid_: Mengisi tanggal sentinel atau menebak tanggal pelaksanaan.
+
+**Jadwal teks**:
+Nilai jadwal program kerja yang bukan satu tanggal kalender: rentang, rangkaian sesi, berkala, kondisional, atau relatif. Rentang dan rangkaian diturunkan menjadi tanggal mulai/selesai saat rekonsiliasi, dan tanggal selesainya dipakai sebagai tanggal kalender program; jadwal berkala/kondisional/relatif tetap tanpa tanggal dan tidak dipakai sebagai dasar kronologi.
+_Avoid_: Memaksakan tanggal tunggal untuk jadwal berkala, memparsing jadwal teks saat runtime.
+
+**Rentang pelaksanaan**:
+Pelaksanaan program kerja yang mencakup beberapa hari atau sesi berurutan, dibedakan dari satu tanggal kalender. Tanggal selesai dipakai sebagai penanda kronologis dan tanggal mulai disimpan untuk konteks.
+_Avoid_: Menyamakan rentang dengan satu tanggal, memakai tanggal mulai sebagai penanda selesai.
 
 **Legacy-only pada rekonsiliasi**:
 Record yang ada di database tetapi tidak muncul pada Excel terbaru. Dalam rekonsiliasi periode 2025/2026, istilah ini menunjukkan perbedaan cakupan source, bukan periode lama; record tetap dipertahankan dan tidak dihapus otomatis.
@@ -71,7 +79,7 @@ _Avoid_: Dokumen publik umum.
 ## Akses dan Konten
 
 **Admin global**:
-Aktor CMS lintas seluruh komisariat yang mengelola akun operator, berita, dan approval data.
+Aktor CMS lintas seluruh komisariat yang mengelola akun operator, berita, konten beranda, dan approval data.
 _Avoid_: Admin komisariat scoped.
 
 **Sekretaris umum**:
@@ -133,8 +141,8 @@ Bagian situs dan kontrak yang hanya dipakai operator terautentikasi: seluruh rou
 _Avoid_: Mencampur temuan CMS ke dalam definisi selesai permukaan publik.
 
 **Konten statis disengaja**:
-Teks atau angka yang memang ditulis tetap di dalam kode karena nilainya stabil dan disetujui, misalnya metrik Beranda (ADR 0001) dan narasi profil. Nilai ini bukan mock, boleh tampil apa adanya, dan sumbernya dicatat di komentar.
-_Avoid_: Menyebut konten statis sebagai mock, atau menuntut semua konten diambil dari API.
+Teks, angka, atau aset yang tetap di dalam kode karena nilainya stabil dan disetujui: metrik dan judul/struktur section Beranda, narasi halaman Profil, kartu Akses Platform Digital, serta aset brand (logo GenBI, Bank Indonesia, dan kampus mitra). Nilai ini bukan mock, boleh tampil apa adanya, dan sumbernya dicatat di komentar.
+_Avoid_: Menyebut konten statis sebagai mock, menuntut semua konten diambil dari API, atau mencampurnya dengan Konten beranda.
 
 **Data mock**:
 Data karangan yang menyerupai data nyata tetapi tidak berasal dari database atau sumber resmi: file fixture, array hardcoded yang berpura-pura menjadi hasil query, dan fallback yang mengarang isi saat API gagal. Data mock tidak boleh tampil di permukaan publik.
@@ -146,6 +154,10 @@ _Avoid_: Menyamakan mock dengan konten statis, atau membiarkan mock sebagai "fal
 Halaman publik utama (landing page) yang menjadi titik masuk situs: menyusun narasi identitas organisasi, ringkasan metrik, akses ke platform lain, berita terbaru, dan FAQ. Beranda berbeda dari Daftar Program kerja dan Detail Komisariat.
 _Avoid_: Menyamakan Beranda dengan halaman daftar Program kerja atau Detail Komisariat.
 
+**Konten beranda**:
+Teks dan media Beranda yang dikelola admin global melalui CMS: judul dan subteks hero, Tentang GenBI (paragraf dan gambar), kartu Pilar GenBI, judul dan deskripsi milestone Sejarah Perjalanan, serta pemilihan Berita pada slot beranda.
+_Avoid_: Mencampur konten beranda dengan Konten statis disengaja, atau menganggap seluruh bagian Beranda dapat diedit.
+
 **Profil**:
 Halaman publik tentang organisasi yang menggantikan "Tentang Kami" pada navigasi dan dipilih per periode kepengurusan. Bagian naratif (visi, misi, nilai, pilar) bersifat lintas periode; bagian yang bergantung periode mengikuti periode yang dipilih.
 _Avoid_: Menyebut Profil sebagai Tentang Kami, atau mencampur data beberapa periode dalam satu tampilan.
@@ -153,6 +165,10 @@ _Avoid_: Menyebut Profil sebagai Tentang Kami, atau mencampur data beberapa peri
 **Struktur organisasi**:
 Susunan pengurus satu komisariat pada satu periode, ditampilkan sebagai BPH terlebih dahulu lalu per divisi. Setiap entri memuat nama dan jabatan, dan diturunkan dari Membership; anggota tanpa divisi tidak ditampilkan di sini.
 _Avoid_: Menyimpan jabatan di sumber manual terpisah, atau memasukkan anggota tanpa divisi ke struktur.
+
+**Umpan kegiatan terakhir**:
+Daftar kegiatan pada halaman Komisariat yang hanya memuat program kerja dengan tanggal kalender yang sudah berlangsung, diurutkan dari yang paling baru. Untuk rentang dan rangkaian sesi, tanggal yang dipakai adalah tanggal selesai.
+_Avoid_: Memasukkan tanggal rencana, memakai tanggal mulai sebagai penanda selesai.
 
 **Mitra Strategis**:
 Sembilan perguruan tinggi mitra Bank Indonesia tempat Komisariat GenBI berada. Cakupan mitra pada judul bagian Beranda adalah Suramadu-Bojonegoro, bukan Jawa Timur, mengikuti keputusan pemilik produk.
@@ -169,6 +185,10 @@ _Avoid_: Menyajikannya sebagai timeline horizontal, carousel, atau daftar tanpa 
 **Galeri Berita**:
 Cara satu Berita ditampilkan di Beranda: satu gambar utama ditambah paling banyak empat gambar pendukung. Gambar pendukung membuka pratinjau, gambar utama menuju detail berita. Jumlah gambar mengikuti data yang ada, jadi satu berita dengan satu gambar tetap sah.
 _Avoid_: Menyamakan galeri dengan berita itu sendiri, atau mencampur gambar antar berita.
+
+**Slot beranda**:
+Satu dari tiga posisi tampil Berita di Beranda yang dipilih admin global secara manual dan berurutan. Pilihan manual menang atas kronologi; slot yang kosong atau tidak lagi valid diisi otomatis oleh Berita terbit terbaru, dan satu Berita tidak pernah menempati dua slot.
+_Avoid_: Menampilkan Berita belum terbit di slot, slot ganda, slot lebih dari tiga.
 
 **Data contoh pratinjau**:
 Data karangan yang dipakai sementara untuk meninjau bentuk tampilan sebelum sumber resminya siap. Berbeda dari **Data mock** dalam tiga hal: ia tidak pernah menjadi pengganti saat API gagal, ia mati pada build produksi, dan ia wajib disebut sumbernya di dalam kode.

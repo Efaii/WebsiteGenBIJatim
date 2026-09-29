@@ -23,8 +23,41 @@ const assertImageSignature = (file: Express.Multer.File) => {
 };
 
 const categories = Object.values(NewsCategory);
-type PublicNews = { id: string; title: string; slug: string; excerpt: string; content: string; category: NewsCategory | null; publishedAt: Date | null; coverAssets?: Array<{ status: string; storageKey: string }> };
-const publicProjection = (news: PublicNews) => ({ id: news.id, title: news.title, slug: news.slug, excerpt: news.excerpt, content: news.content, category: news.category, coverImage: news.coverAssets?.find((asset) => asset.status === 'PUBLIC')?.storageKey ?? null, publishedAt: news.publishedAt, byline: 'GenBI Jatim' });
+type PublicNewsCoverAsset = { status: string; storageKey: string; role: string; sortOrder: number; createdAt: Date };
+type PublicNews = { id: string; title: string; slug: string; excerpt: string; content: string; category: NewsCategory | null; publishedAt: Date | null; author: string; publisher: string | null; featuredOrder: number | null; coverAssets?: PublicNewsCoverAsset[] };
+
+/*
+ * Urutan gambar publik: aset berperan COVER selalu lebih dulu (satuannya
+ * thumbnail pilihan editor), sisanya mengikuti sortOrder lalu createdAt.
+ * Berita lama yang seluruh asetnya GALLERY tetap tampil dengan urutan stabil.
+ */
+const publicNewsImages = (news: PublicNews): string[] =>
+  [...(news.coverAssets ?? [])]
+    .sort(
+      (left, right) =>
+        Number(right.role === 'COVER') - Number(left.role === 'COVER') ||
+        left.sortOrder - right.sortOrder ||
+        left.createdAt.getTime() - right.createdAt.getTime(),
+    )
+    .map((asset) => asset.storageKey);
+
+const publicProjection = (news: PublicNews) => {
+  const images = publicNewsImages(news);
+  return {
+    id: news.id,
+    title: news.title,
+    slug: news.slug,
+    excerpt: news.excerpt,
+    content: news.content,
+    category: news.category,
+    coverImage: images[0] ?? null,
+    images,
+    publishedAt: news.publishedAt,
+    author: news.author,
+    publisher: news.publisher,
+    featuredOrder: news.featuredOrder,
+  };
+};
 const includePublic = { coverAssets: { where: { status: 'PUBLIC' } } } as const;
 const includeCms = { coverAssets: true, revisions: { orderBy: { updatedAt: 'desc' as const } }, slugAliases: true } as const;
 
@@ -34,9 +67,26 @@ const audit = (accountId: string, action: string, entityId: string, oldStatus?: 
 export const listPublishedNews = async (req: Request, res: Response) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 25));
-  const where = { publicationStatus: 'PUBLISHED' as const, deletedAt: null };
+  /*
+   * `featured=1` mengembalikan pilihan beranda yang dikurasi admin global
+   * (urut `featuredOrder`); tanpa itu, daftar biasa: terbaru lebih dulu.
+   */
+  const featuredOnly = req.query.featured === '1' || req.query.featured === 'true';
+  const where = {
+    publicationStatus: 'PUBLISHED' as const,
+    deletedAt: null,
+    ...(featuredOnly ? { featuredOrder: { not: null } } : {}),
+  };
   const [items, total] = await prisma.$transaction([
-    prisma.news.findMany({ where, include: includePublic, orderBy: [{ publishedAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * pageSize, take: pageSize }),
+    prisma.news.findMany({
+      where,
+      include: includePublic,
+      orderBy: featuredOnly
+        ? [{ featuredOrder: 'asc' as const }, { id: 'asc' as const }]
+        : [{ publishedAt: 'desc' as const }, { id: 'desc' as const }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
     prisma.news.count({ where }),
   ]);
   return sendSuccess(res, items.map(publicProjection), { pagination: { page, pageSize, total, hasNextPage: page * pageSize < total } });

@@ -41,7 +41,9 @@ export function Navbar() {
 
   const floating = isHome && !scrolled;
 
-  {/* --- DATA ARCHITECTURE: PUBLIC PERIODS --- */}
+  {
+    /* --- DATA ARCHITECTURE: PUBLIC PERIODS --- */
+  }
   useEffect(() => {
     let cancelled = false;
     getPublicPeriods()
@@ -58,7 +60,9 @@ export function Navbar() {
     };
   }, []);
 
-  {/* --- INTERACTION LOGIC: SCROLL LOCK --- */}
+  {
+    /* --- INTERACTION LOGIC: SCROLL LOCK --- */
+  }
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -69,9 +73,6 @@ export function Navbar() {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
-
-  {/* --- DATA ARCHITECTURE: COMMISSARIAT RESOLVER --- */}
-  const COMMISSARIAT_LINKS = siteConfig.commissariatLinks;
 
   const PERIOD_LINKS = periods.map((period) => ({
     name: period,
@@ -101,7 +102,9 @@ export function Navbar() {
         <div
           className={cn(
             "mx-auto flex h-20 items-center justify-between border border-white/60 bg-white/92 shadow-[0_10px_32px_-16px_rgba(16,42,92,0.35)] backdrop-blur-xl transition-all duration-400 ease-out md:h-[72px]",
-            floating ? "max-w-[1440px] rounded-b-nav" : "max-w-none rounded-none",
+            floating
+              ? "max-w-[1440px] rounded-b-nav"
+              : "max-w-none rounded-none",
           )}
         >
           {/*
@@ -123,7 +126,6 @@ export function Navbar() {
             <NavbarLinks
               pathname={pathname}
               navItems={siteConfig.navItems}
-              commissariatLinks={COMMISSARIAT_LINKS}
               periodLinks={PERIOD_LINKS}
             />
 
@@ -168,7 +170,6 @@ export function Navbar() {
           menuButtonRef.current?.focus();
         }}
         pathname={pathname}
-        commissariatLinks={COMMISSARIAT_LINKS}
         periodLinks={PERIOD_LINKS}
       />
     </>

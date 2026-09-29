@@ -2,11 +2,17 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Button } from "@/components/Button";
-import { FadeIn, SlideUp } from "@/components/MotionWrapper";
-import { getNewsBySlug, getRecentNews, newsAssetUrl } from "@/lib/services/news.service";
+import { Container } from "@/components/Container";
+import { NewsGalleryCarousel } from "@/components/news/NewsGalleryCarousel";
+import {
+  getNewsBySlug,
+  getRecentNews,
+  newsAssetUrl,
+  type PublicNewsSummary,
+} from "@/lib/services/news.service";
 
 const formatDate = (value: string | null | undefined) => {
   if (!value) return "";
@@ -15,6 +21,31 @@ const formatDate = (value: string | null | undefined) => {
     ? ""
     : date.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
 };
+
+/**
+ * Awalan dateline pada paragraf pertama ("Surabaya — ...", "Gresik — ...").
+ * Kota ditebalkan seperti kebiasaan media, tanpa mengubah teks sumbernya.
+ */
+const DATELINE = /^([A-Z][A-Za-z.'-]*)(\s*(?:—|–|-)\s*)([\s\S]*)$/;
+
+const imageUrl = (news: PublicNewsSummary) =>
+  newsAssetUrl(news.images?.[0] ?? news.coverImage);
+
+/**
+ * Kalimat penting ditandai `**...**` di dalam data berita (bukan di kode), lalu
+ * penanda itu dirender sebagai bold supaya pesan utama tiap berita menonjol.
+ * Teks di luar penanda dibiarkan apa adanya.
+ */
+const renderInline = (text: string) =>
+  text.split(/\*\*(.+?)\*\*/).map((part, index) =>
+    index % 2 === 1 ? (
+      <strong key={index} className="font-semibold text-slate-900">
+        {part}
+      </strong>
+    ) : (
+      part
+    ),
+  );
 
 export async function generateMetadata({
   params,
@@ -25,7 +56,7 @@ export async function generateMetadata({
   const news = await getNewsBySlug(slug);
   if (!news) return { title: "Berita tidak ditemukan | GenBI Jatim" };
 
-  const cover = newsAssetUrl(news.coverImage);
+  const cover = imageUrl(news);
   return {
     title: `${news.title} | GenBI Jatim`,
     description: news.excerpt,
@@ -40,8 +71,10 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   const news = await getNewsBySlug(slug);
   if (!news) notFound();
 
-  const related = (await getRecentNews(4)).filter((item) => item.slug !== news.slug).slice(0, 3);
-  const cover = newsAssetUrl(news.coverImage);
+  const others = (await getRecentNews(5)).filter((item) => item.slug !== news.slug).slice(0, 4);
+  const gallery = (news.images ?? [])
+    .map((path) => newsAssetUrl(path))
+    .filter((src): src is string => Boolean(src));
   const paragraphs = (news.content ?? "")
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
@@ -49,105 +82,119 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   const publishedLabel = formatDate(news.publishedAt);
 
   return (
-    <div className="flex min-h-screen flex-col font-sans selection:bg-cyan-500 selection:text-white bg-[#020617] relative overflow-hidden">
-      {/* Background Orbs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob optimize-gpu"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 optimize-gpu"></div>
-
+    <div className="flex min-h-screen flex-col bg-white font-sans text-slate-900">
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-20 relative">
-        {/* Article Header */}
-        <section className="relative h-[60vh] min-h-[400px] w-full overflow-hidden flex items-end">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none mix-blend-screen optimize-gpu"></div>
+      <main className="flex-1 pt-24 pb-24 md:pt-28">
+        <Container>
+          <div className="grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-12 lg:gap-x-12">
+            {/*
+              Baris pertama: judul, penulis, dan dokumentasi. Blok ini memakai
+              lebar kolom berita (8/12) supaya gambar dokumentasi mentok penuh
+              selebar kolom, dan "Berita Lainnya" di kanan baru mulai sejajar
+              dengan isi berita pada baris kedua.
+            */}
+            <header className="lg:col-span-8 lg:row-start-1">
+              <h1 className="text-[1.75rem] font-bold leading-[1.15] tracking-tight text-slate-900 md:text-[2.25rem] lg:text-[2.5rem]">
+                {news.title}
+              </h1>
 
-          <div className="absolute inset-0 z-0 bg-[#0f1016]">
-            {cover && (
-              <Image src={cover} alt={news.title} fill sizes="100vw" unoptimized className="object-cover brightness-50" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0f1016] via-[#0f1016]/50 to-transparent"></div>
-          </div>
-
-          <div className="container mx-auto px-6 relative z-10 pb-12">
-            <div className="max-w-4xl">
-              <FadeIn>
-                <span className="px-3 py-1 bg-cyan-500/20 backdrop-blur border border-cyan-500/30 text-cyan-300 text-xs font-bold rounded-full shadow-sm uppercase tracking-wider mb-4 inline-block">
-                  {news.category ?? "Berita"}
-                </span>
-                <h1 className="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight">
-                  {news.title}
-                </h1>
-                <div className="flex items-center gap-4 text-blue-200/60 text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs text-cyan-300 font-bold">
-                      A
-                    </span>
-                    {news.byline || "GenBI Jatim"}
+              <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+                <span className="font-semibold text-slate-900">{news.author}</span>
+                {news.publisher ? (
+                  <span>
+                    <span aria-hidden="true">- </span>
+                    <span className="font-medium text-genbi-blue">{news.publisher}</span>
                   </span>
-                  {publishedLabel && (
-                    <>
-                      <span>•</span>
-                      <span>{publishedLabel}</span>
-                    </>
-                  )}
-                </div>
-              </FadeIn>
-            </div>
-          </div>
-        </section>
+                ) : null}
+                {publishedLabel ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{publishedLabel}</span>
+                  </>
+                ) : null}
+              </div>
 
-        {/* Article Content */}
-        <section className="container mx-auto px-6 relative z-10 -mt-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div className="lg:col-span-8">
-              <SlideUp
-                delay={0.2}
-                className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 md:p-12 space-y-6 text-blue-100/80 text-lg leading-relaxed"
-              >
+              <NewsGalleryCarousel images={gallery} title={news.title} />
+            </header>
+
+            {/* Baris kedua: isi berita, sejajar dengan "Berita Lainnya". */}
+            <div className="lg:col-span-8 lg:row-start-2">
+              {/* Tanpa animasi masuk: isi berita langsung tampil utuh. */}
+              <div className="max-w-[68ch] space-y-6 text-[1.0625rem] leading-[1.8] text-slate-700">
                 {paragraphs.length > 0 ? (
-                  paragraphs.map((paragraph, index) => (
-                    <p key={paragraph.slice(0, 40)} className={index === 0 ? "font-medium text-white text-xl" : undefined}>
-                      {paragraph}
-                    </p>
-                  ))
+                  paragraphs.map((paragraph, index) => {
+                    const dateline = index === 0 ? paragraph.match(DATELINE) : null;
+                    if (dateline) {
+                      return (
+                        <p key={paragraph.slice(0, 40)}>
+                          <strong className="font-semibold text-slate-900">{dateline[1]}</strong>
+                          {dateline[2]}
+                          {renderInline(dateline[3])}
+                        </p>
+                      );
+                    }
+                    return <p key={paragraph.slice(0, 40)}>{renderInline(paragraph)}</p>;
+                  })
                 ) : (
-                  <p className="italic text-blue-200/60">Belum ada konten.</p>
+                  <p className="italic text-slate-500">Belum ada konten.</p>
                 )}
-              </SlideUp>
-
-              <div className="mt-12">
-                <Link href="/news">
-                  <Button variant="outline" className="gap-2">
-                    ← Kembali ke Berita
-                  </Button>
-                </Link>
               </div>
             </div>
 
-            {/* Sidebar */}
-            {related.length > 0 && (
-              <div className="lg:col-span-4 space-y-8">
-                <div className="bg-blue-950/20 border border-white/10 rounded-2xl p-6 sticky top-24">
-                  <h2 className="text-lg font-bold text-white mb-4">Berita Terkait</h2>
-                  <ul className="space-y-4">
-                    {related.map((item) => (
-                      <li key={item.id} className="group">
-                        <Link href={`/news/${item.slug}`} className="block">
-                          <h3 className="text-blue-100 group-hover:text-cyan-400 transition-colors text-sm font-medium mb-1">
-                            {item.title}
-                          </h3>
-                          {formatDate(item.publishedAt) && (
-                            <span className="text-xs text-blue-500/60">{formatDate(item.publishedAt)}</span>
+            {/* Sidebar: berita lainnya, gambar + penerbit + judul. */}
+            {others.length > 0 && (
+              <aside className="lg:col-span-4 lg:row-start-2">
+                <div className="lg:sticky lg:top-28">
+                  <h2 className="text-lg font-bold tracking-tight text-slate-900">
+                    Berita Lainnya
+                  </h2>
+                  <div className="mt-2 divide-y divide-genbi-line">
+                    {others.map((item) => {
+                      const cover = imageUrl(item);
+                      return (
+                        <Link
+                          key={item.id}
+                          href={`/news/${item.slug}`}
+                          className="group block py-6"
+                        >
+                          {cover && (
+                            <div className="relative aspect-[16/9] w-full overflow-hidden rounded-media bg-genbi-light">
+                              <Image
+                                src={cover}
+                                alt={item.title}
+                                fill
+                                sizes="(max-width: 1024px) 100vw, 380px"
+                                className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
+                              />
+                            </div>
                           )}
+                          <div className="mt-3">
+                            {item.publisher ? (
+                              <p className="text-xs font-semibold text-genbi-blue">
+                                {item.publisher}
+                              </p>
+                            ) : null}
+                            <h3 className="mt-1 text-base font-bold leading-snug text-slate-900 transition-colors duration-200 group-hover:text-genbi-blue">
+                              {item.title}
+                            </h3>
+                          </div>
                         </Link>
-                      </li>
-                    ))}
-                  </ul>
+                      );
+                    })}
+                  </div>
+                  <Link
+                    href="/news"
+                    className="mt-8 inline-flex h-11 items-center gap-2 rounded-full bg-genbi-blue px-5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60"
+                  >
+                    Lihat Semua Berita
+                    <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  </Link>
                 </div>
-              </div>
+              </aside>
             )}
           </div>
-        </section>
+        </Container>
       </main>
 
       <Footer />

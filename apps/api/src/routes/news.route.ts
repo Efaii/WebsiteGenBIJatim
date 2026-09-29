@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getLatestNews, getAllNewsCountAndData, createNews, updateNews, deleteNews } from '../controllers/news.controller';
+import { getLatestNews, getAllNewsCountAndData, createNews, updateNews, deleteNews, setFeaturedOrder } from '../controllers/news.controller';
 import { verifyToken } from '../middlewares/auth.middleware';
 import { uploadNewsImage } from '../middlewares/upload.middleware';
 
@@ -11,6 +11,7 @@ router.get('/latest', getLatestNews);
 // Admin Routes (Protected)
 router.get('/', verifyToken, getAllNewsCountAndData);
 router.post('/', verifyToken, uploadNewsImage.single('image'), createNews);
+router.put('/:id/featured', verifyToken, setFeaturedOrder);
 router.put('/:id', verifyToken, uploadNewsImage.single('image'), updateNews);
 router.delete('/:id', verifyToken, deleteNews);
 

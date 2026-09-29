@@ -111,3 +111,11 @@ yang tampil dan tata letaknya sudah final.
   video benar-benar terlihat.
 - Bila kelak video diganti-ganti, jangan menaikkan resolusi berkas tanpa meninjau
   ulang anggaran di atas.
+
+## Revisi: media hero menjadi slot CMS (ADR 0013)
+
+Pemilihan poster dan video hero tidak lagi ditentukan boolean
+`hero.video.enabled` di `content/home.ts`; keduanya menjadi slot media yang
+dikelola admin global dari CMS. Aturan yang tetap berlaku: poster adalah elemen
+LCP, video hanya lapisan opsional yang dipasang setelah mount, dan anggaran
+berkas video (1280x720, H.264, tanpa audio, <= 2 MB) menjadi batas unggah.

@@ -8,8 +8,9 @@ import type { NavDropdown, NavItem } from "@/config/site";
  * NavbarLinks Component
  * * Purpose: Renders the primary desktop navigation interface and megamenu systems.
  * Architecture:
- * - Dropdown System: hover-triggered megamenu that lists either the public
- *   periods (Profil) or the commissariats (Komisariat).
+ * - Dropdown System: hover-triggered megamenu that lists the public periods
+ *   (Profil). Komisariat deliberately renders as a plain link so visitors see
+ *   the /commissariat page first instead of jumping to a campus detail.
  * - State Management: synchronizes active styling from the current `pathname`.
  *
  * Skala tipografi dibuat bertingkat: 15px di md, 17px di lg ke atas. Pada 768px
@@ -17,19 +18,16 @@ import type { NavDropdown, NavItem } from "@/config/site";
  * dipakai mulai lg. Jarak antar menu juga mengikuti: rapat di md, lega di lg.
  */
 
-type CommissariatLink = { name: string; slug: string };
 type PeriodLink = { name: string; href: string };
 
 type NavbarLinksProps = {
   pathname: string;
   navItems: NavItem[];
-  commissariatLinks: CommissariatLink[];
   periodLinks: PeriodLink[];
 };
 
 const EMPTY_LABEL: Record<NavDropdown, string> = {
   profil: "Belum ada periode",
-  commissariat: "Belum ada komisariat",
 };
 
 /** Kelas bersama untuk setiap item navigasi: ukuran, padding, dan area klik. */
@@ -39,7 +37,6 @@ const ITEM_BASE =
 export function NavbarLinks({
   pathname,
   navItems,
-  commissariatLinks,
   periodLinks,
 }: NavbarLinksProps) {
   return (
@@ -47,9 +44,11 @@ export function NavbarLinks({
       <div className="flex items-center gap-3 lg:gap-7 xl:gap-9">
         {navItems.map((link) => {
           if (link.dropdown) {
-            const items = link.dropdown === "profil"
-              ? periodLinks.map((item) => ({ key: item.href, name: item.name, href: item.href }))
-              : commissariatLinks.map((item) => ({ key: item.slug, name: item.name, href: `/commissariat/${item.slug}` }));
+            const items = periodLinks.map((item) => ({
+              key: item.href,
+              name: item.name,
+              href: item.href,
+            }));
             const isDropdownActive = pathname.startsWith(link.href);
             return (
               <div
@@ -126,7 +125,10 @@ export function NavbarLinks({
                 ITEM_BASE,
                 "font-medium relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.5 after:transition-opacity",
                 pathname === link.href
-                  ? cn("font-bold after:opacity-100", "text-genbi-blue after:bg-genbi-blue")
+                  ? cn(
+                      "font-bold after:opacity-100",
+                      "text-genbi-blue after:bg-genbi-blue",
+                    )
                   : "text-slate-900 hover:text-genbi-blue after:opacity-0",
               )}
             >

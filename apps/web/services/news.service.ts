@@ -11,6 +11,7 @@ export interface AdminNewsItem {
   content: string;
   image: string;
   author: string;
+  featuredOrder?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +54,23 @@ export const updateNews = async (id: string, formData: FormData): Promise<AdminN
     body: formData,
   });
   if (!response.ok) throw new Error('Failed to update News');
+  return response.json();
+};
+
+/**
+ * Mengatur slot beranda berita (1-3) atau melepasnya (null).
+ * Satu slot hanya bisa diisi satu berita; slot yang sama dilepas otomatis.
+ */
+export const setAdminNewsFeaturedOrder = async (
+  id: string,
+  featuredOrder: number | null,
+): Promise<AdminNewsItem> => {
+  const response = await fetch(`${API_BASE}/news/${id}/featured`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify({ featuredOrder }),
+  });
+  if (!response.ok) throw new Error('Failed to set featured order');
   return response.json();
 };
 

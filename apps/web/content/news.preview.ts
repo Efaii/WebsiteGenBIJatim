@@ -8,8 +8,8 @@ import type { GalleryItem } from "@/types/news-gallery.types";
  * (satu utama + empat thumbnail). Lihat ADR 0006.
  *
  * Cara kerjanya:
- * - pada `next dev`, fixture ini yang tampil supaya struktur final galeri bisa
- *   ditinjau sekarang;
+ * - fixture ini HANYA tampil bila database berita masih kosong (pratinjau
+ *   bentuk galeri di `next dev`); berita asli dari API selalu menang;
  * - pada build produksi fixture ini MATI, sehingga tidak pernah ada berita
  *   karangan yang tayang ke publik;
  * - untuk menyalakannya paksa di produksi (mis. demo), set

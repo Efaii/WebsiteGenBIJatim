@@ -4,7 +4,10 @@ import { Container } from "@/components/Container";
 import { NewsGallery } from "@/components/home/NewsGallery";
 import { homeContent } from "@/content/home";
 import { newsGalleryPreview, newsPreviewEnabled } from "@/content/news.preview";
-import { newsAssetUrl, type PublicNewsSummary } from "@/lib/services/news.service";
+import {
+  newsAssetUrl,
+  type PublicNewsSummary,
+} from "@/lib/services/news.service";
 import type { GalleryItem } from "@/types/news-gallery.types";
 
 /**
@@ -23,11 +26,16 @@ const formatMonthYear = (iso: string | null): string | null => {
 };
 
 /**
- * Berita nyata hari ini hanya membawa satu gambar, jadi ia menjadi galeri
- * satu gambar (gambar utama saja). Bentuk lima gambar menyusul dari API.
+ * Berita membawa galeri (cover + gambar pendukung). Kartu Beranda memakai
+ * bentuk lima gambar (1 utama + maks 4 thumbnail, ADR 0006); sisa gambar tetap
+ * tampil di halaman detail berita.
  */
 const toGalleryItem = (news: PublicNewsSummary): GalleryItem => {
-  const cover = newsAssetUrl(news.coverImage);
+  const gallery = (news.images ?? [])
+    .map((path) => newsAssetUrl(path))
+    .filter((src): src is string => Boolean(src));
+  const cover = gallery[0] ?? newsAssetUrl(news.coverImage);
+  const selected = cover ? [cover, ...gallery.slice(1, 5)] : [];
   return {
     id: news.id,
     slug: news.slug,
@@ -36,7 +44,7 @@ const toGalleryItem = (news: PublicNewsSummary): GalleryItem => {
     location: null,
     category: news.category,
     excerpt: news.excerpt,
-    images: cover ? [{ src: cover, alt: news.title }] : [],
+    images: selected.map((src) => ({ src, alt: news.title })),
   };
 };
 
@@ -47,11 +55,24 @@ const toGalleryItem = (news: PublicNewsSummary): GalleryItem => {
  * hanya galeri interaktifnya yang menjadi client island.
  */
 export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
-  const items = newsPreviewEnabled ? newsGalleryPreview : initialNews.map(toGalleryItem);
+  /*
+   * Data nyata menang. Fixture hanya dipakai sebagai pratinjau bentuk galeri
+   * ketika belum ada berita asli di database (mis. environment baru di dev);
+   * di produksi fixture tetap mati. Lihat ADR 0006 dan ADR 0010.
+   */
+  const items =
+    initialNews.length > 0
+      ? initialNews.map(toGalleryItem)
+      : newsPreviewEnabled
+        ? newsGalleryPreview
+        : [];
   const { title, emptyState } = homeContent.newsPreview;
 
   return (
-    <section data-section="berita" className="bg-genbi-soft py-24 md:py-28 lg:py-32">
+    <section
+      data-section="berita"
+      className="bg-genbi-soft py-24 md:py-28 lg:py-32"
+    >
       <Container>
         {/*
           Judul di tengah untuk mobile (section lain pun begitu), kembali
@@ -64,12 +85,18 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
             {title}
           </h2>
 
+          {/*
+            Tombol "Lainnya" diskalakan supaya setara dengan judul (56px,
+            mengikuti proporsi referensi): teks tebal 16px, padding lega.
+            Tinggi yang sama juga dipakai versi mobile di bawah galeri supaya
+            tombolnya tidak jadi dua ukuran berbeda.
+          */}
           <Link
             href="/news"
-            className="hidden items-center gap-2 rounded-full bg-genbi-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:inline-flex"
+            className="hidden items-center gap-2.5 rounded-full bg-genbi-blue px-7 py-4 text-base font-bold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:inline-flex"
           >
             Lainnya
-            <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            <ArrowRight className="h-5 w-5" strokeWidth={2} />
           </Link>
         </div>
 
@@ -89,10 +116,10 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
         */}
         <Link
           href="/news"
-          className="mx-auto mt-6 flex w-full max-w-md items-center justify-center gap-2 rounded-full bg-genbi-blue px-6 py-3.5 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:hidden"
+          className="mx-auto mt-6 flex w-full max-w-md items-center justify-center gap-2.5 rounded-full bg-genbi-blue px-7 py-4 text-base font-bold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:hidden"
         >
           Lainnya
-          <ArrowRight className="h-4 w-4" strokeWidth={2} />
+          <ArrowRight className="h-5 w-5" strokeWidth={2} />
         </Link>
       </Container>
     </section>

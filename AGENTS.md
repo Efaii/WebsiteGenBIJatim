@@ -45,10 +45,26 @@ npx ts-node src/scripts/import.ts ./data/excel
 npx ts-node src/scripts/process_images.ts
 ```
 
-Import **wipes** all `ProgramKerja` then reloads from sheet `ALL`.
+Import **wipes** all `ProgramKerja` (foto/LPJ ikut ter-cascade) then reloads from sheet `ALL`.
 
-Excel source of truth for DB: `apps/api/data/excel/*_Proker_Normalized*.xlsx`  
-Raw Desktop `Data Program kerja` is **not** import-ready (different shape).
+> **Jangan jalankan import pada snapshot hasil rekonsiliasi.** File di
+> `apps/api/data/excel/` adalah generasi lama (148 baris vs 153 di DB; 48 sel
+> tanggal masih berisi contoh template; hanya 21 dari 52 label jadwal cocok).
+> Import akan mengganti 46 jadwal teks hasil rekonsiliasi dengan
+> "Periode 2025/2026" dan menghapus tautan periode. Impor hanya untuk DB kosong.
+
+Sumber rekonsiliasi (di luar repo): `<source-dir>/Data Program Kerja Updated` +
+`<source-dir>/Dokumentasi Proker`, dibaca `src/scripts/reconcile_proker.ts`
+(`--source-dir`, butuh approval env). Snapshot hasil rekonsiliasi adalah sumber
+promosi; lihat `CONTEXT.md` dan ADR 0008.
+
+Tanggal proker: kolom `date` boleh teks bebas (`"Setiap hari Senin"`,
+`"28-30 Januari 2026"`); kolom `date_iso` menang bila valid. Parser `excelDate`
+mengabaikan awalan nama hari (`"Sabtu, 9 Mei 2026"` → 2026-05-09). Rentang dan
+rangkaian sesi diturunkan `extractScheduleRange` menjadi `startDate`/`endDate`,
+dan tanggal selesai dipakai sebagai tanggal kalender program; jadwal
+berkala/kondisional/relatif tetap di `dateLabel` dan tidak dipakai umpan
+Kegiatan Terakhir (lihat ADR 0009).
 
 Photos pipeline:
 
