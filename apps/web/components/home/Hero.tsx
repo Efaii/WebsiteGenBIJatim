@@ -5,7 +5,6 @@ import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import CountUp from "@/components/CountUp";
 import { Container } from "@/components/Container";
-import { homeContent } from "@/content/home";
 
 /*
  * Lapisan visual hero.
@@ -26,7 +25,8 @@ import { homeContent } from "@/content/home";
  * kontras AA 4,5:1 mulai tembus. Rinciannya ada di laporan Fase 13.
  */
 /** Tint biru di atas foto. Menyatukan warna foto kegiatan dengan palet GenBI. */
-const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/26 via-[#174AA8]/20 to-[#2DA9E6]/14";
+const HERO_TINT =
+  "bg-gradient-to-br from-[#1674D1]/26 via-[#174AA8]/20 to-[#2DA9E6]/14";
 /**
  * Scrim legibilitas: pita vertikal yang menjaga teks hero tetap terbaca.
  *
@@ -36,7 +36,8 @@ const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/26 via-[#174AA8]/20 to-[#2DA
  * Dengan 0.66 dan stop aksen yang sekarang, kontras terburuknya ~3.3:1
  * (angka lengkapnya di HERO_HEADLINE_ACCENT).
  */
-const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.66)_28%,rgba(6,22,54,0.66)_76%,rgba(6,22,54,0.16)_100%)]";
+const HERO_SCRIM =
+  "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.66)_28%,rgba(6,22,54,0.66)_76%,rgba(6,22,54,0.16)_100%)]";
 /**
  * Peleburan tepi bawah hero ke section berikutnya.
  *
@@ -82,6 +83,17 @@ const HERO_TEXT_SHADOW = "[text-shadow:0_1px_14px_rgba(6,22,54,0.5)]";
 const HERO_HEADLINE_ACCENT =
   "bg-[linear-gradient(180deg,#FFFFFF_44%,#DCEAFF_52%,#9CC8FF_60%,#6FB2FF_68%,#5EA8FF_78%,#4E97FF_92%)] bg-clip-text [-webkit-background-clip:text] text-transparent [text-shadow:none] [filter:drop-shadow(0_1px_14px_rgba(6,22,54,0.5))]";
 
+export interface HeroContent {
+  heading: { line1: string; line2: string };
+  description: string;
+  /** Nama peran statis yang dicetak tebal di ujung subteks. */
+  highlights: string[];
+  poster: { src: string; alt: string };
+  video: { enabled: boolean; src: string; type: string; poster: string };
+  /** Metrik statis yang menyatu dengan konten utama hero. */
+  stats: { label: string; number: number; suffix: string }[];
+}
+
 /**
  * Hero beranda.
  *
@@ -95,12 +107,12 @@ const HERO_HEADLINE_ACCENT =
  * - Overlay dinaikkan sedikit kepekatannya agar lebih sinematik tanpa membuat
  *   media latar hilang.
  *
- * Lapisan media menerima gambar poster ATAU video: selama
- * `homeContent.hero.video.enabled` masih false, poster yang tampil dan
- * tampilannya sudah final. Menyalakan video hanya mengubah satu boolean.
+ * Lapisan media menerima gambar poster ATAU video lewat props `content`:
+ * selama `video.enabled` masih false, poster yang tampil dan tampilannya
+ * sudah final. Menyalakan video hanya mengubah satu boolean.
  */
-export function Hero() {
-  const { heading, description, highlights, video } = homeContent.hero;
+export function Hero({ content }: { content: HeroContent }) {
+  const { heading, description, highlights, poster, video, stats } = content;
   const [first, second, third] = highlights;
 
   return (
@@ -112,8 +124,8 @@ export function Hero() {
       {/* --- LAPISAN MEDIA --- */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/assets/images/hero.JPG"
-          alt="Ratusan peserta berpose bersama di dalam aula"
+          src={poster.src}
+          alt={poster.alt}
           fill
           priority
           sizes="100vw"
@@ -141,7 +153,9 @@ export function Hero() {
         {/* --- TUMPUKAN TEKS: JUDUL, SUBTEKS, STATISTIK --- */}
         <div className="flex flex-1 flex-col items-center justify-center pb-16 pt-28 text-center md:pt-24">
           <SlideUp delay={0.1} className="w-full">
-            <h1 className={`font-heading text-[2.5rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[4.25rem] ${HERO_TEXT_SHADOW}`}>
+            <h1
+              className={`font-heading text-[2.5rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[4.25rem] ${HERO_TEXT_SHADOW}`}
+            >
               {heading.line1}
               <br />
               {/*
@@ -157,7 +171,9 @@ export function Hero() {
           </SlideUp>
 
           <FadeIn delay={0.25} className="mt-5 w-full md:mt-6">
-            <p className={`mx-auto max-w-[36rem] text-base leading-relaxed text-white/95 sm:text-base md:text-lg ${HERO_TEXT_SHADOW}`}>
+            <p
+              className={`mx-auto max-w-[36rem] text-base leading-relaxed text-white/95 sm:text-base md:text-lg ${HERO_TEXT_SHADOW}`}
+            >
               {description}{" "}
               <span className="font-semibold text-white">{first}</span>,{" "}
               <span className="font-semibold text-white">{second}</span>
@@ -173,8 +189,10 @@ export function Hero() {
 
           {/* --- STATISTIK: MENYATU DENGAN KONTEN UTAMA --- */}
           <FadeIn delay={0.4} className="w-full">
-            <ul className={`mx-auto mt-10 grid w-full max-w-3xl grid-cols-3 divide-x divide-white/15 md:mt-12 ${HERO_TEXT_SHADOW}`}>
-              {homeContent.stats.map((stat) => (
+            <ul
+              className={`mx-auto mt-10 grid w-full max-w-3xl grid-cols-3 divide-x divide-white/15 md:mt-12 ${HERO_TEXT_SHADOW}`}
+            >
+              {stats.map((stat) => (
                 <li
                   key={stat.label}
                   className="flex flex-col items-center gap-1 px-2 sm:px-6"

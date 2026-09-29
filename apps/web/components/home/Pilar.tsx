@@ -1,6 +1,19 @@
 import Image from "next/image";
 import { Container } from "@/components/Container";
-import { homeContent } from "@/content/home";
+
+export interface PilarItem {
+  title: string;
+  description: string;
+  points: string[];
+  image: string;
+  imageAlt: string;
+}
+
+export interface PilarContent {
+  heading: string;
+  description: string;
+  items: PilarItem[];
+}
 
 /**
  * PilarSection (Peran Utama GenBI)
@@ -32,11 +45,14 @@ import { homeContent } from "@/content/home";
  * Tiga kartu sejajar adalah permintaan eksplisit brief, jadi pola "tiga kartu
  * identik" di sini disengaja dan dicatat sebagai pengecualian.
  */
-export function Pilar() {
-  const { heading, description, items } = homeContent.pilar;
+export function Pilar({ content }: { content: PilarContent }) {
+  const { heading, description, items } = content;
 
   return (
-    <section data-section="pilar" className="relative overflow-hidden bg-genbi-soft py-24 md:py-28 lg:py-32">
+    <section
+      data-section="pilar"
+      className="relative overflow-hidden bg-genbi-soft py-24 md:py-28 lg:py-32"
+    >
       <Container className="relative z-10">
         {/* --- JUDUL SECTION --- */}
         {/* Label "Kenali Peran GenBI" dihapus atas permintaan pemilik produk;

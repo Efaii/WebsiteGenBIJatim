@@ -10,8 +10,19 @@ import {
   useTransform,
 } from "framer-motion";
 import { Container } from "@/components/Container";
-import { homeContent } from "@/content/home";
 import { cn } from "@/lib/utils";
+
+export interface StoryMilestone {
+  year: string;
+  title: string;
+  description: string;
+}
+
+export interface StoryContent {
+  heading: string;
+  description: string;
+  milestones: StoryMilestone[];
+}
 
 /*
  * Latar section Story.
@@ -21,13 +32,8 @@ import { cn } from "@/lib/utils";
  * bernama di sini, bukan token global, karena hanya dipakai di satu tempat.
  */
 const STORY_BASE = "bg-[#163A73]";
-const STORY_GRADIENT = "bg-gradient-to-br from-[#163A73] via-[#123E86] to-[#1557B8]";
-
-type Milestone = {
-  year: string;
-  title: string;
-  description: string;
-};
+const STORY_GRADIENT =
+  "bg-gradient-to-br from-[#163A73] via-[#123E86] to-[#1557B8]";
 
 /**
  * Satu milestone timeline.
@@ -41,7 +47,7 @@ function MilestoneItem({
   index,
   isLast,
 }: {
-  milestone: Milestone;
+  milestone: StoryMilestone;
   index: number;
   isLast: boolean;
 }) {
@@ -93,7 +99,9 @@ function MilestoneItem({
       <div className="pl-10 lg:grid lg:grid-cols-2 lg:gap-12 lg:pl-0">
         <div
           className={cn(
-            isLeft ? "lg:col-start-1 lg:pr-6 lg:text-right" : "lg:col-start-2 lg:pl-6",
+            isLeft
+              ? "lg:col-start-1 lg:pr-6 lg:text-right"
+              : "lg:col-start-2 lg:pl-6",
           )}
         >
           <p className="font-heading text-2xl font-bold tabular-nums text-genbi-cyan md:text-[28px]">
@@ -135,8 +143,8 @@ function MilestoneItem({
  * Sengaja tidak dipaksa muat dalam satu layar: jarak antar milestone dibuat
  * lega supaya mudah diikuti.
  */
-export function Story() {
-  const { heading, description, milestones } = homeContent.story;
+export function Story({ content }: { content: StoryContent }) {
+  const { heading, description, milestones } = content;
   const listRef = useRef<HTMLOListElement>(null);
   const [listHeight, setListHeight] = useState(0);
   const reduce = useReducedMotion();
@@ -174,7 +182,11 @@ export function Story() {
 
   // Rentangnya sudah memasukkan setengah tinggi kepala (5px) agar titiknya
   // berada tepat di ujung garis, bukan di bawahnya.
-  const headY = useTransform(progress, [0, 1], [-5, Math.max(0, listHeight - 5)]);
+  const headY = useTransform(
+    progress,
+    [0, 1],
+    [-5, Math.max(0, listHeight - 5)],
+  );
 
   return (
     <section
@@ -201,11 +213,16 @@ export function Story() {
           <h2 className="font-heading text-[2rem] font-bold tracking-tight text-white md:text-[2.5rem] lg:text-[2.75rem]">
             {heading}
           </h2>
-          <p className="mt-4 text-base text-genbi-haze/85 md:text-[17px]">{description}</p>
+          <p className="mt-4 text-base text-genbi-haze/85 md:text-[17px]">
+            {description}
+          </p>
         </div>
 
         {/* Lebar dibatasi supaya blok teks tidak terpisah terlalu jauh dari garis. */}
-        <ol ref={listRef} className="relative mx-auto mt-14 w-full max-w-5xl md:mt-16">
+        <ol
+          ref={listRef}
+          className="relative mx-auto mt-14 w-full max-w-5xl md:mt-16"
+        >
           {/*
             Lintasan dasar: selalu terlihat, termasuk sebelum JavaScript jalan.
             Tetap 1px dan redup supaya tidak bersaing dengan lintasan progres.

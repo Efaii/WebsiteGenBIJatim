@@ -1,12 +1,13 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Hero } from "@/components/home/Hero";
-import { About } from "@/components/home/About";
+import { Hero, type HeroContent } from "@/components/home/Hero";
+import { About, type AboutContent } from "@/components/home/About";
 import { Mitra } from "@/components/home/Mitra";
-import { Pilar } from "@/components/home/Pilar";
-import { Story } from "@/components/home/Story";
+import { Pilar, type PilarContent } from "@/components/home/Pilar";
+import { Story, type StoryContent } from "@/components/home/Story";
 import { Portal } from "@/components/home/Portal";
 import { News } from "@/components/home/News";
+import { homeContent } from "@/content/home";
 import { newsPreviewEnabled } from "@/content/news.preview";
 import { FAQ } from "@/components/home/FAQ";
 import { Container } from "@/components/Container";
@@ -28,7 +29,13 @@ export const metadata: Metadata = {
  * gagal, bagian lain tetap tampil dan bagian yang gagal menjelaskan keadaannya
  * (tidak ada area kosong misterius).
  */
-function SectionFallback({ title, message }: { title: string; message: string }) {
+function SectionFallback({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
   return (
     <section className="bg-white py-24 md:py-28">
       <Container>
@@ -60,6 +67,19 @@ export default async function Home() {
    */
   const homeNews = featuredNews?.length ? featuredNews : latestNews;
 
+  /*
+   * Empat bagian statis menerima isinya lewat props dari kamus konten yang
+   * sekarang. Nanti saat konten beranda pindah ke database, hanya perakitan
+   * di sini yang berubah; komponen bagiannya tetap.
+   */
+  const heroContent: HeroContent = {
+    ...homeContent.hero,
+    stats: homeContent.stats,
+  };
+  const aboutContent: AboutContent = homeContent.about;
+  const pilarContent: PilarContent = homeContent.pilar;
+  const storyContent: StoryContent = homeContent.story;
+
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">
       {/* --- GLOBAL NAVIGATION INTERFACE --- */}
@@ -68,19 +88,21 @@ export default async function Home() {
       {/* --- PRIMARY NARRATIVE SECTIONS --- */}
       <main className="flex-1">
         {/* Entrance & Identity */}
-        <Hero />
+        <Hero content={heroContent} />
 
         {/* Organizational Context */}
-        <About />
+        <About content={aboutContent} />
 
         {/* Institutional Partners */}
-        <Mitra commissariats={homeData?.commissariats ?? STATIC_COMMISSARIATS} />
+        <Mitra
+          commissariats={homeData?.commissariats ?? STATIC_COMMISSARIATS}
+        />
 
         {/* Three Strategic Roles */}
-        <Pilar />
+        <Pilar content={pilarContent} />
 
         {/* Organizational History */}
-        <Story />
+        <Story content={storyContent} />
 
         {/* Strategic Program Access */}
         <Portal />
@@ -91,7 +113,10 @@ export default async function Home() {
         {homeNews || newsPreviewEnabled ? (
           <News initialNews={homeNews ?? []} />
         ) : (
-          <SectionFallback title="Berita Kegiatan" message="Berita belum dapat dimuat." />
+          <SectionFallback
+            title="Berita Kegiatan"
+            message="Berita belum dapat dimuat."
+          />
         )}
 
         {/* Knowledge Base & Support */}

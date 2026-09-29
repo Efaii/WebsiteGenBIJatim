@@ -1,6 +1,14 @@
 import Image from "next/image";
 import { Container } from "@/components/Container";
-import { homeContent } from "@/content/home";
+
+export interface AboutContent {
+  eyebrow: string;
+  heading: { line1: string; line2: string };
+  paragraphLead: string;
+  paragraph: string;
+  emphasis: string;
+  images: { src: string; alt: string }[];
+}
 
 /**
  * AboutSection
@@ -14,11 +22,15 @@ import { homeContent } from "@/content/home";
  *
  * Tidak ada animasi masuk di section ini: seluruh konten langsung ter-render.
  */
-export function About() {
-  const { eyebrow, heading, paragraphLead, paragraph, emphasis, images } = homeContent.about;
+export function About({ content }: { content: AboutContent }) {
+  const { eyebrow, heading, paragraphLead, paragraph, emphasis, images } =
+    content;
 
   return (
-    <section data-section="about" className="relative overflow-hidden bg-white py-24 md:py-28 lg:py-32">
+    <section
+      data-section="about"
+      className="relative overflow-hidden bg-white py-24 md:py-28 lg:py-32"
+    >
       {/* Aksen dekoratif tipis, tidak mengganggu konten. */}
       <div
         aria-hidden="true"
@@ -27,7 +39,6 @@ export function About() {
 
       <Container className="relative z-10">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
-
           {/* --- KOLASE --- */}
           {/*
             Empat tile dengan komposisi ASIMETRIS: baris atas terbagi rata
@@ -91,7 +102,9 @@ export function About() {
               menyempit sehingga masalah itu jauh lebih terlihat.
             */}
             <p className="mt-6 max-w-[38rem] text-base leading-relaxed text-slate-600 md:mt-7 md:text-[17px]">
-              <strong className="font-semibold text-slate-900">{paragraphLead}</strong>{" "}
+              <strong className="font-semibold text-slate-900">
+                {paragraphLead}
+              </strong>{" "}
               {paragraph}
             </p>
 

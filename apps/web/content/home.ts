@@ -23,6 +23,16 @@ export const homeContent = {
       "Komunitas penerima Beasiswa Bank Indonesia di Jawa Timur, garda terdepan transformasi bangsa sebagai",
     highlights: ["Front-liner", "Agent of Change", "Future Leaders"],
     /**
+     * Poster hero: lapisan media dasar saat video belum aktif. Gambar ini dulu
+     * dipatok langsung di komponen Hero; sekarang ikut dialirkan lewat konten
+     * supaya path dan alt-nya satu sumber. Berkasnya sengaja sama dengan
+     * `video.poster`, yang dipakai sebagai poster elemen video.
+     */
+    poster: {
+      src: "/assets/images/hero.JPG",
+      alt: "Ratusan peserta berpose bersama di dalam aula",
+    },
+    /**
      * Catatan: CTA hero ("Profil Lengkap" dan "Data Komisariat") DIHAPUS atas
      * keputusan pemilik produk pada revisi hero. Jangan ditambahkan kembali
      * hanya karena disebut di brief lama.
@@ -102,9 +112,18 @@ export const homeContent = {
        * berhubungan dengan GenBI. Untuk sementara diganti foto dokumentasi
        * program kerja, sampai pemilik produk mengganti seluruh foto beranda.
        */
-      { src: "/uploads/proker/upnvjt/1ea05c84-2f55-45da-ab83-8932099598e9/foto6.webp", alt: "Aktivitas anggota GenBI" },
-      { src: "/assets/images/bnsp.JPG", alt: "Pelatihan peningkatan kapasitas anggota" },
-      { src: "/assets/images/background.jpg", alt: "Kolaborasi GenBI Jawa Timur" },
+      {
+        src: "/uploads/proker/upnvjt/1ea05c84-2f55-45da-ab83-8932099598e9/foto6.webp",
+        alt: "Aktivitas anggota GenBI",
+      },
+      {
+        src: "/assets/images/bnsp.JPG",
+        alt: "Pelatihan peningkatan kapasitas anggota",
+      },
+      {
+        src: "/assets/images/background.jpg",
+        alt: "Kolaborasi GenBI Jawa Timur",
+      },
     ],
   },
   mitra: {
