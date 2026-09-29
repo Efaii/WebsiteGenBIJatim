@@ -13,13 +13,37 @@ import { homeContent } from "@/content/home";
  * Nilainya sengaja ditulis sebagai konstanta bernama di sini, bukan token
  * global di globals.css: masing-masing hanya dipakai di satu tempat, jadi nama
  * global justru menambah kosakata token tanpa ada yang memakainya ulang.
+ *
+ * Pembagian tugasnya penting dan sengaja:
+ * - HERO_TINT  memberi arah palet GenBI, jadi ia yang paling banyak dikurangi
+ *              supaya warna asli foto (karpet merah) tidak mati menjadi mauve.
+ * - HERO_SCRIM menjaga teks tetap terbaca. Ia justru dinaikkan DI PITA TEKS
+ *              saja (28%-76%), dan diturunkan di luar pita itu, supaya langit
+ *              dan karpet di tepi atas-bawah terlihat lebih hidup.
+ *
+ * Batasnya diukur, bukan diperkirakan: dengan teks putih, gabungan kedua lapis
+ * di area teks tidak boleh turun di bawah ~65% opasitas, karena di situlah
+ * kontras AA 4,5:1 mulai tembus. Rinciannya ada di laporan Fase 13.
  */
 /** Tint biru di atas foto. Menyatukan warna foto kegiatan dengan palet GenBI. */
-const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/46 via-[#174AA8]/38 to-[#2DA9E6]/28";
+const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/26 via-[#174AA8]/20 to-[#2DA9E6]/14";
 /** Scrim legibilitas: pita vertikal yang menjaga teks putih tetap terbaca. */
-const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.36)_0%,rgba(6,22,54,0.48)_30%,rgba(6,22,54,0.48)_70%,rgba(6,22,54,0.28)_100%)]";
-/** Peleburan tepi bawah hero ke section berikutnya. */
-const HERO_FLOOR = "bg-gradient-to-t from-[#0B2551]/70 to-transparent";
+const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.58)_28%,rgba(6,22,54,0.58)_76%,rgba(6,22,54,0.16)_100%)]";
+/**
+ * Peleburan tepi bawah hero ke section berikutnya.
+ *
+ * Diturunkan dari 70% ke 42%: lapisan ini tepat menutupi karpet merah di
+ * bagian bawah foto, dan karena letaknya DI BAWAH area teks (teks berakhir di
+ * y=653, lapisan ini mulai di y=772), menurunkannya tidak menyentuh kontras
+ * teks sama sekali.
+ */
+const HERO_FLOOR = "bg-gradient-to-t from-[#0B2551]/42 to-transparent";
+/*
+ * Bayangan teks tipis. Ini TIDAK dihitung WCAG (kontras diukur dari warna teks
+ * terhadap latar), tetapi menaikkan keterbacaan yang dirasakan di atas foto
+ * yang tidak rata. Kontras terukurnya sendiri tetap dijaga oleh HERO_SCRIM.
+ */
+const HERO_TEXT_SHADOW = "[text-shadow:0_1px_14px_rgba(6,22,54,0.5)]";
 
 /**
  * Hero beranda.
@@ -80,7 +104,7 @@ export function Hero() {
         {/* --- TUMPUKAN TEKS: JUDUL, SUBTEKS, STATISTIK --- */}
         <div className="flex flex-1 flex-col items-center justify-center pb-16 pt-28 text-center md:pt-24">
           <SlideUp delay={0.1} className="w-full">
-            <h1 className="font-heading text-[2.5rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+            <h1 className={`font-heading text-[2.5rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[4.25rem] ${HERO_TEXT_SHADOW}`}>
               {heading.line1}
               <br />
               {/*
@@ -104,7 +128,7 @@ export function Hero() {
           </SlideUp>
 
           <FadeIn delay={0.25} className="mt-5 w-full md:mt-6">
-            <p className="mx-auto max-w-[36rem] text-base leading-relaxed text-white/95 sm:text-base md:text-lg">
+            <p className={`mx-auto max-w-[36rem] text-base leading-relaxed text-white/95 sm:text-base md:text-lg ${HERO_TEXT_SHADOW}`}>
               {description}{" "}
               <span className="font-semibold text-white">{first}</span>,{" "}
               <span className="font-semibold text-white">{second}</span>
@@ -120,7 +144,7 @@ export function Hero() {
 
           {/* --- STATISTIK: MENYATU DENGAN KONTEN UTAMA --- */}
           <FadeIn delay={0.4} className="w-full">
-            <ul className="mx-auto mt-10 grid w-full max-w-3xl grid-cols-3 divide-x divide-white/15 md:mt-12">
+            <ul className={`mx-auto mt-10 grid w-full max-w-3xl grid-cols-3 divide-x divide-white/15 md:mt-12 ${HERO_TEXT_SHADOW}`}>
               {homeContent.stats.map((stat) => (
                 <li
                   key={stat.label}
