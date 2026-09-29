@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ReactNode } from "react";
 
 type MotionProps = {
@@ -13,6 +13,18 @@ type MotionProps = {
   onViewportEnter?: () => void;
 };
 
+/*
+ * Seluruh wrapper di bawah menghormati `prefers-reduced-motion`.
+ *
+ * Saat pengguna meminta gerakan minimum, elemen langsung tampil dalam keadaan
+ * akhirnya (initial=false, whileInView={}) sehingga tidak ada animasi masuk,
+ * tetapi observer viewport tetap dibuat supaya `onViewportEnter` tetap
+ * berjalan seperti sebelumnya.
+ */
+function useReduced() {
+  return useReducedMotion() ?? false;
+}
+
 export const FadeIn = ({
   children,
   className,
@@ -20,19 +32,22 @@ export const FadeIn = ({
   once = true,
   amount = 0.3,
   onViewportEnter,
-}: MotionProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 20, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    onViewportEnter={onViewportEnter}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}: MotionProps) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 20 }}
+      whileInView={reduce ? {} : { opacity: 1, y: 0 }}
+      exit={reduce ? undefined : { opacity: 0, y: 20, transition: { duration: 0.3 } }}
+      viewport={{ once, amount }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      onViewportEnter={onViewportEnter}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const SlideUp = ({
   children,
@@ -40,18 +55,21 @@ export const SlideUp = ({
   delay = 0,
   once = true,
   amount = 0.3,
-}: MotionProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: 40, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}: MotionProps) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, y: 40 }}
+      whileInView={reduce ? {} : { opacity: 1, y: 0 }}
+      exit={reduce ? undefined : { opacity: 0, y: 40, transition: { duration: 0.3 } }}
+      viewport={{ once, amount }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const SlideInLeft = ({
   children,
@@ -59,18 +77,21 @@ export const SlideInLeft = ({
   delay = 0,
   once = true,
   amount = 0.3,
-}: MotionProps) => (
-  <motion.div
-    initial={{ opacity: 0, x: -40 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -40, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.7, delay, ease: "easeOut" }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}: MotionProps) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, x: -40 }}
+      whileInView={reduce ? {} : { opacity: 1, x: 0 }}
+      exit={reduce ? undefined : { opacity: 0, x: -40, transition: { duration: 0.3 } }}
+      viewport={{ once, amount }}
+      transition={{ duration: 0.7, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const ScaleIn = ({
   children,
@@ -78,18 +99,21 @@ export const ScaleIn = ({
   delay = 0,
   once = true,
   amount = 0.5,
-}: MotionProps) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.9 }}
-    whileInView={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
-    viewport={{ once, amount }}
-    transition={{ duration: 0.5, delay, ease: "easeOut" }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}: MotionProps) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      initial={reduce ? false : { opacity: 0, scale: 0.9 }}
+      whileInView={reduce ? {} : { opacity: 1, scale: 1 }}
+      exit={reduce ? undefined : { opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
+      viewport={{ once, amount }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const StaggerContainer = ({
   children,
@@ -98,28 +122,31 @@ export const StaggerContainer = ({
   once = true,
   amount = 0.3,
   staggerDelay = 0.1,
-}: MotionProps) => (
-  <motion.div
-    initial="hidden"
-    whileInView="show"
-    viewport={{ once, amount }}
-    variants={{
-      hidden: { opacity: 0 },
-      show: {
-        opacity: 1,
-        transition: {
-          staggerChildren: staggerDelay,
-          delayChildren: delay,
+}: MotionProps) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      initial={reduce ? false : "hidden"}
+      whileInView={reduce ? {} : "show"}
+      viewport={{ once, amount }}
+      variants={{
+        hidden: { opacity: 0 },
+        show: {
+          opacity: 1,
+          transition: {
+            staggerChildren: staggerDelay,
+            delayChildren: delay,
+          },
         },
-      },
-      exit: { opacity: 0, transition: { duration: 0.3 } },
-    }}
-    exit="exit"
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+        exit: { opacity: 0, transition: { duration: 0.3 } },
+      }}
+      exit="exit"
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 export const StaggerItem = ({
   children,
@@ -127,15 +154,22 @@ export const StaggerItem = ({
 }: {
   children: ReactNode;
   className?: string;
-}) => (
-  <motion.div
-    variants={{
-      hidden: { opacity: 0, y: 20 },
-      show: { opacity: 1, y: 0 },
-    }}
-    transition={{ duration: 0.5, ease: "easeOut" }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+}) => {
+  const reduce = useReduced();
+  return (
+    <motion.div
+      variants={
+        reduce
+          ? { hidden: { opacity: 1, y: 0 }, show: { opacity: 1, y: 0 } }
+          : {
+              hidden: { opacity: 0, y: 20 },
+              show: { opacity: 1, y: 0 },
+            }
+      }
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};

@@ -2,109 +2,104 @@
 
 import Image from "next/image";
 import { FadeIn, SlideInLeft } from "@/components/MotionWrapper";
-import { CommissariatItem } from "@/types/home.types";
+import { Container } from "@/components/Container";
+import { homeContent } from "@/content/home";
 
 /**
- * AboutSection Component
- * * Provides an overview of the organization's core values and institutional partnerships.
- * Features a dual-column layout:
- * - Media & Partners: Displays brand imagery and a grid of affiliated commissariats.
- * - Value Propositions: Explains program benefits through an icon-based vertical stack.
+ * AboutSection
+ *
+ * Dua kolom: kolase aktivitas di kiri, narasi di kanan. Kolase memakai
+ * komposisi asimetris (baris atas lebih tinggi, baris bawah terbagi lebar
+ * 5/7) supaya terasa disusun, bukan grid sama rata.
+ *
+ * Mitra Strategis TIDAK lagi di sini: section itu punya komponen sendiri
+ * (components/home/Mitra.tsx) karena punya judul sendiri.
  */
-export function About({
-  commissariats,
-}: {
-  commissariats: CommissariatItem[];
-}) {
+export function About() {
+  const { eyebrow, heading, paragraphLead, paragraph, emphasis, images } = homeContent.about;
+
   return (
-    <section className="py-16 md:py-24 bg-white relative overflow-hidden">
-      
-      {/* --- CONTENT ARCHITECTURE CONTAINER --- */}
-      <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative z-10 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 xl:gap-20 items-center">
-          
-          {/* --- MEDIA & PARTNERSHIPS COLUMN --- */}
-          <div className="relative flex flex-col gap-8">
-            
-            {/* 2x2 activity gallery */}
-            <SlideInLeft delay={0.4}>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  ["/assets/images/raker.jpg", "Kegiatan Raker GenBI"],
-                  ["/assets/images/individu.jpg", "Aktivitas anggota GenBI"],
-                  ["/assets/images/bnsp.JPG", "Pengembangan kapasitas anggota"],
-                  ["/assets/images/background.jpg", "Kolaborasi GenBI Jawa Timur"],
-                ].map(([src, alt]) => (
-                  <div
-                    key={src}
-                    className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] shadow-lg shadow-blue-900/10 group"
-                  >
-                    <Image
-                      src={src}
-                      alt={alt}
-                      fill sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
-            </SlideInLeft>
+    <section data-section="about" className="relative overflow-hidden bg-white py-24 md:py-28 lg:py-32">
+      {/* Aksen dekoratif tipis, tidak mengganggu konten. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-32 top-1/4 h-[420px] w-[420px] rounded-full bg-genbi-haze/40 blur-3xl"
+      />
 
-          </div>
+      <Container className="relative z-10">
+        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
 
-          {/* --- PROGRAM NARRATIVE & VALUES COLUMN --- */}
-          <div className="lg:pr-6 xl:pr-10">
-            
-            {/* Descriptive Headers */}
-            <FadeIn delay={0.2}>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 mb-4">
-                Kenali Kami Lebih Dekat
+          {/* --- KOLASE --- */}
+          <SlideInLeft delay={0.1}>
+            <div className="grid aspect-[4/3] grid-cols-12 grid-rows-[1.28fr_1fr] gap-3 md:gap-4">
+              {images.map((image, index) => (
+                <div
+                  key={image.src}
+                  className={[
+                    "group relative overflow-hidden rounded-card bg-genbi-light",
+                    // Baris atas: dua tile besar. Baris bawah: satu sempit, satu lebar.
+                    index === 0 ? "col-span-6" : "",
+                    index === 1 ? "col-span-6" : "",
+                    index === 2 ? "col-span-5" : "",
+                    index === 3 ? "col-span-7" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                  />
+                </div>
+              ))}
+            </div>
+          </SlideInLeft>
+
+          {/* --- NARASI --- */}
+          <div>
+            <FadeIn delay={0.15}>
+              {/*
+                Eyebrow ini sengaja dinormalkan: warna biru dan bobot semibold
+                dilepas atas permintaan pemilik produk, jadi kini near-black
+                tanpa bold. Huruf besar dan jarak antarhurufnya dipertahankan
+                supaya ia tetap terbaca sebagai label kecil di atas judul,
+                bukan sebagai paragraf.
+              */}
+              <p className="text-sm uppercase tracking-[0.2em] text-slate-900">
+                {eyebrow}
               </p>
-              <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-[1.15] mb-6">
-                Bukan Sekadar Beasiswa, <br />
-                <span className="text-blue-600">Tapi Transformasi Diri</span>
+
+              <h2 className="mt-4 font-heading text-[2rem] font-bold leading-[1.12] tracking-tight text-slate-900 md:mt-5 md:text-[2.75rem] lg:text-[3.25rem]">
+                {heading.line1}
+                <br />
+                <span className="text-genbi-blue">{heading.line2}</span>
               </h2>
             </FadeIn>
 
-            <FadeIn delay={0.3}>
-              <p className="text-slate-900 text-lg leading-relaxed max-w-xl mb-6">
-                GenBI Jawa Timur hadir sebagai wadah bagi para penerima beasiswa Bank Indonesia untuk berkembang. Kami adalah komunitas yang menjembatani mahasiswa dari berbagai latar belakang kampus untuk bergerak bersama mengusung semangat Energi Untuk Negeri. Di sini, kami tidak hanya belajar, tetapi juga berkontribusi nyata sebagai garda terdepan dalam mengomunikasikan kebijakan Bank Indonesia kepada masyarakat luas.
+            <FadeIn delay={0.25}>
+              {/*
+                Rata kanan-kiri (justify) atas permintaan pemilik produk. Pada
+                kolom selebar ~38rem efeknya halus; di layar sempit, kolom yang
+                pendek bisa membuat jarak antarkata melebar. Kalau itu mengganggu,
+                obatnya `hyphens-auto` (butuh kamus bahasa di browser).
+              */}
+              <p className="mt-6 max-w-[38rem] text-justify text-base leading-relaxed text-slate-600 md:mt-7 md:text-[17px]">
+                <strong className="font-semibold text-slate-900">{paragraphLead}</strong>{" "}
+                {paragraph}
               </p>
             </FadeIn>
 
+            <FadeIn delay={0.35}>
+              <p className="mt-5 max-w-[38rem] text-justify text-base font-semibold leading-relaxed text-slate-900 md:mt-6 md:text-[17px]">
+                {emphasis}
+              </p>
+            </FadeIn>
           </div>
         </div>
-
-        {/* Partner logos occupy their own full-width row below the main content. */}
-        <FadeIn delay={0.5}>
-          <div className="mt-14 overflow-hidden rounded-[2rem] bg-slate-50 p-8 border border-slate-200/80 shadow-md md:p-10">
-            <p className="text-xs md:text-sm font-bold text-slate-900 uppercase tracking-[0.16em] mb-8 text-center">
-              Menaungi mahasiswa berprestasi dari 9 Kampus Mitra Strategis di Jawa Timur
-            </p>
-
-            <div className="overflow-hidden">
-              <div className="flex w-max animate-marquee-loop hover:[animation-play-state:paused]">
-                {[...commissariats, ...commissariats].map((comm, index) => (
-                  <div
-                    key={`${comm.id}-${index}`}
-                    className="group/logo relative flex w-32 shrink-0 items-center justify-center px-4 md:w-44 md:px-6"
-                    title={comm.name}
-                  >
-                    <Image
-                      src={comm.logo}
-                      alt={comm.name}
-                      width={140}
-                      height={80}
-                      unoptimized
-                      className="h-16 md:h-20 w-auto object-contain opacity-75 transition-all duration-300 group-hover/logo:scale-110 group-hover/logo:opacity-100"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FadeIn>
-      </div>
+      </Container>
     </section>
   );
 }

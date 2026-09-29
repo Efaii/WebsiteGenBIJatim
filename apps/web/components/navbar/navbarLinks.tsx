@@ -11,6 +11,10 @@ import type { NavDropdown, NavItem } from "@/config/site";
  * - Dropdown System: hover-triggered megamenu that lists either the public
  *   periods (Profil) or the commissariats (Komisariat).
  * - State Management: synchronizes active styling from the current `pathname`.
+ *
+ * Skala tipografi dibuat bertingkat: 15px di md, 17px di lg ke atas. Pada 768px
+ * enam label dengan huruf 17px tidak muat satu baris, jadi ukuran penuh baru
+ * dipakai mulai lg. Jarak antar menu juga mengikuti: rapat di md, lega di lg.
  */
 
 type CommissariatLink = { name: string; slug: string };
@@ -28,6 +32,10 @@ const EMPTY_LABEL: Record<NavDropdown, string> = {
   commissariat: "Belum ada komisariat",
 };
 
+/** Kelas bersama untuk setiap item navigasi: ukuran, padding, dan area klik. */
+const ITEM_BASE =
+  "px-1.5 py-2 lg:px-3 text-[15px] lg:text-[17px] transition-colors flex items-center gap-1.5";
+
 export function NavbarLinks({
   pathname,
   navItems,
@@ -35,8 +43,8 @@ export function NavbarLinks({
   periodLinks,
 }: NavbarLinksProps) {
   return (
-    <div className="hidden md:flex items-center gap-8">
-      <div className="flex items-center gap-8">
+    <div className="hidden lg:flex items-center gap-3 lg:gap-7 xl:gap-9">
+      <div className="flex items-center gap-3 lg:gap-7 xl:gap-9">
         {navItems.map((link) => {
           if (link.dropdown) {
             const items = link.dropdown === "profil"
@@ -46,23 +54,21 @@ export function NavbarLinks({
             return (
               <div
                 key={link.href}
-                className="relative group h-full flex items-center py-2"
+                className="relative group h-full flex items-center"
               >
                 <Link
                   href={link.href}
                   className={cn(
-                    "text-sm font-medium transition-colors flex items-center gap-1",
+                    ITEM_BASE,
+                    "font-medium relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.5",
                     isDropdownActive
-                      ? cn(
-                          "font-bold relative after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:bg-current",
-                          "text-blue-600",
-                        )
-                      : "text-blue-900 hover:text-blue-600",
+                      ? cn("font-bold", "text-blue-600 after:bg-current")
+                      : "text-slate-900 hover:text-blue-600",
                   )}
                 >
                   {link.label}
                   <svg
-                    className="w-3 h-3 opacity-90 group-hover:rotate-180 transition-transform"
+                    className="h-3.5 w-3.5 opacity-90 transition-transform group-hover:rotate-180 lg:h-4 lg:w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -77,7 +83,7 @@ export function NavbarLinks({
                 </Link>
 
                 {/* --- MEGAMENU OVERLAY INTERFACE --- */}
-                <div className="absolute right-0 top-full pt-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 w-64 z-50">
+                <div className="absolute right-0 top-full pt-4 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 w-72 z-50">
                   <div className="bg-white/95 backdrop-blur-xl border border-slate-100 rounded-2xl overflow-hidden shadow-xl p-2 flex flex-col gap-1">
                     <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
                       {items.length > 0 ? (
@@ -85,13 +91,13 @@ export function NavbarLinks({
                           <Link
                             key={item.key}
                             href={item.href}
-                            className="block px-4 py-2 text-sm text-slate-900 hover:bg-blue-600 hover:text-white rounded-full transition-colors"
+                            className="block px-4 py-2.5 text-[15px] text-slate-900 hover:bg-blue-600 hover:text-white rounded-full transition-colors"
                           >
                             {item.name}
                           </Link>
                         ))
                       ) : (
-                        <span className="block px-4 py-2 text-sm text-slate-400">
+                        <span className="block px-4 py-2.5 text-[15px] text-slate-400">
                           {EMPTY_LABEL[link.dropdown]}
                         </span>
                       )}
@@ -117,13 +123,11 @@ export function NavbarLinks({
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors relative after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:transition-opacity",
+                ITEM_BASE,
+                "font-medium relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.5 after:transition-opacity",
                 pathname === link.href
-                  ? cn(
-                      "font-bold after:opacity-100",
-                      "text-blue-600 after:bg-blue-600",
-                    )
-                  : "text-blue-900 hover:text-blue-600 after:opacity-0",
+                  ? cn("font-bold after:opacity-100", "text-blue-600 after:bg-blue-600")
+                  : "text-slate-900 hover:text-blue-600 after:opacity-0",
               )}
             >
               {link.label}

@@ -1,95 +1,100 @@
-"use client";
-
 import Link from "next/link";
-import Image from "next/image";
-import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
-import { ArrowRight, Calendar, MapPin } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Container } from "@/components/Container";
+import { NewsGallery } from "@/components/home/NewsGallery";
+import { homeContent } from "@/content/home";
+import { newsGalleryPreview, newsPreviewEnabled } from "@/content/news.preview";
 import { newsAssetUrl, type PublicNewsSummary } from "@/lib/services/news.service";
+import type { GalleryItem } from "@/types/news-gallery.types";
 
+/**
+ * Bulan dan tahun berita, diformat di server dengan zona waktu tetap supaya
+ * hasil render server dan klien tidak pernah berbeda.
+ */
+const formatMonthYear = (iso: string | null): string | null => {
+  if (!iso) return null;
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat("id-ID", {
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(parsed);
+};
+
+/**
+ * Berita nyata hari ini hanya membawa satu gambar, jadi ia menjadi galeri
+ * satu gambar (gambar utama saja). Bentuk lima gambar menyusul dari API.
+ */
+const toGalleryItem = (news: PublicNewsSummary): GalleryItem => {
+  const cover = newsAssetUrl(news.coverImage);
+  return {
+    id: news.id,
+    slug: news.slug,
+    title: news.title,
+    date: formatMonthYear(news.publishedAt),
+    location: null,
+    category: news.category,
+    excerpt: news.excerpt,
+    images: cover ? [{ src: cover, alt: news.title }] : [],
+  };
+};
+
+/**
+ * Section Berita.
+ *
+ * Server Component: penyiapan data dan format tanggal terjadi di server, dan
+ * hanya galeri interaktifnya yang menjadi client island.
+ */
 export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
-  const newsItems = (initialNews || []).slice(0, 3);
-
-  const formatMonth = (item: PublicNewsSummary) =>
-    item.publishedAt
-      ? new Date(item.publishedAt).toLocaleDateString("id-ID", {
-          month: "long",
-          year: "numeric",
-        })
-      : "GenBI Jawa Timur";
+  const items = newsPreviewEnabled ? newsGalleryPreview : initialNews.map(toGalleryItem);
+  const { title, emptyState } = homeContent.newsPreview;
 
   return (
-    <section className="bg-white px-6 py-16 md:px-10 md:py-24">
-      <div className="mx-auto max-w-329">
-        <FadeIn className="mb-12 flex items-center justify-between gap-6" amount={0.2}>
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-blue-700 md:text-[34px]">
-            Berita Kegiatan
+    <section data-section="berita" className="bg-genbi-soft py-24 md:py-28 lg:py-32">
+      <Container>
+        {/*
+          Judul di tengah untuk mobile (section lain pun begitu), kembali
+          kiri-kanan mulai md. Tombol "Lainnya" di baris judul hanya tampil
+          mulai md; di mobile tombolnya pindah ke bawah deretan berita meniru
+          referensi desain.
+        */}
+        <div className="flex flex-wrap items-end justify-center gap-4 text-center md:justify-between md:text-left">
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-[2.75rem]">
+            {title}
           </h2>
+
           <Link
             href="/news"
-            className="group flex shrink-0 items-center gap-3 rounded-full bg-blue-700 px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_18px_rgba(30,64,175,0.18)] transition-all hover:bg-blue-800 hover:shadow-[0_10px_24px_rgba(30,64,175,0.26)]"
+            className="hidden items-center gap-2 rounded-full bg-genbi-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#1a56e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:inline-flex"
           >
             Lainnya
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+            <ArrowRight className="h-4 w-4" strokeWidth={2} />
           </Link>
-        </FadeIn>
+        </div>
 
-        {newsItems.length > 0 ? (
-          <StaggerContainer className="grid grid-cols-1 gap-6 lg:grid-cols-3" staggerDelay={0.12} amount={0.15}>
-            {newsItems.map((news) => {
-              const cover = newsAssetUrl(news.coverImage);
-
-              return (
-                <FadeIn key={news.id} className="min-w-0" delay={0.1} amount={0.15}>
-                  <Link
-                    href={`/news/${news.slug}`}
-                    className="group block overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_5px_20px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_30px_rgba(15,23,42,0.1)]"
-                  >
-                    {cover && (
-                      <div className="relative aspect-[1.95/1] overflow-hidden bg-slate-100">
-                        <Image
-                          src={cover}
-                          alt={news.title}
-                          fill sizes="(max-width: 1024px) 100vw, 33vw"
-                          unoptimized
-                          className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
-
-                    <div className="px-5 pb-6 pt-7">
-                      <h3 className="line-clamp-1 text-xl font-extrabold leading-tight text-slate-950 transition-colors group-hover:text-blue-700">
-                        {news.title}
-                      </h3>
-                      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700">
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="h-4 w-4 text-slate-600" aria-hidden="true" />
-                          {formatMonth(news)}
-                        </span>
-                        <span className="text-slate-400">•</span>
-                        <span className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-slate-600" aria-hidden="true" />
-                          {news.byline || "GenBI Jawa Timur"}
-                        </span>
-                      </div>
-                      <p className="mt-5 line-clamp-3 text-[15px] leading-7 text-slate-800">
-                        {news.excerpt}
-                      </p>
-                    </div>
-                  </Link>
-                </FadeIn>
-              );
-            })}
-          </StaggerContainer>
+        {items.length > 0 ? (
+          <NewsGallery items={items} className="mt-10 md:mt-12" />
         ) : (
-          <FadeIn amount={0.2}>
-            <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 text-center">
-              <p className="text-lg font-semibold text-slate-600 md:text-xl">
-                Belum ada berita terbit. Nantikan kabar terbaru dari kami.
-              </p>
-            </div>
-          </FadeIn>
+          <p className="mt-10 rounded-card border border-dashed border-genbi-line bg-white px-6 py-16 text-center text-base font-medium text-slate-500 md:mt-12 md:py-20">
+            {emptyState}
+          </p>
         )}
-      </div>
+
+        {/*
+          Tombol versi mobile: muncul SETELAH ketiga berita, selebar kolom tapi
+          dibatasi max-w-md supaya tidak jadi pil raksasa di layar lebar, dan
+          hilang mulai md karena di sana tombolnya kembali ke baris judul.
+          Latarnya biru solid dengan teks putih mengikuti referensi.
+        */}
+        <Link
+          href="/news"
+          className="mx-auto mt-6 flex w-full max-w-md items-center justify-center gap-2 rounded-full bg-genbi-blue px-6 py-3.5 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-[#1a56e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:hidden"
+        >
+          Lainnya
+          <ArrowRight className="h-4 w-4" strokeWidth={2} />
+        </Link>
+      </Container>
     </section>
   );
 }

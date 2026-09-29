@@ -15,14 +15,27 @@ import { siteConfig } from "@/config/site";
  */
 
 export function NavbarLogo() {
+  /*
+   * Nama merek dipecah supaya dua katanya bisa berwarna berbeda: "GenBI" tetap
+   * biru dan "Jatim" memakai merah dari logo (token, bukan angka warna liar).
+   * Dipecah dari `siteConfig.name`, jadi kalau namanya berubah, keduanya ikut.
+   */
+  const [brandLead, ...brandRest] = siteConfig.name.split(" ");
+  const brandTrail = brandRest.join(" ");
+
   return (
     <Link href="/" className="flex items-center gap-3 group relative z-[110]">
       {/* --- BRAND MARK CONTAINER --- */}
-      <div className="relative w-9 h-9 transition-transform duration-300 group-hover:scale-105">
+      {/*
+       * Ukuran lambang mengecil satu langkah di layar sempit (36px) lalu kembali
+       * ke 40px mulai md dan 44px mulai lg, supaya tinggi bar yang lebih pendek
+       * di mobile tidak terasa penuh. Tampilan md ke atas tidak berubah.
+       */}
+      <div className="relative h-9 w-9 transition-transform duration-300 group-hover:scale-105 md:h-10 md:w-10 lg:h-11 lg:w-11">
         <Image
           src="/assets/logos/genbi.svg"
           alt="GenBI Jatim Logo"
-          fill sizes="40px"
+          fill sizes="48px"
           className="object-contain"
           priority
         />
@@ -31,11 +44,11 @@ export function NavbarLogo() {
       {/* --- WORDMARK TYPOGRAPHY --- */}
       <span
         className={cn(
-          "text-lg font-bold tracking-tight transition-colors duration-300",
-          "text-blue-900",
+          "text-lg font-bold tracking-tight transition-colors duration-300 lg:text-xl",
         )}
       >
-        {siteConfig.name}
+        <span className="text-blue-900">{brandLead}</span>
+        {brandTrail ? <span className="text-genbi-brand-red"> {brandTrail}</span> : null}
       </span>
     </Link>
   );

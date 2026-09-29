@@ -48,6 +48,30 @@
   --genbi-royal: #1e40af;
   --genbi-gold: #eab308;
   --genbi-red: #ef4444;
+
+  /*
+   * Palet GenBI 2026 (aditif).
+   *
+   * Hanya dipakai section landing yang di-redesign. Token lama di atas
+   * sengaja TIDAK diubah supaya halaman lain (profil, program, berita,
+   * admin) tidak bergeser tanpa diminta. Lihat ADR 0007.
+   */
+  --genbi-blue: #1e63ff;
+  --genbi-ink: #102a5c;
+  --genbi-bright: #2e8bff;
+  --genbi-cyan: #35c7f3;
+  --genbi-yellow: #ffd21a;
+  --genbi-soft: #f8faff;
+  --genbi-light: #eef5ff;
+  --genbi-haze: #dceaff;
+  --genbi-line: #dce6ef;
+
+  /*
+   * Merah yang dipakai path logo GenBI (#EF1C23). Dipakai untuk kata "Jatim"
+   * pada wordmark navbar supaya merahnya sama persis dengan lambangnya, dan
+   * disimpan sebagai token agar tidak ada angka warna liar di komponen.
+   */
+  --genbi-brand-red: #ef1c23;
 }
 
 @theme inline {
@@ -73,10 +97,39 @@
   --color-silver: var(--silver);
   --color-ice: var(--ice);
 
+  /* Palet GenBI 2026 sebagai utility Tailwind: bg-genbi-soft, text-genbi-cyan, dst. */
+  --color-genbi-blue: var(--genbi-blue);
+  --color-genbi-ink: var(--genbi-ink);
+  --color-genbi-bright: var(--genbi-bright);
+  --color-genbi-cyan: var(--genbi-cyan);
+  --color-genbi-yellow: var(--genbi-yellow);
+  --color-genbi-soft: var(--genbi-soft);
+  --color-genbi-light: var(--genbi-light);
+  --color-genbi-haze: var(--genbi-haze);
+  --color-genbi-line: var(--genbi-line);
+  --color-genbi-brand-red: var(--genbi-brand-red);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /*
+   * Skala radius halaman (Shape Consistency Lock).
+   *
+   * Aturannya, dan hanya ini yang boleh dipakai di section landing:
+   * - rounded-thumb   : 12px, thumbnail dan chip kecil
+   * - rounded-media   : 24px, gambar di dalam kartu
+   * - rounded-nav     : 24px, navbar mengambang
+   * - rounded-card    : 28px, kartu dan wrapper section
+   * - rounded-feature : 32px, kartu fitur besar yang memuat gambar (3 Pilar)
+   * - rounded-full    : tombol dan rail
+   */
+  --radius-thumb: 12px;
+  --radius-media: 24px;
+  --radius-nav: 24px;
+  --radius-card: 28px;
+  --radius-feature: 32px;
 
   /* Tipografi: variabel diisi oleh next/font di app/layout.tsx */
   --font-sans: var(--font-geist-sans);
@@ -300,6 +353,97 @@ body {
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* ─── Lightbox Berita ─── */
+
+@keyframes lightbox-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lightbox-backdrop {
+  animation: lightbox-backdrop-in 200ms ease-out;
+}
+
+.lightbox-panel {
+  animation: lightbox-panel-in 240ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-backdrop,
+  .lightbox-panel {
+    animation: none;
+  }
+
+  /*
+   * Marquee mitra: pengguna yang meminta gerakan minimum melihat deretan logo
+   * diam, bukan bergerak terus. Salinan kedua (yang ditandai aria-hidden)
+   * disembunyikan supaya tidak ada sembilan logo yang terlihat dobel.
+   * Untuk pengguna lain animasinya tetap berjalan tanpa jeda, termasuk saat
+   * kursor berada di atasnya.
+   */
+  .animate-marquee-loop {
+    animation: none;
+  }
+  .animate-marquee-loop > [aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/*
+ * Selarasan konten navbar mengambang dengan Container halaman.
+ *
+ * Kapsul mengambang memakai sebagian gutter halaman sebagai inset, jadi sisa
+ * gutter di dalam kapsul hanya selisihnya. Begitu viewport melewati 1504px,
+ * kapsul berhenti melebar (max-width 1440px) sehingga gutter penuh dipakai
+ * lagi. Ditulis sebagai kelas eksplisit, bukan varian arbitrer, supaya urutan
+ * media query-nya pasti dan tidak kalah dari varian `xl:`.
+ *
+ * Inset kapsul: 24px (mobile), 40px (md ke atas). Gutter Container: 24/40/64.
+ */
+.nav-inner-floating {
+  padding-inline: 0;
+}
+
+/*
+ * Di bawah lg (mode menu lipat), kapsul tidak punya sisa gutter: inset kapsul
+ * (24px di mobile) sama persis dengan gutter Container, sehingga logo dan tombol
+ * menu menempel ke tepi kapsul dan terasa sesak di dekat sudut membulatnya.
+ * Ruang 1rem ini memberi napas dari tepi kapsul. Mulai lg nilainya
+ * dipertahankan seperti semula supaya tampilan desktop tidak berubah.
+ */
+@media (max-width: 1023.98px) {
+  .nav-inner-floating {
+    padding-inline: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .nav-inner-floating {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1504px) {
+  .nav-inner-floating {
+    padding-inline: 4rem;
+  }
 }
 
 /* Pola latar kustom */

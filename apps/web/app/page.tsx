@@ -2,11 +2,14 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/home/Hero";
 import { About } from "@/components/home/About";
+import { Mitra } from "@/components/home/Mitra";
 import { Pilar } from "@/components/home/Pilar";
 import { Story } from "@/components/home/Story";
 import { Portal } from "@/components/home/Portal";
 import { News } from "@/components/home/News";
+import { newsPreviewEnabled } from "@/content/news.preview";
 import { FAQ } from "@/components/home/FAQ";
+import { Container } from "@/components/Container";
 import { StateMessage } from "@/components/StateMessage";
 import { getHomeData, STATIC_COMMISSARIATS } from "@/services/home.service";
 import { getRecentNews } from "@/lib/services/news.service";
@@ -27,9 +30,9 @@ export const metadata: Metadata = {
  */
 function SectionFallback({ title, message }: { title: string; message: string }) {
   return (
-    <section className="bg-white px-6 py-16 md:px-10 md:py-24">
-      <div className="mx-auto max-w-329">
-        <h2 className="font-heading text-3xl font-extrabold tracking-tight text-blue-700 md:text-[34px]">
+    <section className="bg-white py-24 md:py-28">
+      <Container>
+        <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
           {title}
         </h2>
         <StateMessage
@@ -38,7 +41,7 @@ function SectionFallback({ title, message }: { title: string; message: string })
           description="Bagian lain di halaman ini tetap dapat dibaca."
           className="mt-8"
         />
-      </div>
+      </Container>
     </section>
   );
 }
@@ -52,7 +55,7 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="min-h-screen bg-white font-sans selection:bg-blue-200 selection:text-blue-900">
+    <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">
       {/* --- GLOBAL NAVIGATION INTERFACE --- */}
       <Navbar />
 
@@ -61,8 +64,11 @@ export default async function Home() {
         {/* Entrance & Identity */}
         <Hero />
 
-        {/* Organizational Context & Metrics */}
-        <About commissariats={homeData?.commissariats ?? STATIC_COMMISSARIATS} />
+        {/* Organizational Context */}
+        <About />
+
+        {/* Institutional Partners */}
+        <Mitra commissariats={homeData?.commissariats ?? STATIC_COMMISSARIATS} />
 
         {/* Three Strategic Roles */}
         <Pilar />
@@ -74,8 +80,10 @@ export default async function Home() {
         <Portal />
 
         {/* Dynamic Content & Updates */}
-        {latestNews ? (
-          <News initialNews={latestNews} />
+        {/* Saat data contoh aktif (dev), galeri tetap tampil walau API berita
+            sedang tidak bisa dihubungi, supaya struktur finalnya bisa ditinjau. */}
+        {latestNews || newsPreviewEnabled ? (
+          <News initialNews={latestNews ?? []} />
         ) : (
           <SectionFallback title="Berita Kegiatan" message="Berita belum dapat dimuat." />
         )}

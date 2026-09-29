@@ -107,7 +107,7 @@ export function MobileMenu({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-[120] bg-slate-900/40 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-[120] bg-slate-900/40 backdrop-blur-sm lg:hidden"
           />
 
           {/* --- NAVIGATION PANEL ARCHITECTURE --- */}
@@ -121,7 +121,7 @@ export function MobileMenu({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[130] w-[85vw] max-w-sm bg-slate-50 md:hidden flex flex-col shadow-2xl focus:outline-none"
+            className="fixed top-0 right-0 bottom-0 z-[130] w-[85vw] max-w-sm bg-slate-50 lg:hidden flex flex-col shadow-2xl focus:outline-none"
           >
             {/* --- BRANDING & HEADER SECTION --- */}
             <div className="relative p-6 px-6 overflow-hidden shrink-0 bg-white border-b border-slate-100">

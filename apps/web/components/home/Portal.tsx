@@ -12,6 +12,7 @@ import {
   FileStack,
 } from "lucide-react";
 import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
+import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 
 /**
@@ -39,10 +40,13 @@ export function Portal() {
   const { description, items } = homeContent.portalGrid;
 
   return (
-    <section className="py-16 md:py-24 bg-white relative overflow-hidden">
+    <section data-section="portal" className="py-24 md:py-28 lg:py-32 bg-white relative overflow-hidden">
       
       {/* --- SECTION CONTENT WRAPPER --- */}
-      <div className="container mx-auto w-full max-w-none px-6 lg:px-8 xl:px-12 relative z-10">
+      {/* Penyesuaian spacing saja: gutter dan lebar mengikuti Container bersama
+          supaya tepi kiri-kanan sejajar dengan section lain. Tata letak kartu,
+          ikon, dan hover tidak diubah. */}
+      <Container className="relative z-10">
         <div className="w-full">
           
           {/* --- HEADER SECTION --- */}
@@ -71,7 +75,7 @@ export function Portal() {
                 <FadeIn key={item.title} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
                   <Link
                     href={item.link}
-                    className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-2xl p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
+                    className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-card p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
                   >
                     {/* --- CARD HEADER: NAVIGATION & ICONOGRAPHY --- */}
                     <div className="relative z-10 flex justify-between items-start mb-4 md:mb-6">
@@ -129,7 +133,7 @@ export function Portal() {
             })}
           </StaggerContainer>
         </div>
-      </div>
+      </Container>
     </section>
   );
 }

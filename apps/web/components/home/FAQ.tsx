@@ -40,8 +40,8 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
 
   if (!faqs || faqs.length === 0) {
     return (
-      <section className="relative bg-slate-50 py-16 md:py-24">
-        <div className="container mx-auto max-w-7xl px-6 lg:px-8 xl:px-12">
+      <section className="relative bg-slate-50 py-24 md:py-28 lg:py-32">
+        <div className="mx-auto w-full max-w-[1440px] px-6 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-sm md:px-10">
             <MessageCircleQuestion className="mx-auto mb-5 h-12 w-12 text-blue-600" />
             <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
@@ -57,10 +57,10 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
   }
 
   return (
-    <section className="py-16 md:py-24 bg-slate-50 relative">
+    <section className="py-24 md:py-28 lg:py-32 bg-slate-50 relative">
       
       {/* --- CONTENT ARCHITECTURE WRAPPER --- */}
-      <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative z-10 max-w-7xl">
+      <div className="mx-auto w-full max-w-[1440px] px-6 md:px-10 xl:px-16 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 w-full lg:px-6 xl:px-10">
           
           {/* --- NARRATIVE & DETAIL PREVIEW COLUMN --- */}
@@ -123,12 +123,12 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
                         </p>
                       </FadeIn>
                       <FadeIn delay={0.4}>
-                        <div className="inline-flex items-center gap-4 p-4 pr-6 bg-white rounded-2xl border border-slate-200 shadow-sm text-blue-800">
+                        <div className="inline-flex items-center gap-4 p-4 pr-6 bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-900">
                           <div className="w-10 h-10 bg-slate-100 rounded-full shadow-sm flex items-center justify-center shrink-0">
                             <ArrowRight className="w-5 h-5 text-blue-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-blue-900">Interaksi Tersedia</p>
+                            <p className="text-sm font-bold text-slate-900">Interaksi Tersedia</p>
                             <p className="text-sm font-medium text-blue-700">Pilih pertanyaan di kanan untuk melihat detail</p>
                           </div>
                         </div>

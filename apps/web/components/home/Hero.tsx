@@ -4,102 +4,126 @@ import Image from "next/image";
 import { FadeIn, SlideUp } from "@/components/MotionWrapper";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import CountUp from "@/components/CountUp";
+import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 
 /**
- * HeroSection Component
- * * Purpose: Establishes the primary visual identity and value proposition of the platform.
- * Architecture:
- * - Layout: Responsive grid system that adaptively centers narrative content on smaller viewports.
- * - Imagery: High-priority background assets with dynamic gradient masking for optimal text contrast.
- * - Data: Synchronized organizational metrics driven by dynamic counters.
+ * Hero beranda.
+ *
+ * Revisi terakhir (lihat ADR 0005):
+ * - DUA CTA hero dihapus atas keputusan pemilik produk. Jangan ditambahkan lagi.
+ * - Tumpukan teks jadi tiga bagian: judul, subteks, lalu blok statistik yang
+ *   menyatu dengan konten utama. Statistik TIDAK lagi menempel di tepi bawah
+ *   hero, dan tidak memakai kapsul putih.
+ * - Baris kedua judul memakai token biru yang sama dengan tombol yang dulu ada
+ *   (`genbi-blue`), bukan cyan.
+ * - Overlay dinaikkan sedikit kepekatannya agar lebih sinematik tanpa membuat
+ *   media latar hilang.
+ *
+ * Lapisan media menerima gambar poster ATAU video: selama
+ * `homeContent.hero.video.enabled` masih false, poster yang tampil dan
+ * tampilannya sudah final. Menyalakan video hanya mengubah satu boolean.
  */
 export function Hero() {
+  const { heading, description, highlights, video } = homeContent.hero;
+  const [first, second, third] = highlights;
+
   return (
-    <section className="relative w-full h-[100svh] min-h-[600px] flex flex-col overflow-hidden bg-blue-950">
-      
-      {/* --- BACKGROUND INFRASTRUCTURE LAYER --- */}
-      {/* Manages immersive visual assets with multi-stage gradient masks for legibility */}
+    <section
+      data-hero
+      data-section="hero"
+      className="relative isolate flex min-h-[100svh] w-full flex-col overflow-hidden bg-genbi-ink"
+    >
+      {/* --- LAPISAN MEDIA --- */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/assets/images/raker.jpg"
-          alt="GenBI Activities"
+          src="/assets/images/hero.JPG"
+          alt="Ratusan peserta berpose bersama di dalam aula"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center lg:object-center"
+          className="object-cover object-center"
         />
 
-        {homeContent.hero.video.enabled && (
-          <HeroVideo
-            src={homeContent.hero.video.src}
-            type={homeContent.hero.video.type}
-            poster={homeContent.hero.video.poster}
-          />
+        {video.enabled && (
+          <HeroVideo src={video.src} type={video.type} poster={video.poster} />
         )}
 
-        <div className="absolute inset-0 bg-blue-900/65" />
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-950/80 via-blue-900/45 to-blue-800/30" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-950/60 to-transparent z-10" />
+        {/* Tint biru: warna dasar tetap memakai arah palet GenBI. */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1674D1]/46 via-[#174AA8]/38 to-[#2DA9E6]/28" />
+        {/*
+          Scrim legibilitas berbentuk pita vertikal, kali ini dipudarkan
+          kembali: pita rata 30%-70% supaya kontras sama di semua lebar
+          viewport, dengan tepi atas dan bawah lebih terang agar foto/video
+          tetap terlihat.
+        */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,22,54,0.36)_0%,rgba(6,22,54,0.48)_30%,rgba(6,22,54,0.48)_70%,rgba(6,22,54,0.28)_100%)]" />
+        {/* Peleburan ke section berikutnya. */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0B2551]/70 to-transparent" />
       </div>
 
-      {/* --- CORE CONTENT ARCHITECTURE --- */}
-      <div className="container relative z-20 px-6 lg:px-8 xl:px-12 mx-auto h-full max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 h-full lg:px-6 xl:px-10">
-          
-          {/* --- PRIMARY BRANDING & CONVERSION COLUMN --- */}
-          <div className="lg:col-span-12 xl:col-span-12 flex flex-col justify-center items-center text-center h-full pt-0 lg:pt-8 translate-y-8 lg:translate-y-30">
-            
-            {/* Main Narrative Header */}
-            <SlideUp delay={0.2} className="w-full mb-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black md:font-bold lg:font-bold font-heading text-white leading-[1.15] tracking-tight">
-                {homeContent.hero.heading.line1} <br />
-                <span className="text-blue-600">
-                  {homeContent.hero.heading.line2}
-                </span>
-              </h1>
-            </SlideUp>
+      <Container className="relative z-20 flex flex-1 flex-col">
+        {/* --- TUMPUKAN TEKS: JUDUL, SUBTEKS, STATISTIK --- */}
+        <div className="flex flex-1 flex-col items-center justify-center pb-16 pt-28 text-center md:pt-24">
+          <SlideUp delay={0.1} className="w-full">
+            <h1 className="font-heading text-[2.5rem] font-bold leading-[1.06] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+              {heading.line1}
+              <br />
+              {/*
+                Baris kedua sekarang PUTIH, sama seperti baris pertama, atas
+                permintaan pemilik produk.
 
-            {/* Supportive Contextual Description */}
-            <FadeIn delay={0.4} className="w-full mb-6">
-              <p className="text-[17px] md:text-lg text-white/95 leading-relaxed max-w-[340px] md:max-w-xl mx-auto font-medium">
-                {homeContent.hero.description}{" "}
-                <span className="text-white font-bold">
-                  {homeContent.hero.highlights[0]}
-                </span>{" "}
-                {homeContent.hero.highlights[1] ? "dan " : ""}
-                <span className="text-white font-bold">
-                  {homeContent.hero.highlights[1]}
-                </span>
-              </p>
-            </FadeIn>
+                Sebelumnya baris ini memakai token biru tombol hero
+                (`genbi-blue` / #1E63FF). Kontrasnya diukur langsung dari
+                piksel halaman hasil render: hanya ~2.2:1 di posisi baris ini,
+                di bawah ambang AA 3:1 untuk teks besar, karena itu warna itu
+                sulit dibaca di atas foto yang bertint biru gelap. Dengan putih,
+                kontrasnya menjadi ~11:1, setara baris pertama.
 
-            {/* --- ORGANIZATIONAL METRICS ENGINE --- */}
-            {/* Orchestrates real-time data display with responsive alignment synchronization */}
-            <FadeIn delay={0.8} className="w-full flex justify-center">
-              <div className="grid w-full max-w-2xl grid-cols-2 divide-x divide-y divide-slate-200 rounded-[2rem] border border-white/70 bg-white px-3 py-3 shadow-xl shadow-blue-950/20 sm:grid-cols-4 sm:divide-y-0 sm:rounded-[6rem] sm:px-6 sm:py-5">
-                {homeContent.stats.map((stat) => (
-                  <div key={stat.label} className="flex min-w-0 flex-col items-center gap-1 px-2 py-2 first:pl-0 last:pr-0 sm:px-4 sm:py-0 [&:nth-child(odd)]:border-r [&:nth-child(-n+2)]:border-b sm:border-0">
-                      <div className="text-xl font-black text-blue-900 flex items-baseline lg:text-2xl">
-                      <CountUp
-                        to={stat.number}
-                        suffix={stat.suffix}
-                      />
-                    </div>
-                    <div className="text-center text-[9px] font-bold uppercase tracking-[0.12em] text-blue-800 sm:tracking-widest lg:text-[10px]">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </FadeIn>
-          </div>
+                Biru `genbi-blue` tetap dipakai sebagai aksen brand di tempat
+                lain (judul section, tombol, bullet, tahun timeline), jadi
+                identitas warnanya tidak hilang. Kalau baris ini ingin
+                dikembalikan ke biru, cukup ganti kelasnya.
+              */}
+              <span className="text-white">{heading.line2}</span>
+            </h1>
+          </SlideUp>
 
-          {/* --- NARRATIVE SPACER COLUMN --- */}
-          {/* Maintains visual balance and ensures focal point visibility on wide screens */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-6" />
+          <FadeIn delay={0.25} className="mt-5 w-full md:mt-6">
+            <p className="mx-auto max-w-[36rem] text-base leading-relaxed text-white/95 sm:text-base md:text-lg">
+              {description}{" "}
+              <span className="font-semibold text-white">{first}</span>,{" "}
+              <span className="font-semibold text-white">{second}</span>
+              {third && (
+                <>
+                  {" "}
+                  dan <span className="font-semibold text-white">{third}</span>
+                </>
+              )}
+              .
+            </p>
+          </FadeIn>
+
+          {/* --- STATISTIK: MENYATU DENGAN KONTEN UTAMA --- */}
+          <FadeIn delay={0.4} className="w-full">
+            <ul className="mx-auto mt-10 grid w-full max-w-3xl grid-cols-3 divide-x divide-white/15 md:mt-12">
+              {homeContent.stats.map((stat) => (
+                <li
+                  key={stat.label}
+                  className="flex flex-col items-center gap-1 px-2 sm:px-6"
+                >
+                  <span className="font-heading text-2xl font-bold tabular-nums text-white sm:text-3xl md:text-[40px]">
+                    <CountUp to={stat.number} suffix={stat.suffix} />
+                  </span>
+                  <span className="text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/75 md:text-[11px]">
+                    {stat.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </FadeIn>
         </div>
-      </div>
+      </Container>
     </section>
   );
 }
