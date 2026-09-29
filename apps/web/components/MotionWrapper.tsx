@@ -16,10 +16,22 @@ type MotionProps = {
 /*
  * Seluruh wrapper di bawah menghormati `prefers-reduced-motion`.
  *
- * Saat pengguna meminta gerakan minimum, elemen langsung tampil dalam keadaan
- * akhirnya (initial=false, whileInView={}) sehingga tidak ada animasi masuk,
- * tetapi observer viewport tetap dibuat supaya `onViewportEnter` tetap
- * berjalan seperti sebelumnya.
+ * PENTING — kenapa `whileInView` SELALU membawa nilai akhir:
+ *
+ * Dulu nilainya `whileInView={reduce ? {} : { opacity: 1, y: 0 }}`. Objek kosong
+ * tidak punya nilai target, sehingga Motion tidak punya tujuan untuk
+ * dianimasikan. Karena `initial` sudah terlanjur ter-render sebagai
+ * `{ opacity: 0, y: 20 }` pada pass pertama (saat `useReducedMotion()` masih
+ * `null`, dan `useReduced()` memaksanya jadi `false`), elemennya terjebak di
+ * `opacity: 0` selamanya. Akibatnya pengguna yang meminta gerakan minimum
+ * justru mendapat halaman kosong — kebalikan dari tujuan fiturnya.
+ *
+ * Perbaikannya: `whileInView` selalu punya nilai akhir, dan yang di-nol-kan saat
+ * `reduce` adalah DURASINYA. Jadi elemen tetap sampai di keadaan akhir, hanya
+ * saja tanpa gerak.
+ *
+ * `StaggerItem` tidak butuh perubahan ini karena variannya sudah dibuat setara
+ * (opacity 1 -> 1, y 0 -> 0) saat `reduce`, sehingga tidak ada gerak sama sekali.
  */
 function useReduced() {
   return useReducedMotion() ?? false;
@@ -37,10 +49,10 @@ export const FadeIn = ({
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 20 }}
-      whileInView={reduce ? {} : { opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 20, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      transition={reduce ? { duration: 0 } : { duration: 0.6, delay, ease: "easeOut" }}
       onViewportEnter={onViewportEnter}
       className={className}
     >
@@ -60,10 +72,10 @@ export const SlideUp = ({
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 40 }}
-      whileInView={reduce ? {} : { opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 40, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      transition={reduce ? { duration: 0 } : { duration: 0.6, delay, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -82,10 +94,10 @@ export const SlideInLeft = ({
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, x: -40 }}
-      whileInView={reduce ? {} : { opacity: 1, x: 0 }}
+      whileInView={{ opacity: 1, x: 0 }}
       exit={reduce ? undefined : { opacity: 0, x: -40, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
-      transition={{ duration: 0.7, delay, ease: "easeOut" }}
+      transition={reduce ? { duration: 0 } : { duration: 0.7, delay, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -104,10 +116,10 @@ export const ScaleIn = ({
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, scale: 0.9 }}
-      whileInView={reduce ? {} : { opacity: 1, scale: 1 }}
+      whileInView={{ opacity: 1, scale: 1 }}
       exit={reduce ? undefined : { opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
-      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      transition={reduce ? { duration: 0 } : { duration: 0.5, delay, ease: "easeOut" }}
       className={className}
     >
       {children}
@@ -127,16 +139,23 @@ export const StaggerContainer = ({
   return (
     <motion.div
       initial={reduce ? false : "hidden"}
-      whileInView={reduce ? {} : "show"}
+      /*
+       * Selalu "show". Saat `reduce`, yang di-nol-kan adalah durasi dan jeda
+       * antar-anak, bukan nilai akhirnya — kalau labelnya dikosongkan, container
+       * ini tertinggal di varian "hidden" (opacity 0) dan seluruh isinya hilang.
+       */
+      whileInView="show"
       viewport={{ once, amount }}
       variants={{
         hidden: { opacity: 0 },
         show: {
           opacity: 1,
-          transition: {
-            staggerChildren: staggerDelay,
-            delayChildren: delay,
-          },
+          transition: reduce
+            ? { duration: 0, staggerChildren: 0, delayChildren: 0 }
+            : {
+                staggerChildren: staggerDelay,
+                delayChildren: delay,
+              },
         },
         exit: { opacity: 0, transition: { duration: 0.3 } },
       }}
