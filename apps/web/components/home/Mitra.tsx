@@ -105,8 +105,10 @@ export function Mitra({ commissariats }: { commissariats: CommissariatItem[] }) 
             berjalan sesuai permintaan pemilik produk. List tetap diduplikasi
             lalu digeser -50% supaya loop-nya mulus.
           */}
-          {/* Area marquee selebar card; card sendiri yang memotong lintasan. */}
-          <div className="mt-6 md:mt-8">
+          {/* Area marquee selebar card; card sendiri yang memotong lintasan.
+              `marquee-fade` melembutkan tepi kiri-kanan supaya logo tidak
+              terlihat terbelah keras saat melewati batas card. */}
+          <div className="marquee-fade mt-6 md:mt-8">
             {/*
               `optimize-gpu` (utilitas yang sudah ada di globals.css) menaikkan
               lintasan ini ke layer kompositornya sendiri. Tanpa itu browser
