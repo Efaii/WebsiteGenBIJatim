@@ -154,6 +154,26 @@ _Avoid_: Menyebut Profil sebagai Tentang Kami, atau mencampur data beberapa peri
 Susunan pengurus satu komisariat pada satu periode, ditampilkan sebagai BPH terlebih dahulu lalu per divisi. Setiap entri memuat nama dan jabatan, dan diturunkan dari Membership; anggota tanpa divisi tidak ditampilkan di sini.
 _Avoid_: Menyimpan jabatan di sumber manual terpisah, atau memasukkan anggota tanpa divisi ke struktur.
 
+**Mitra Strategis**:
+Sembilan perguruan tinggi mitra Bank Indonesia tempat Komisariat GenBI berada. Cakupan mitra pada judul bagian Beranda adalah Suramadu-Bojonegoro, bukan Jawa Timur, mengikuti keputusan pemilik produk.
+_Avoid_: Memakai "Jawa Timur" pada judul bagian mitra, atau menyebut mitra sebagai klien.
+
+**Pilar GenBI**:
+Tiga peran yang dijalankan anggota GenBI sebagai mitra Bank Indonesia, dan ketiganya bukan sinonim: **Front-liners** menyampaikan informasi dan edukasi kepada masyarakat, **Agent of Change** menginisiasi gagasan dan aksi nyata atas tantangan sosial, **Future Leaders** menyiapkan kapasitas kepemimpinan dan jejaring anggota.
+_Avoid_: Menukar makna antar peran, atau menyebut pilar sebagai divisi.
+
+**Sejarah Perjalanan**:
+Rangkaian milestone organisasi dari inisiasi nasional 2011, GenBI Surabaya 2022, GenBI Korkom Suramadu-Bojonegoro 2023, sampai GenBI Korkom Jawa Timur 2024. Bagian ini selalu digambarkan sebagai timeline vertikal.
+_Avoid_: Menyajikannya sebagai timeline horizontal, carousel, atau daftar tanpa urutan waktu.
+
+**Galeri Berita**:
+Cara satu Berita ditampilkan di Beranda: satu gambar utama ditambah paling banyak empat gambar pendukung. Gambar pendukung membuka pratinjau, gambar utama menuju detail berita. Jumlah gambar mengikuti data yang ada, jadi satu berita dengan satu gambar tetap sah.
+_Avoid_: Menyamakan galeri dengan berita itu sendiri, atau mencampur gambar antar berita.
+
+**Data contoh pratinjau**:
+Data karangan yang dipakai sementara untuk meninjau bentuk tampilan sebelum sumber resminya siap. Berbeda dari **Data mock** dalam tiga hal: ia tidak pernah menjadi pengganti saat API gagal, ia mati pada build produksi, dan ia wajib disebut sumbernya di dalam kode.
+_Avoid_: Menyebutnya Data mock, atau membiarkannya hidup di produksi.
+
 ## Migrasi dan Rilis
 
 **Snapshot hasil rekonsiliasi**:
