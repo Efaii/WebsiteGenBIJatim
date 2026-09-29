@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/cms", label: "Ringkasan" },
   { href: "/cms/beranda", label: "Beranda" },
   { href: "/cms/berita", label: "Berita" },
+  { href: "/cms/faq", label: "FAQ" },
 ];
 
 /** Navigasi area CMS (seadanya; ditumbuhkan bersama tiket berikutnya). */
