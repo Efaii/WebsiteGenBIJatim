@@ -56,3 +56,30 @@ artifacts/migration/
 artifacts/promotion/
 artifacts/membership/
 artifacts/initial-production/
+
+# ─── Kebersihan repo ───
+# Media mentah input pipeline foto proker (diproses ke apps/web/public/uploads/proker).
+# Catatan: apps/api/data/images/ TIDAK diabaikan karena sudah ter-track sejak lama.
+data/proker/
+
+# Environment / perangkat alat lokal
+.kilo/
+
+# Artefak audit visual (konsisten dengan tests/visual/ di atas)
+.playwright-mcp/
+
+# Knowledge graph generated
+graphify-out/
+
+# Output test
+test-results/
+e2e-public/
+e2e-private/
+apps/api/e2e-public/
+apps/api/e2e-private/
+
+# Log runtime
+*.log
+
+# Dump database lokal (dapat memuat data pribadi awardee)
+backups/
