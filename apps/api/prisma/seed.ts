@@ -38,45 +38,45 @@ const MOCK_FAQS = [
   {
     id: "faq-1",
     question: "Apakah semua mahasiswa di Jawa Timur bisa mendaftar?",
-    answer: "Beasiswa Bank Indonesia KPw. BI Jatim dikhususkan bagi mahasiswa jenjang **S1/D3/D4 di 9 Perguruan Tinggi Mitra**: ITS, UNAIR, UINSA, UNESA, UPN Veteran Jatim, PENS, UTM, UIN MADURA, dan UNUGIRI. Pastikan kampusmu termasuk dalam daftar mitra kami.",
+    answer: "**Beasiswa Bank Indonesia KPw. BI Jatim** dikhususkan bagi mahasiswa jenjang **S1/D3/D4** di 9 Perguruan Tinggi Mitra: ITS, UNAIR, UINSA, UNESA, UPN Veteran Jatim, PENS, UTM, UIN MADURA, dan UNUGIRI. Pastikan kampusmu termasuk dalam daftar **mitra kami**.",
     order: 1,
   },
   {
     id: "faq-2",
-    question: "Apa keuntungan menjadi anggota GenBI selain bantuan dana?",
-    answer: "Tentu! Selain bantuan pendidikan, benefit terbesar adalah **tergabung dalam komunitas GenBI**. Kamu akan mendapatkan pelatihan kepemimpinan eksklusif, perluasan jejaring profesional, serta kesempatan berkontribusi langsung dalam berbagai proyek sosial bersama Bank Indonesia.",
+    question: "Apa keuntungan menjadi awardee selain bantuan pendidikan?",
+    answer: "Selain **bantuan biaya pendidikan**, awardee mendapatkan kesempatan mengikuti **pelatihan kepemimpinan**, public speaking, pengembangan soft skill dan hard skill, serta memperluas **jejaring** dengan mahasiswa dari berbagai perguruan tinggi. GenBI juga menjadi ruang untuk memperoleh **pengalaman organisasi** yang dapat mendukung kesiapan karier dan kepemimpinan.",
     order: 2,
   },
   {
     id: "faq-3",
-    question: "Apa perbedaan Beasiswa Reguler dan Unggulan?",
-    answer: "**Beasiswa Unggulan** umumnya memiliki persyaratan IPK yang lebih tinggi, bukti kemampuan bahasa Inggris yang baik (TOEFL/IELTS), dan *track record* prestasi yang kuat. Penerima Unggulan juga sering dilibatkan dalam event-event berskala internasional.",
+    question: "Apa saja yang perlu dipersiapkan untuk mendaftar Beasiswa Bank Indonesia?",
+    answer: "Pastikan kamu memenuhi **persyaratan pendaftaran** dan menyiapkan **dokumen yang dibutuhkan** sejak awal. Pantau informasi resmi dari **kampus** dan GenBI Jawa Timur agar tidak melewatkan jadwal maupun ketentuan terbaru.",
     order: 3,
   },
   {
     id: "faq-4",
-    question: "Bagaimana tahapan seleksi beasiswa ini?",
-    answer: "Proses seleksi terdiri dari dua tahap utama: **1) Seleksi Administrasi** di tingkat Perguruan Tinggi (Pemberkasan), dan **2) Seleksi Wawancara** langsung oleh *user* dari Bank Indonesia. Keduanya harus dilalui untuk dinyatakan lolos.",
+    question: "Apa yang dilakukan setelah menjadi awardee Beasiswa Bank Indonesia?",
+    answer: "Setelah menjadi awardee, kamu bergabung dalam **GenBI** dan dapat terlibat dalam berbagai kegiatan seperti **edukasi dan literasi keuangan**, kegiatan sosial dan lingkungan, pemberdayaan masyarakat, serta **program pengembangan kepemimpinan**. Awardee juga didorong menjalankan peran sebagai **Front-liner, Agent of Change, dan Future Leader**.",
     order: 4,
   },
   {
     id: "faq-5",
     question: "Kapan periode pendaftaran biasanya dibuka?",
-    answer: "Siklus pendaftaran umumnya dibuka pada **awal tahun (Februari - Maret)**. Namun, jadwal spesifik bisa berbeda tiap kampus. Kami sangat menyarankan untuk memantau Instagram **@genbi_jatim** dan Biro Kemahasiswaan kampus masing-masing.",
+    answer: "Siklus pendaftaran umumnya berlangsung pada **pertengahan tahun (April–Juli)**. Namun, jadwal dapat **berbeda setiap kampus**. Pantau **@genbi_jatim** dan Biro Kemahasiswaan kampus masing-masing untuk mendapatkan informasi terbaru.",
     order: 5,
   }
 ];
 
 const MOCK_COMMISSARIATS = [
-  { id: "com-1", slug: "upnvjt", name: "UPN Veteran Jatim", university: "UPN Veteran Jawa Timur", description: "GenBI UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.svg" },
-  { id: "com-2", slug: "unair", name: "Universitas Airlangga", university: "Universitas Airlangga", description: "GenBI Universitas Airlangga", logo: "/assets/logos/unair.svg" },
-  { id: "com-3", slug: "its", name: "ITS Surabaya", university: "Institut Teknologi Sepuluh Nopember", description: "GenBI ITS", logo: "/assets/logos/its.svg" },
-  { id: "com-4", slug: "pens", name: "PENS Surabaya", university: "Politeknik Elektronika Negeri Surabaya", description: "GenBI PENS", logo: "/assets/logos/pens.svg" },
-  { id: "com-5", slug: "unesa", name: "Unesa", university: "Universitas Negeri Surabaya", description: "GenBI UNESA", logo: "/assets/logos/unesa.svg" },
-  { id: "com-6", slug: "uinsa", name: "UIN Sunan Ampel", university: "UIN Sunan Ampel Surabaya", description: "GenBI UINSA", logo: "/assets/logos/uinsa.svg" },
-  { id: "com-7", slug: "utm", name: "Universitas Trunojoyo", university: "Universitas Trunojoyo Madura", description: "GenBI UTM", logo: "/assets/logos/utm.svg" },
-  { id: "com-8", slug: "unugiri", name: "UNUGIRI", university: "Universitas Nahdlatul Ulama Sunan Giri", description: "GenBI UNUGIRI", logo: "/assets/logos/unugiri.svg" },
-  { id: "com-9", slug: "uin-madura", name: "UIN Madura", university: "UIN Madura", description: "GenBI UIN Madura", logo: "/assets/logos/uinMadura.svg" },
+  { id: "com-1", slug: "upnvjt", name: "UPN Veteran Jatim", university: "UPN Veteran Jawa Timur", description: "GenBI UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.webp" },
+  { id: "com-2", slug: "unair", name: "Universitas Airlangga", university: "Universitas Airlangga", description: "GenBI Universitas Airlangga", logo: "/assets/logos/unair.webp" },
+  { id: "com-3", slug: "its", name: "ITS Surabaya", university: "Institut Teknologi Sepuluh Nopember", description: "GenBI ITS", logo: "/assets/logos/its.webp" },
+  { id: "com-4", slug: "pens", name: "PENS Surabaya", university: "Politeknik Elektronika Negeri Surabaya", description: "GenBI PENS", logo: "/assets/logos/pens.webp" },
+  { id: "com-5", slug: "unesa", name: "Unesa", university: "Universitas Negeri Surabaya", description: "GenBI UNESA", logo: "/assets/logos/unesa.webp" },
+  { id: "com-6", slug: "uinsa", name: "UIN Sunan Ampel", university: "UIN Sunan Ampel Surabaya", description: "GenBI UINSA", logo: "/assets/logos/uinsa.webp" },
+  { id: "com-7", slug: "utm", name: "Universitas Trunojoyo", university: "Universitas Trunojoyo Madura", description: "GenBI UTM", logo: "/assets/logos/utm.webp" },
+  { id: "com-8", slug: "unugiri", name: "UNUGIRI", university: "Universitas Nahdlatul Ulama Sunan Giri", description: "GenBI UNUGIRI", logo: "/assets/logos/unugiri.webp" },
+  { id: "com-9", slug: "uin-madura", name: "UIN Madura", university: "UIN Madura", description: "GenBI UIN Madura", logo: "/assets/logos/uinMadura.webp" },
 ];
 
 async function main() {
