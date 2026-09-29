@@ -125,7 +125,7 @@ export function MobileMenu({
           >
             {/* --- BRANDING & HEADER SECTION --- */}
             <div className="relative p-6 px-6 overflow-hidden shrink-0 bg-white border-b border-slate-100">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-genbi-light rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-60" />
               <div className="relative flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 relative">
@@ -177,14 +177,14 @@ export function MobileMenu({
                             onClick={() => setOpenDropdown(isAccordionOpen ? null : dropdown!)}
                             className={cn(
                               "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border",
-                              isAccordionOpen || isActive ? "bg-white border-blue-200 text-blue-700 shadow-md ring-1 ring-blue-50" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
+                              isAccordionOpen || isActive ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
                             )}
                           >
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isAccordionOpen || isActive ? "bg-blue-600 text-white shadow-lg" : "bg-slate-50 text-blue-600")}>
+                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isAccordionOpen || isActive ? "bg-genbi-blue text-white shadow-lg" : "bg-slate-50 text-genbi-blue")}>
                               {IconComponent}
                             </div>
                             <span className="font-semibold text-base flex-1 text-left">{link.label}</span>
-                            <ChevronDown size={18} className={cn("transition-transform duration-300", isAccordionOpen ? "rotate-180 text-blue-500" : "text-slate-900")} />
+                            <ChevronDown size={18} className={cn("transition-transform duration-300", isAccordionOpen ? "rotate-180 text-genbi-blue" : "text-slate-900")} />
                           </button>
                         ) : (
                           <Link
@@ -192,14 +192,14 @@ export function MobileMenu({
                             onClick={onClose}
                             className={cn(
                               "flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border",
-                              isActive ? "bg-white border-blue-200 text-blue-700 shadow-md ring-1 ring-blue-50" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
+                              isActive ? "bg-white border-genbi-haze text-genbi-blue-hover shadow-md ring-1 ring-genbi-light" : "bg-white border-slate-200/60 text-slate-900 shadow-sm"
                             )}
                           >
-                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-slate-50 text-blue-600")}>
+                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-genbi-blue text-white shadow-lg shadow-genbi-blue/20" : "bg-slate-50 text-genbi-blue")}>
                               {IconComponent}
                             </div>
                             <span className="font-semibold text-base flex-1">{link.label}</span>
-                            <ArrowUpRight size={16} className={cn("transition-all duration-300", isActive ? "opacity-100 translate-x-0.5 -translate-y-0.5 text-blue-400" : "opacity-70 text-slate-900")} />
+                            <ArrowUpRight size={16} className={cn("transition-all duration-300", isActive ? "opacity-100 translate-x-0.5 -translate-y-0.5 text-genbi-bright" : "opacity-70 text-slate-900")} />
                           </Link>
                         )}
                       </motion.div>
@@ -222,7 +222,7 @@ export function MobileMenu({
                                     href={item.href}
                                     onClick={onClose}
                                     className={cn(
-                                      "px-3 py-3 text-[11px] font-semibold bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm active:bg-blue-50 active:border-blue-200 transition-all text-center flex items-center justify-center leading-tight",
+                                      "px-3 py-3 text-[11px] font-semibold bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm active:bg-genbi-light active:border-genbi-haze transition-all text-center flex items-center justify-center leading-tight",
                                       index === submenu.length - 1 && submenu.length % 2 !== 0 ? "col-span-2" : ""
                                     )}
                                   >
@@ -253,7 +253,7 @@ export function MobileMenu({
                   <span className="text-xs font-bold text-slate-900">Butuh Bantuan?</span>
                   <span className="text-[10px] text-slate-900 font-semibold">Layanan Aspirasi Pengurus</span>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-blue-600 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-genbi-blue flex items-center justify-center shadow-sm group-hover:bg-genbi-blue group-hover:text-white transition-colors">
                   <ChevronRight size={16} />
                 </div>
               </Link>

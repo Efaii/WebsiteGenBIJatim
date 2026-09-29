@@ -47,7 +47,7 @@ export function NavbarLogo() {
           "text-lg font-bold tracking-tight transition-colors duration-300 lg:text-xl",
         )}
       >
-        <span className="text-blue-900">{brandLead}</span>
+        <span className="text-genbi-ink">{brandLead}</span>
         {brandTrail ? <span className="text-genbi-brand-red"> {brandTrail}</span> : null}
       </span>
     </Link>

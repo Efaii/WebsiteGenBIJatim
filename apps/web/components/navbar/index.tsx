@@ -144,7 +144,7 @@ export function Navbar() {
                     : // Tombol menu harus tidak mungkin terlewat. Versi putih di
                       // atas kapsul putih sebelumnya tidak terlihat, versi chip
                       // biru muda pun masih terlalu halus, jadi sekarang solid.
-                      "bg-genbi-blue border-genbi-blue text-white shadow-sm hover:bg-[#1a56e6]",
+                      "bg-genbi-blue border-genbi-blue text-white shadow-sm hover:bg-genbi-blue-hover",
                 )}
               >
                 {isOpen ? (

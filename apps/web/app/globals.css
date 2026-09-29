@@ -57,6 +57,12 @@
    * admin) tidak bergeser tanpa diminta. Lihat ADR 0007.
    */
   --genbi-blue: #1e63ff;
+  /*
+   * Versi lebih gelap dari `genbi-blue`, khusus untuk keadaan hover dan teks
+   * sekunder yang perlu sedikit lebih berat. Sebelumnya nilai ini ditulis
+   * sebagai literal `#1a56e6` di komponen tombol.
+   */
+  --genbi-blue-hover: #1a56e6;
   --genbi-ink: #102a5c;
   --genbi-bright: #2e8bff;
   --genbi-cyan: #35c7f3;
@@ -99,6 +105,7 @@
 
   /* Palet GenBI 2026 sebagai utility Tailwind: bg-genbi-soft, text-genbi-cyan, dst. */
   --color-genbi-blue: var(--genbi-blue);
+  --color-genbi-blue-hover: var(--genbi-blue-hover);
   --color-genbi-ink: var(--genbi-ink);
   --color-genbi-bright: var(--genbi-bright);
   --color-genbi-cyan: var(--genbi-cyan);

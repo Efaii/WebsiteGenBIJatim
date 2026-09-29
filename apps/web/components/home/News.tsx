@@ -66,7 +66,7 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
 
           <Link
             href="/news"
-            className="hidden items-center gap-2 rounded-full bg-genbi-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#1a56e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:inline-flex"
+            className="hidden items-center gap-2 rounded-full bg-genbi-blue px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:inline-flex"
           >
             Lainnya
             <ArrowRight className="h-4 w-4" strokeWidth={2} />
@@ -89,7 +89,7 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
         */}
         <Link
           href="/news"
-          className="mx-auto mt-6 flex w-full max-w-md items-center justify-center gap-2 rounded-full bg-genbi-blue px-6 py-3.5 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-[#1a56e6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:hidden"
+          className="mx-auto mt-6 flex w-full max-w-md items-center justify-center gap-2 rounded-full bg-genbi-blue px-6 py-3.5 text-[15px] font-semibold text-white transition-colors duration-200 hover:bg-genbi-blue-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60 md:hidden"
         >
           Lainnya
           <ArrowRight className="h-4 w-4" strokeWidth={2} />

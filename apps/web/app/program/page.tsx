@@ -193,7 +193,7 @@ export default async function ProgramListPage({
                   </div>
 
                   <p className="text-sm text-slate-500">
-                    Menampilkan {firstShown}–{lastShown} dari {filtered.length} program kerja
+                    Menampilkan {firstShown}-{lastShown} dari {filtered.length} program kerja
                     {query ? ` (hasil pencarian "${query}")` : ""} · halaman {currentPage} dari{" "}
                     {totalPages}
                   </p>

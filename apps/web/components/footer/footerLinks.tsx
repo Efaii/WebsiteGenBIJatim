@@ -58,9 +58,9 @@ export function FooterLinks({
               <Link
                 href={link.href}
                 className={cn(
-                  "flex items-center min-h-[44px] md:min-h-0 md:py-1.5 hover:text-blue-600 transition-colors",
+                  "flex items-center min-h-[44px] md:min-h-0 md:py-1.5 hover:text-genbi-blue transition-colors",
                   link.isBold &&
-                    "text-blue-600 hover:text-blue-700 font-bold text-[12px] uppercase tracking-wider mt-1",
+                    "text-genbi-blue hover:text-genbi-blue-hover font-bold text-[12px] uppercase tracking-wider mt-1",
                 )}
               >
                 {link.label}

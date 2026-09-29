@@ -27,7 +27,7 @@ export function FooterSocials() {
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all duration-300 text-blue-600 hover:-translate-y-1 hover:shadow-md"
+              className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-100 flex items-center justify-center hover:bg-genbi-blue hover:border-genbi-blue hover:text-white transition-all duration-300 text-genbi-blue hover:-translate-y-1 hover:shadow-md"
               title={social.name}
             >
               <Icon size={20} />
@@ -42,13 +42,13 @@ export function FooterSocials() {
         href={contact.href}
         className="inline-flex min-h-[44px] items-center"
       >
-        <span className="text-[14px] font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer pb-0.5 hover:border-blue-600">
+        <span className="text-[14px] font-bold text-genbi-blue hover:text-genbi-blue-hover transition-colors cursor-pointer pb-0.5 hover:border-genbi-blue">
           {contact.cta}
         </span>
       </Link>
 
       <div className="pt-4 mt-4 border-t border-slate-100 w-fit">
-        <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold mb-2">
+        <p className="text-[10px] uppercase tracking-wider text-genbi-blue font-bold mb-2">
           {identity.support.label}
         </p>
         <div className="relative w-32 h-10 opacity-90 hover:opacity-100 transition-opacity">

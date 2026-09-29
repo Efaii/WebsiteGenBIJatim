@@ -13,6 +13,16 @@ import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 import { cn } from "@/lib/utils";
 
+/*
+ * Latar section Story.
+ *
+ * Blok gelap tunggal di beranda ini memakai gradien diagonal supaya punya
+ * kedalaman, bukan bidang navy rata. Nilainya ditulis sebagai konstanta
+ * bernama di sini, bukan token global, karena hanya dipakai di satu tempat.
+ */
+const STORY_BASE = "bg-[#163A73]";
+const STORY_GRADIENT = "bg-gradient-to-br from-[#163A73] via-[#123E86] to-[#1557B8]";
+
 type Milestone = {
   year: string;
   title: string;
@@ -169,11 +179,11 @@ export function Story() {
   return (
     <section
       data-section="story"
-      className="relative overflow-hidden bg-[#163A73] py-24 text-white md:py-28 lg:py-32"
+      className={`relative overflow-hidden py-24 text-white md:py-28 lg:py-32 ${STORY_BASE}`}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-br from-[#163A73] via-[#123E86] to-[#1557B8]"
+        className={`absolute inset-0 ${STORY_GRADIENT}`}
       />
       {/* Pendar ambient dikurangi supaya tidak terasa seperti neon. */}
       <div

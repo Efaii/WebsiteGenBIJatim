@@ -7,6 +7,20 @@ import CountUp from "@/components/CountUp";
 import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 
+/*
+ * Lapisan visual hero.
+ *
+ * Nilainya sengaja ditulis sebagai konstanta bernama di sini, bukan token
+ * global di globals.css: masing-masing hanya dipakai di satu tempat, jadi nama
+ * global justru menambah kosakata token tanpa ada yang memakainya ulang.
+ */
+/** Tint biru di atas foto. Menyatukan warna foto kegiatan dengan palet GenBI. */
+const HERO_TINT = "bg-gradient-to-br from-[#1674D1]/46 via-[#174AA8]/38 to-[#2DA9E6]/28";
+/** Scrim legibilitas: pita vertikal yang menjaga teks putih tetap terbaca. */
+const HERO_SCRIM = "bg-[linear-gradient(180deg,rgba(6,22,54,0.36)_0%,rgba(6,22,54,0.48)_30%,rgba(6,22,54,0.48)_70%,rgba(6,22,54,0.28)_100%)]";
+/** Peleburan tepi bawah hero ke section berikutnya. */
+const HERO_FLOOR = "bg-gradient-to-t from-[#0B2551]/70 to-transparent";
+
 /**
  * Hero beranda.
  *
@@ -50,16 +64,16 @@ export function Hero() {
         )}
 
         {/* Tint biru: warna dasar tetap memakai arah palet GenBI. */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1674D1]/46 via-[#174AA8]/38 to-[#2DA9E6]/28" />
+        <div className={`absolute inset-0 ${HERO_TINT}`} />
         {/*
           Scrim legibilitas berbentuk pita vertikal, kali ini dipudarkan
           kembali: pita rata 30%-70% supaya kontras sama di semua lebar
           viewport, dengan tepi atas dan bawah lebih terang agar foto/video
           tetap terlihat.
         */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,22,54,0.36)_0%,rgba(6,22,54,0.48)_30%,rgba(6,22,54,0.48)_70%,rgba(6,22,54,0.28)_100%)]" />
+        <div className={`absolute inset-0 ${HERO_SCRIM}`} />
         {/* Peleburan ke section berikutnya. */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#0B2551]/70 to-transparent" />
+        <div className={`absolute inset-x-0 bottom-0 h-32 ${HERO_FLOOR}`} />
       </div>
 
       <Container className="relative z-20 flex flex-1 flex-col">

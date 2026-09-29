@@ -62,8 +62,8 @@ export function NavbarLinks({
                     ITEM_BASE,
                     "font-medium relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.5",
                     isDropdownActive
-                      ? cn("font-bold", "text-blue-600 after:bg-current")
-                      : "text-slate-900 hover:text-blue-600",
+                      ? cn("font-bold", "text-genbi-blue after:bg-current")
+                      : "text-slate-900 hover:text-genbi-blue",
                   )}
                 >
                   {link.label}
@@ -91,7 +91,7 @@ export function NavbarLinks({
                           <Link
                             key={item.key}
                             href={item.href}
-                            className="block px-4 py-2.5 text-[15px] text-slate-900 hover:bg-blue-600 hover:text-white rounded-full transition-colors"
+                            className="block px-4 py-2.5 text-[15px] text-slate-900 hover:bg-genbi-blue hover:text-white rounded-full transition-colors"
                           >
                             {item.name}
                           </Link>
@@ -105,7 +105,7 @@ export function NavbarLinks({
                     <div className="h-px bg-slate-100 my-1"></div>
                     <Link
                       href={link.href}
-                      className="block px-4 py-2 text-xs text-center text-blue-600 hover:bg-blue-600 hover:text-white rounded-full font-bold uppercase tracking-wider transition-colors"
+                      className="block px-4 py-2 text-xs text-center text-genbi-blue hover:bg-genbi-blue hover:text-white rounded-full font-bold uppercase tracking-wider transition-colors"
                     >
                       Lihat Semua
                     </Link>
@@ -126,8 +126,8 @@ export function NavbarLinks({
                 ITEM_BASE,
                 "font-medium relative after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.5 after:transition-opacity",
                 pathname === link.href
-                  ? cn("font-bold after:opacity-100", "text-blue-600 after:bg-blue-600")
-                  : "text-slate-900 hover:text-blue-600 after:opacity-0",
+                  ? cn("font-bold after:opacity-100", "text-genbi-blue after:bg-genbi-blue")
+                  : "text-slate-900 hover:text-genbi-blue after:opacity-0",
               )}
             >
               {link.label}

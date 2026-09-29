@@ -55,7 +55,7 @@ export function Portal() {
             <div className="flex flex-col">
               <FadeIn delay={0.1}>
                 <h2 className="font-heading text-[2rem] font-bold text-slate-900 tracking-tight mb-6 md:text-[2.5rem] lg:text-[2.75rem]">
-                  Akses <span className="text-blue-600">Platform Digital</span>
+                  Akses <span className="text-genbi-blue">Platform Digital</span>
                 </h2>
               </FadeIn>
               <FadeIn delay={0.2}>
@@ -75,18 +75,18 @@ export function Portal() {
                 <FadeIn key={item.title} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
                   <Link
                     href={item.link}
-                    className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-card p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-200 overflow-hidden"
+                    className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-card p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-genbi-haze hover:shadow-lg transition-all duration-200 overflow-hidden"
                   >
                     {/* --- CARD HEADER: NAVIGATION & ICONOGRAPHY --- */}
                     <div className="relative z-10 flex justify-between items-start mb-4 md:mb-6">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-white border border-slate-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 relative overflow-hidden">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-white border border-slate-200 text-genbi-blue group-hover:bg-genbi-blue group-hover:text-white transition-all duration-300 relative overflow-hidden">
                         <Icon
                           className="w-8 h-8 md:w-10 md:h-10 relative z-10"
                           strokeWidth={2}
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-blue-600 transition-all duration-300" />
+                        <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-genbi-blue transition-all duration-300" />
                       </div>
                     </div>
 
@@ -95,32 +95,32 @@ export function Portal() {
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
                       {iconName === "LayoutDashboard" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
+                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "FileText" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
+                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "GraduationCap" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
+                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "Newspaper" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
+                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
                         </div>
                       )}
                     </div>
 
                     {/* --- CARD NARRATIVE LAYER --- */}
                     <div className="relative z-10">
-                      <h3 className="text-base md:text-xl font-bold text-slate-900 mb-1 md:mb-2 group-hover:text-blue-700 transition-colors">
+                      <h3 className="text-base md:text-xl font-bold text-slate-900 mb-1 md:mb-2 group-hover:text-genbi-blue-hover transition-colors">
                         {item.title}
                       </h3>
                       <p className="text-slate-900 text-xs md:text-base leading-relaxed line-clamp-2 md:line-clamp-none">
