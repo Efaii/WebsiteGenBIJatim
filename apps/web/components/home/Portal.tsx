@@ -8,6 +8,8 @@ import {
   Newspaper,
   ArrowRight,
   LucideIcon,
+  Building2,
+  FileStack,
 } from "lucide-react";
 import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
 import { Container } from "@/components/Container";
@@ -81,6 +83,7 @@ export function Portal() {
           <StaggerContainer className="grid w-full grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 md:auto-rows-[280px] items-stretch">
             {items.map((item, idx) => {
               const Icon = ICON_MAP[item.iconName] || LayoutDashboard;
+              const iconName = item.iconName as string;
 
               return (
                 <FadeIn key={item.title} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
@@ -99,6 +102,45 @@ export function Portal() {
                       <div className="flex items-center gap-2">
                         <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-genbi-blue transition-all duration-300" />
                       </div>
+                    </div>
+
+                    {/*
+                      --- LAPISAN ORNAMEN DEKORATIF ---
+
+                      Ornamen outline besar di sudut kanan-bawah tiap kartu,
+                      muncul sebagai tekstur latar saat kartu di-hover.
+
+                      `strokeWidth={0.5}` adalah PENGECUALIAN YANG DISENGAJA
+                      terhadap aturan satu nilai strokeWidth. Ikon ini berukuran
+                      96-128 px dengan opasitas hanya 0,1, jadi pada nilai 2
+                      garisnya empat kali lebih tebal dan berubah dari tekstur
+                      halus menjadi outline yang bersaing dengan ikon utama.
+                      Jangan diseragamkan tanpa persetujuan pemilik produk.
+                    */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                      {iconName === "LayoutDashboard" && (
+                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
+                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={0.5} />
+                        </div>
+                      )}
+
+                      {iconName === "FileText" && (
+                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
+                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={0.5} />
+                        </div>
+                      )}
+
+                      {iconName === "GraduationCap" && (
+                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
+                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={0.5} />
+                        </div>
+                      )}
+
+                      {iconName === "Newspaper" && (
+                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
+                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={0.5} />
+                        </div>
+                      )}
                     </div>
 
                     {/* --- CARD NARRATIVE LAYER --- */}
