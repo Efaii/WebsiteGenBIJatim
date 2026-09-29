@@ -3,15 +3,15 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const DATA_UPDATES = [
-  { slug: "unesa", name: "Komisariat UNESA", univ: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.svg", members: 64 },
-  { slug: "upnvjt", name: "Komisariat UPNVJT", univ: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.svg", members: 50 },
-  { slug: "unair", name: "Komisariat UNAIR", univ: "Universitas Airlangga", logo: "/assets/logos/unair.svg", members: 112 },
-  { slug: "its", name: "Komisariat ITS", univ: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.svg", members: 87 },
-  { slug: "uinsa", name: "Komisariat UINSA", univ: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.svg", members: 83 },
-  { slug: "unugiri", name: "Komisariat UNUGIRI", univ: "UNU Sunan Giri Bojonegoro", logo: "/assets/logos/unugiri.svg", members: 50 },
-  { slug: "utm", name: "Komisariat UTM", univ: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.svg", members: 75 },
-  { slug: "pens", name: "Komisariat PENS", univ: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.svg", members: 48 },
-  { slug: "uin-madura", name: "Komisariat UIN Madura", univ: "UIN Madura", logo: "/assets/logos/uinMadura.svg", members: 50 },
+  { slug: "unesa", name: "Komisariat UNESA", univ: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.webp", members: 64 },
+  { slug: "upnvjt", name: "Komisariat UPNVJT", univ: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.webp", members: 50 },
+  { slug: "unair", name: "Komisariat UNAIR", univ: "Universitas Airlangga", logo: "/assets/logos/unair.webp", members: 112 },
+  { slug: "its", name: "Komisariat ITS", univ: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.webp", members: 87 },
+  { slug: "uinsa", name: "Komisariat UINSA", univ: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.webp", members: 83 },
+  { slug: "unugiri", name: "Komisariat UNUGIRI", univ: "UNU Sunan Giri Bojonegoro", logo: "/assets/logos/unugiri.webp", members: 50 },
+  { slug: "utm", name: "Komisariat UTM", univ: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.webp", members: 75 },
+  { slug: "pens", name: "Komisariat PENS", univ: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.webp", members: 48 },
+  { slug: "uin-madura", name: "Komisariat UIN Madura", univ: "UIN Madura", logo: "/assets/logos/uinMadura.webp", members: 50 },
 ];
 
 async function main() {

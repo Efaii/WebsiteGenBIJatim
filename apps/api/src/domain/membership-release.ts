@@ -2,15 +2,15 @@ export const MEMBERSHIP_RELEASE_PERIOD = '2025/2026';
 export const MEMBERSHIP_SOURCE_SHA256 = 'c8559cd5cdcf2b92f4f107dac122be47c6f63eaaddbcd7045212278fa2f65ae7';
 
 export const MEMBERSHIP_RELEASE_COMMISSARIATS = [
-  { slug: 'its', name: 'ITS', university: 'Institut Teknologi Sepuluh Nopember', logo: '/assets/logos/its.svg', expectedCount: 87 },
-  { slug: 'pens', name: 'PENS', university: 'Politeknik Elektronika Negeri Surabaya', logo: '/assets/logos/pens.svg', expectedCount: 48 },
-  { slug: 'uin-madura', name: 'UIN Madura', university: 'UIN Madura', logo: '/assets/logos/uinMadura.svg', expectedCount: 50 },
-  { slug: 'uinsa', name: 'UINSA', university: 'UIN Sunan Ampel Surabaya', logo: '/assets/logos/uinsa.svg', expectedCount: 83 },
-  { slug: 'unair', name: 'UNAIR', university: 'Universitas Airlangga', logo: '/assets/logos/unair.svg', expectedCount: 112 },
-  { slug: 'unesa', name: 'UNESA', university: 'Universitas Negeri Surabaya', logo: '/assets/logos/unesa.svg', expectedCount: 64 },
-  { slug: 'unugiri', name: 'UNUGIRI', university: 'Universitas Nahdlatul Ulama Sunan Giri', logo: '/assets/logos/unugiri.svg', expectedCount: 50 },
-  { slug: 'upnvjt', name: 'UPN Veteran Jatim', university: 'UPN Veteran Jawa Timur', logo: '/assets/logos/upnvjt.svg', expectedCount: 50 },
-  { slug: 'utm', name: 'UTM', university: 'Universitas Trunojoyo Madura', logo: '/assets/logos/utm.svg', expectedCount: 75 },
+  { slug: 'its', name: 'ITS', university: 'Institut Teknologi Sepuluh Nopember', logo: '/assets/logos/its.webp', expectedCount: 87 },
+  { slug: 'pens', name: 'PENS', university: 'Politeknik Elektronika Negeri Surabaya', logo: '/assets/logos/pens.webp', expectedCount: 48 },
+  { slug: 'uin-madura', name: 'UIN Madura', university: 'UIN Madura', logo: '/assets/logos/uinMadura.webp', expectedCount: 50 },
+  { slug: 'uinsa', name: 'UINSA', university: 'UIN Sunan Ampel Surabaya', logo: '/assets/logos/uinsa.webp', expectedCount: 83 },
+  { slug: 'unair', name: 'UNAIR', university: 'Universitas Airlangga', logo: '/assets/logos/unair.webp', expectedCount: 112 },
+  { slug: 'unesa', name: 'UNESA', university: 'Universitas Negeri Surabaya', logo: '/assets/logos/unesa.webp', expectedCount: 64 },
+  { slug: 'unugiri', name: 'UNUGIRI', university: 'Universitas Nahdlatul Ulama Sunan Giri', logo: '/assets/logos/unugiri.webp', expectedCount: 50 },
+  { slug: 'upnvjt', name: 'UPN Veteran Jatim', university: 'UPN Veteran Jawa Timur', logo: '/assets/logos/upnvjt.webp', expectedCount: 50 },
+  { slug: 'utm', name: 'UTM', university: 'Universitas Trunojoyo Madura', logo: '/assets/logos/utm.webp', expectedCount: 75 },
 ] as const;
 
 export const MEMBERSHIP_EXPECTED_COUNTS = Object.fromEntries(
