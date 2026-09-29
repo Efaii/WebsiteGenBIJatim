@@ -9,8 +9,9 @@ export interface BPHMember {
     linkedin?: string;
 }
 export interface NewsItem {
-    id: number;
+    id: number | string;
     title: string;
+    slug?: string;
     category: "Kegiatan" | "Webinar" | "Sosial" | "Edukasi" | "Pelatihan";
     date: string;
     image_color: string;
@@ -27,7 +28,8 @@ export interface ProkerData {
     audience: "Internal" | "External";
     status: "Completed" | "On-going" | "Upcoming" | "Recurring";
     date: string;
-    dateIso: string;
+    dateIso: string | null;
+    dateLabel?: string | null;
     time?: string;
     location?: string;
     format?: "Offline" | "Online" | "Hybrid";
@@ -46,6 +48,9 @@ export interface ProkerData {
     linkProposalPdf?: string;
     linkLpjPdf?: string;
     dokumentasiDrive?: string;
+    proposalLink?: string;
+    lpjLink?: string;
+    documentation?: string;
     commissariatSlug?: string;
     newsUrl?: string;
     gallery?: string[];
@@ -130,4 +135,153 @@ export interface KorkomData {
     divisions: BPHMember[];
     documents: Document[];
 }
+import { z } from "zod";
+export declare const CMS_ROLES: readonly ["ADMIN_GLOBAL", "SEKRETARIS_UMUM", "SEKRETARIS_DIVISI"];
+export declare const PUBLICATION_STATUSES: readonly ["DRAFT", "SUBMITTED", "APPROVED", "PUBLISHED", "REJECTED", "ARCHIVED"];
+export declare const MEMBERSHIP_STATUSES: readonly ["ACTIVE", "INACTIVE"];
+export type CmsRole = (typeof CMS_ROLES)[number];
+export type PublicationStatus = (typeof PUBLICATION_STATUSES)[number];
+export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
+export declare const cmsRoleSchema: z.ZodEnum<{
+    ADMIN_GLOBAL: "ADMIN_GLOBAL";
+    SEKRETARIS_UMUM: "SEKRETARIS_UMUM";
+    SEKRETARIS_DIVISI: "SEKRETARIS_DIVISI";
+}>;
+export declare const publicationStatusSchema: z.ZodEnum<{
+    DRAFT: "DRAFT";
+    SUBMITTED: "SUBMITTED";
+    APPROVED: "APPROVED";
+    PUBLISHED: "PUBLISHED";
+    REJECTED: "REJECTED";
+    ARCHIVED: "ARCHIVED";
+}>;
+export declare const membershipStatusSchema: z.ZodEnum<{
+    ACTIVE: "ACTIVE";
+    INACTIVE: "INACTIVE";
+}>;
+export declare const paginationMetaSchema: z.ZodObject<{
+    page: z.ZodNumber;
+    pageSize: z.ZodNumber;
+    total: z.ZodNumber;
+    hasNextPage: z.ZodBoolean;
+}, z.core.$strip>;
+export declare const responseMetaSchema: z.ZodObject<{
+    requestId: z.ZodString;
+    pagination: z.ZodOptional<z.ZodObject<{
+        page: z.ZodNumber;
+        pageSize: z.ZodNumber;
+        total: z.ZodNumber;
+        hasNextPage: z.ZodBoolean;
+    }, z.core.$strip>>;
+}, z.core.$strip>;
+export declare const apiErrorSchema: z.ZodObject<{
+    code: z.ZodEnum<{
+        VALIDATION_ERROR: "VALIDATION_ERROR";
+        UNAUTHENTICATED: "UNAUTHENTICATED";
+        FORBIDDEN: "FORBIDDEN";
+        NOT_FOUND: "NOT_FOUND";
+        CONFLICT: "CONFLICT";
+        UNSUPPORTED_MEDIA_TYPE: "UNSUPPORTED_MEDIA_TYPE";
+        RATE_LIMITED: "RATE_LIMITED";
+        INTERNAL_ERROR: "INTERNAL_ERROR";
+    }>;
+    message: z.ZodString;
+    fields: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodString>>>;
+}, z.core.$strip>;
+export declare const successEnvelopeSchema: <T extends z.ZodType>(data: T) => z.ZodObject<{
+    data: T;
+    meta: z.ZodObject<{
+        requestId: z.ZodString;
+        pagination: z.ZodOptional<z.ZodObject<{
+            page: z.ZodNumber;
+            pageSize: z.ZodNumber;
+            total: z.ZodNumber;
+            hasNextPage: z.ZodBoolean;
+        }, z.core.$strip>>;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export declare const errorEnvelopeSchema: z.ZodObject<{
+    error: z.ZodObject<{
+        code: z.ZodEnum<{
+            VALIDATION_ERROR: "VALIDATION_ERROR";
+            UNAUTHENTICATED: "UNAUTHENTICATED";
+            FORBIDDEN: "FORBIDDEN";
+            NOT_FOUND: "NOT_FOUND";
+            CONFLICT: "CONFLICT";
+            UNSUPPORTED_MEDIA_TYPE: "UNSUPPORTED_MEDIA_TYPE";
+            RATE_LIMITED: "RATE_LIMITED";
+            INTERNAL_ERROR: "INTERNAL_ERROR";
+        }>;
+        message: z.ZodString;
+        fields: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodString>>>;
+    }, z.core.$strip>;
+    meta: z.ZodObject<{
+        requestId: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export declare const membershipWriteSchema: z.ZodObject<{
+    commissariatId: z.ZodString;
+    periodId: z.ZodString;
+    divisionId: z.ZodNullable<z.ZodString>;
+    name: z.ZodString;
+    position: z.ZodString;
+    studyProgram: z.ZodString;
+    publicationStatus: z.ZodOptional<z.ZodEnum<{
+        DRAFT: "DRAFT";
+        SUBMITTED: "SUBMITTED";
+        APPROVED: "APPROVED";
+        PUBLISHED: "PUBLISHED";
+        REJECTED: "REJECTED";
+        ARCHIVED: "ARCHIVED";
+    }>>;
+    membershipStatus: z.ZodOptional<z.ZodEnum<{
+        ACTIVE: "ACTIVE";
+        INACTIVE: "INACTIVE";
+    }>>;
+}, z.core.$strict>;
+export declare const periodWriteSchema: z.ZodObject<{
+    label: z.ZodString;
+}, z.core.$strict>;
+export declare const divisionWriteSchema: z.ZodObject<{
+    name: z.ZodString;
+    commissariatId: z.ZodString;
+    periodId: z.ZodString;
+}, z.core.$strict>;
+export declare const canonicalResourceIdSchema: z.ZodString;
+export declare const newsCategorySchema: z.ZodEnum<{
+    KEGIATAN: "KEGIATAN";
+    WEBINAR: "WEBINAR";
+    SOSIAL: "SOSIAL";
+    EDUKASI: "EDUKASI";
+    PELATIHAN: "PELATIHAN";
+}>;
+export declare const newsWriteSchema: z.ZodObject<{
+    title: z.ZodString;
+    excerpt: z.ZodString;
+    content: z.ZodString;
+    category: z.ZodOptional<z.ZodNullable<z.ZodEnum<{
+        KEGIATAN: "KEGIATAN";
+        WEBINAR: "WEBINAR";
+        SOSIAL: "SOSIAL";
+        EDUKASI: "EDUKASI";
+        PELATIHAN: "PELATIHAN";
+    }>>>;
+}, z.core.$strict>;
+export declare const membershipImportErrorCodeSchema: z.ZodEnum<{
+    INVALID_FILE: "INVALID_FILE";
+    INVALID_HEADER: "INVALID_HEADER";
+    INVALID_ROW: "INVALID_ROW";
+    INVALID_SCOPE: "INVALID_SCOPE";
+    INVALID_COMMISSARIAT: "INVALID_COMMISSARIAT";
+    INVALID_DIVISION: "INVALID_DIVISION";
+    UNMAPPED_DIVISION: "UNMAPPED_DIVISION";
+    AMBIGUOUS_MATCH: "AMBIGUOUS_MATCH";
+    DUPLICATE_IN_FILE: "DUPLICATE_IN_FILE";
+    AMBIGUOUS_SHEET: "AMBIGUOUS_SHEET";
+    PREVIEW_EXPIRED: "PREVIEW_EXPIRED";
+    PREVIEW_STALE: "PREVIEW_STALE";
+    PREVIEW_ALREADY_COMMITTED: "PREVIEW_ALREADY_COMMITTED";
+}>;
+export type MembershipWrite = z.infer<typeof membershipWriteSchema>;
+export type ApiError = z.infer<typeof apiErrorSchema>;
 //# sourceMappingURL=index.d.ts.map
