@@ -2,13 +2,15 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { readCmsSession } from "@/lib/cms-session";
 import { CmsLogoutButton } from "./CmsLogoutButton";
+import { CmsNav } from "./CmsNav";
 
 /**
- * Penjaga area CMS.
+ * Kerangka area CMS.
  *
- * Sesi diverifikasi ke API; tanpa sesi valid pengguna diarahkan ke halaman
- * masuk. Peran selain `ADMIN_GLOBAL` ditolak dengan pesan yang jelas, bukan
- * diarahkan diam-diam.
+ * Layout hanya menangani pengunjung tanpa sesi (redirect ke halaman masuk).
+ * Pemeriksaan peran dilakukan di level halaman (`getCmsPageSession`) karena
+ * layout yang mengembalikan pohon tanpa `children` membuat boundary Suspense
+ * tidak pernah selesai pada hard load (terjebak di fallback "Memuat halaman").
  */
 export default async function CmsProtectedLayout({
   children,
@@ -17,32 +19,6 @@ export default async function CmsProtectedLayout({
 }) {
   const session = await readCmsSession();
   if (!session) redirect("/cms/login?reason=required");
-
-  if (session.role !== "ADMIN_GLOBAL") {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12">
-        <div className="w-full max-w-lg rounded-2xl border border-red-200 bg-white p-8 shadow-sm">
-          <h1 className="font-heading text-xl font-bold text-slate-900">
-            Akses ditolak
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Area CMS hanya dapat dibuka oleh admin global. Akun{" "}
-            <strong className="font-semibold text-slate-900">
-              {session.username ?? session.accountId}
-            </strong>{" "}
-            masuk sebagai{" "}
-            <strong className="font-semibold text-slate-900">
-              {session.role}
-            </strong>
-            .
-          </p>
-          <div className="mt-6">
-            <CmsLogoutButton />
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -56,6 +32,7 @@ export default async function CmsProtectedLayout({
               Masuk sebagai {session.username ?? "admin"} ({session.role})
             </p>
           </div>
+          <CmsNav />
           <CmsLogoutButton />
         </div>
       </header>

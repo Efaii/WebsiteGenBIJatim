@@ -58,3 +58,34 @@ export const getHomeContent = async (): Promise<HomeContentResponse | null> => {
     return null;
   }
 };
+
+export type HomeHeroUpdate = {
+  heading: { line1: string; line2: string };
+  description: string;
+  videoEnabled: boolean;
+};
+
+export type HomeContentUpdate = {
+  hero?: HomeHeroUpdate;
+};
+
+/**
+ * Simpan konten Beranda lewat jalur kanonik (`PATCH /api/v1/home`).
+ *
+ * Hanya admin global (sesi cookie). Error dibiarkan naik ke pemanggil supaya
+ * pesan validasi API dapat ditampilkan di form editor.
+ */
+export const updateHomeContent = async (
+  payload: HomeContentUpdate,
+): Promise<HomeContentResponse> => {
+  const response = await api.patch<{ data?: HomeContentResponse }>(
+    "/v1/home",
+    payload,
+    {
+      withCredentials: true,
+    },
+  );
+  if (!response.data.data)
+    throw new Error("Respons simpan tidak berisi konten.");
+  return response.data.data;
+};
