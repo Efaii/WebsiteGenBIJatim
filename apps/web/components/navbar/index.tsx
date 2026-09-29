@@ -100,7 +100,7 @@ export function Navbar() {
       >
         <div
           className={cn(
-            "mx-auto flex h-20 items-center justify-between border border-white/60 bg-white/92 shadow-[0_10px_32px_-16px_rgba(16,42,92,0.35)] backdrop-blur-xl transition-all duration-400 ease-out md:h-[88px]",
+            "mx-auto flex h-20 items-center justify-between border border-white/60 bg-white/92 shadow-[0_10px_32px_-16px_rgba(16,42,92,0.35)] backdrop-blur-xl transition-all duration-400 ease-out md:h-[72px]",
             floating ? "max-w-[1440px] rounded-b-nav" : "max-w-none rounded-none",
           )}
         >

@@ -15,7 +15,7 @@
 :root {
   /* Base */
   --background: #020617;
-  --foreground: #f8fafc;
+  --foreground: #0f172a;
 
   /* Primary brand: Bank Indonesia blue */
   --primary: #3b82f6;
@@ -218,33 +218,20 @@
 
 /* ─── Global Styles ─── */
 
+/*
+ * Body tidak lagi menyimpan mesh gradient gelap.
+ *
+ * Gradient lima lapis itu dirender di setiap halaman tetapi selalu tertutup
+ * wrapper halaman yang terang, jadi biayanya murni tanpa manfaat.
+ * `background-attachment: fixed` khususnya memaksa repaint saat scroll di
+ * banyak browser. Selain itu, rubber-band scroll di mobile sempat menampilkan
+ * navy gelap di balik halaman putih.
+ *
+ * Warna teks default juga diperbaiki: `--foreground` dulu #f8fafc (hampir
+ * putih) padahal seluruh situs bertema terang, sehingga komponen yang
+ * mewarisi warna teks default akan menulis putih di atas putih.
+ */
 body {
-  background-color: #0a1628;
-  /* GenBI/BI Blue Mesh Gradient - Elegant & Modern */
-  background-image:
-    radial-gradient(
-      ellipse 80% 50% at 50% -20%,
-      rgba(59, 130, 246, 0.3),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 0% 50%,
-      rgba(29, 78, 216, 0.25),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 100% 50%,
-      rgba(37, 99, 235, 0.2),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 100% 100% at 50% 100%,
-      rgba(30, 58, 138, 0.3),
-      transparent
-    ),
-    linear-gradient(135deg, #0c1e3a 0%, #0a1628 50%, #1e3a8a 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;

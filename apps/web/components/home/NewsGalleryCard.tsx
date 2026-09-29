@@ -55,7 +55,7 @@ export function NewsGalleryCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-300 ease-out group-hover/img:scale-[1.02]"
           />
-          <span className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity duration-300 group-hover/img:opacity-100 group-focus-visible/img:opacity-100">
+          <span className="absolute inset-0 flex items-center justify-center bg-black/65 opacity-0 transition-opacity duration-300 group-hover/img:opacity-100 group-focus-visible/img:opacity-100">
             <span className="flex translate-y-1 items-center gap-2 text-sm font-semibold text-white transition-transform duration-300 ease-out group-hover/img:translate-y-0">
               Lihat Detail
               <ArrowUpRight className="h-4 w-4" strokeWidth={2} />

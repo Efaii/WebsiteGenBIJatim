@@ -75,17 +75,17 @@ export function About() {
             </h2>
 
             {/*
-              Rata kanan-kiri (justify) atas permintaan pemilik produk. Pada
-              kolom selebar ~38rem efeknya halus; di layar sempit, kolom yang
-              pendek bisa membuat jarak antarkata melebar. Kalau itu mengganggu,
-              obatnya `hyphens-auto` (butuh kamus bahasa di browser).
+              Rata kiri (default). Sebelumnya paragraf ini memakai justify,
+              tetapi justifikasi tanpa hipenasi otomatis menghasilkan celah
+              antarkata yang tidak rata ("sungai" putih). Di mobile kolomnya
+              menyempit sehingga masalah itu jauh lebih terlihat.
             */}
-            <p className="mt-6 max-w-[38rem] text-justify text-base leading-relaxed text-slate-600 md:mt-7 md:text-[17px]">
+            <p className="mt-6 max-w-[38rem] text-base leading-relaxed text-slate-600 md:mt-7 md:text-[17px]">
               <strong className="font-semibold text-slate-900">{paragraphLead}</strong>{" "}
               {paragraph}
             </p>
 
-            <p className="mt-5 max-w-[38rem] text-justify text-base font-semibold leading-relaxed text-slate-900 md:mt-6 md:text-[17px]">
+            <p className="mt-5 max-w-[38rem] text-base font-semibold leading-relaxed text-slate-900 md:mt-6 md:text-[17px]">
               {emphasis}
             </p>
           </div>
