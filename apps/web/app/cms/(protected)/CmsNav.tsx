@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/cms", label: "Ringkasan" },
   { href: "/cms/beranda", label: "Beranda" },
+  { href: "/cms/berita", label: "Berita" },
 ];
 
 /** Navigasi area CMS (seadanya; ditumbuhkan bersama tiket berikutnya). */
