@@ -82,7 +82,7 @@ export function Portal() {
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-white border border-slate-200 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 relative overflow-hidden">
                         <Icon
                           className="w-8 h-8 md:w-10 md:h-10 relative z-10"
-                          strokeWidth={1.5}
+                          strokeWidth={2}
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -95,25 +95,25 @@ export function Portal() {
                     <div className="absolute inset-0 pointer-events-none overflow-hidden">
                       {iconName === "LayoutDashboard" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={0.5} />
+                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "FileText" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={0.5} />
+                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "GraduationCap" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={0.5} />
+                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
                         </div>
                       )}
 
                       {iconName === "Newspaper" && (
                         <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={0.5} />
+                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-blue-600" strokeWidth={2} />
                         </div>
                       )}
                     </div>

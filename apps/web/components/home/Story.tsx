@@ -86,7 +86,7 @@ function MilestoneItem({
             isLeft ? "lg:col-start-1 lg:pr-6 lg:text-right" : "lg:col-start-2 lg:pl-6",
           )}
         >
-          <p className="font-heading text-2xl font-bold tabular-nums text-[#35C7F3] md:text-[28px]">
+          <p className="font-heading text-2xl font-bold tabular-nums text-genbi-cyan md:text-[28px]">
             {milestone.year}
           </p>
           <h3 className="mt-2 text-lg font-bold leading-snug text-white md:text-xl">
@@ -94,7 +94,7 @@ function MilestoneItem({
           </h3>
           <p
             className={cn(
-              "mt-2 text-[15px] leading-relaxed text-[#DCEAFF]/85 md:text-base lg:max-w-sm",
+              "mt-2 text-[15px] leading-relaxed text-genbi-haze/85 md:text-base lg:max-w-sm",
               isLeft && "lg:ml-auto",
             )}
           >
@@ -178,11 +178,11 @@ export function Story() {
       {/* Pendar ambient dikurangi supaya tidak terasa seperti neon. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-40 -top-24 h-[440px] w-[440px] rounded-full bg-[#35C7F3]/[0.06] blur-3xl"
+        className="pointer-events-none absolute -left-40 -top-24 h-[440px] w-[440px] rounded-full bg-genbi-cyan/[0.06] blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-32 -right-32 h-[380px] w-[380px] rounded-full bg-[#2E8BFF]/[0.06] blur-3xl"
+        className="pointer-events-none absolute -bottom-32 -right-32 h-[380px] w-[380px] rounded-full bg-genbi-bright/[0.06] blur-3xl"
       />
 
       <Container className="relative z-10">
@@ -191,7 +191,7 @@ export function Story() {
           <h2 className="font-heading text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
             {heading}
           </h2>
-          <p className="mt-4 text-base text-[#DCEAFF]/85 md:text-[17px]">{description}</p>
+          <p className="mt-4 text-base text-genbi-haze/85 md:text-[17px]">{description}</p>
         </div>
 
         {/* Lebar dibatasi supaya blok teks tidak terpisah terlalu jauh dari garis. */}
