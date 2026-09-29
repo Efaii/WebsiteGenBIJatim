@@ -275,6 +275,62 @@ model CmsSession {
   @@index([cmsAccountId, revokedAt, expiresAt])
 }
 
+// Konten Beranda yang dapat diedit (ADR 0013).
+//
+// Yang tetap statis dan sengaja TIDAK punya kolom di sini: struktur/urutan
+// section, judul/eyebrow/deskripsi pengantar section, metrik hero, chip peran,
+// tahun milestone, kartu "Akses Platform Digital", serta aset brand.
+model HomeHero {
+  id           String   @id @default("default")
+  headingLine1 String   @db.VarChar(120)
+  headingLine2 String   @db.VarChar(120)
+  description  String   @db.VarChar(400)
+  videoEnabled Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+}
+
+model HomeAbout {
+  id            String   @id @default("default")
+  paragraphLead String   @db.VarChar(200)
+  paragraph     String   @db.Text
+  emphasis      String   @db.Text
+  updatedAt     DateTime @updatedAt
+}
+
+model HomePilarCard {
+  position    Int      @id
+  title       String   @db.VarChar(120)
+  description String   @db.Text
+  points      Json
+  updatedAt   DateTime @updatedAt
+}
+
+model HomeStoryMilestone {
+  position    Int      @id
+  title       String   @db.VarChar(200)
+  description String   @db.Text
+  updatedAt   DateTime @updatedAt
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+model HomeMediaAsset {
+  id        String    @id @default(uuid())
+  slot      String    @unique @db.VarChar(64)
+  kind      MediaKind
+  path      String    @db.VarChar(500)
+  alt       String    @db.VarChar(300) @default("")
+  mimeType  String?   @db.VarChar(100)
+  width     Int?
+  height    Int?
+  bytes     Int?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
 model AuditEvent {
   id             String   @id @default(uuid())
   cmsAccountId   String

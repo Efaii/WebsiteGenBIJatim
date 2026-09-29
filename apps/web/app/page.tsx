@@ -1,14 +1,15 @@
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { Hero, type HeroContent } from "@/components/home/Hero";
-import { About, type AboutContent } from "@/components/home/About";
+import { Hero } from "@/components/home/Hero";
+import { About } from "@/components/home/About";
 import { Mitra } from "@/components/home/Mitra";
-import { Pilar, type PilarContent } from "@/components/home/Pilar";
-import { Story, type StoryContent } from "@/components/home/Story";
+import { Pilar } from "@/components/home/Pilar";
+import { Story } from "@/components/home/Story";
 import { Portal } from "@/components/home/Portal";
 import { News } from "@/components/home/News";
-import { homeContent } from "@/content/home";
 import { newsPreviewEnabled } from "@/content/news.preview";
+import { buildHomeSections } from "@/lib/home-content";
+import { getHomeContent } from "@/lib/services/home-content.service";
 import { FAQ } from "@/components/home/FAQ";
 import { Container } from "@/components/Container";
 import { StateMessage } from "@/components/StateMessage";
@@ -56,11 +57,13 @@ function SectionFallback({
 export default async function Home() {
   /* --- ASYNCHRONOUS DATA ORCHESTRATION --- */
   // Setiap sumber data gagal secara terpisah; null berarti "gagal dimuat".
-  const [homeData, latestNews, featuredNews] = await Promise.all([
-    getHomeData().catch(() => null),
-    getRecentNews(3).catch(() => null),
-    getFeaturedNews(3).catch(() => null),
-  ]);
+  const [homeData, latestNews, featuredNews, homeContentData] =
+    await Promise.all([
+      getHomeData().catch(() => null),
+      getRecentNews(3).catch(() => null),
+      getFeaturedNews(3).catch(() => null),
+      getHomeContent(),
+    ]);
   /*
    * Beranda menampilkan pilihan admin global (`featuredOrder`). Bila admin
    * belum memilih, jatuh ke berita terbaru supaya beranda tidak kosong.
@@ -68,17 +71,10 @@ export default async function Home() {
   const homeNews = featuredNews?.length ? featuredNews : latestNews;
 
   /*
-   * Empat bagian statis menerima isinya lewat props dari kamus konten yang
-   * sekarang. Nanti saat konten beranda pindah ke database, hanya perakitan
-   * di sini yang berubah; komponen bagiannya tetap.
+   * Konten empat bagian dirakit dari database (kontrak v1) dan jatuh ke kamus
+   * konten statis bila API tidak tersedia supaya Beranda tidak pernah kosong.
    */
-  const heroContent: HeroContent = {
-    ...homeContent.hero,
-    stats: homeContent.stats,
-  };
-  const aboutContent: AboutContent = homeContent.about;
-  const pilarContent: PilarContent = homeContent.pilar;
-  const storyContent: StoryContent = homeContent.story;
+  const sections = buildHomeSections(homeContentData);
 
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">
@@ -88,10 +84,10 @@ export default async function Home() {
       {/* --- PRIMARY NARRATIVE SECTIONS --- */}
       <main className="flex-1">
         {/* Entrance & Identity */}
-        <Hero content={heroContent} />
+        <Hero content={sections.hero} />
 
         {/* Organizational Context */}
-        <About content={aboutContent} />
+        <About content={sections.about} />
 
         {/* Institutional Partners */}
         <Mitra
@@ -99,10 +95,10 @@ export default async function Home() {
         />
 
         {/* Three Strategic Roles */}
-        <Pilar content={pilarContent} />
+        <Pilar content={sections.pilar} />
 
         {/* Organizational History */}
-        <Story content={storyContent} />
+        <Story content={sections.story} />
 
         {/* Strategic Program Access */}
         <Portal />
