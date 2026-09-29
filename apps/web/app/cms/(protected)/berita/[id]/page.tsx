@@ -5,6 +5,7 @@ import { getCmsPageSession } from "@/lib/cms-guard";
 import type { CmsNewsItem } from "@/lib/services/cms-news.service";
 import { NewsActions } from "../NewsActions";
 import { NewsForm } from "../NewsForm";
+import { NewsGallery } from "../NewsGallery";
 
 export const metadata = { title: "Kelola Berita | CMS GenBI Jatim" };
 
@@ -31,6 +32,7 @@ export default async function CmsNewsDetailPage({
         <NewsActions news={item} />
       </div>
       <NewsForm news={item} />
+      <NewsGallery news={item} />
     </section>
   );
 }

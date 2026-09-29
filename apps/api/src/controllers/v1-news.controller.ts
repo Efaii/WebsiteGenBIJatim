@@ -81,6 +81,61 @@ const stageNewsCoverBuffer = async (file: Express.Multer.File) => {
   };
 };
 
+/*
+ * Galeri berita (ADR 0010): sampai 4 gambar pendukung ber-role GALLERY per
+ * berita. Draft menstaging (promosi saat terbit); berita terbit menulis
+ * langsung ke publik.
+ */
+const NEWS_GALLERY_LIMIT = 4;
+
+const savePublicNewsAssetBuffer = async (file: Express.Multer.File) => {
+  assertImageSignature(file);
+  const webpBuffer = await sharp(file.buffer)
+    .rotate()
+    .resize({
+      width: 1920,
+      height: 1920,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 80 })
+    .toBuffer();
+  await ensureStorageRoots();
+  await fs.mkdir(publicNewsDir(), { recursive: true });
+  const filename = `${crypto.randomUUID()}.webp`;
+  await fs.writeFile(path.join(publicNewsDir(), filename), webpBuffer);
+  const originalFilename = `${path.basename(file.originalname, path.extname(file.originalname))}.webp`;
+  return {
+    storageKey: `/uploads/news/${filename}`,
+    originalFilename,
+    mimeType: "image/webp",
+    byteSize: webpBuffer.length,
+  };
+};
+
+const removeNewsAssetFile = async (storageKey: string) => {
+  try {
+    if (storageKey.startsWith("/uploads/news/")) {
+      await fs.rm(
+        publicStoragePath(path.join("news", path.basename(storageKey))),
+        { force: true },
+      );
+    } else if (storageKey.startsWith("staged/news/")) {
+      await fs.rm(privateStagedNewsPath(path.basename(storageKey)), {
+        force: true,
+      });
+    }
+  } catch {
+    // Berkas mungkin sudah tidak ada; tidak menghalangi operasi database.
+  }
+};
+
+const activeGalleryAssets = (newsId: string) =>
+  prisma.newsCoverAsset.findMany({
+    where: { newsId, role: "GALLERY", status: { in: ["STAGED", "PUBLIC"] } },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
+
 const categories = Object.values(NewsCategory);
 type PublicNewsCoverAsset = {
   status: string;
@@ -275,6 +330,7 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
       data: {
         ...cover,
         newsId: created.id,
+        role: "COVER",
         visibility: "STAGED",
         status: "STAGED",
       },
@@ -332,6 +388,7 @@ export const updateDraftNews = async (req: CmsRequest, res: Response) => {
       data: {
         ...staged,
         newsId: news.id,
+        role: "COVER",
         visibility: "STAGED",
         status: "STAGED",
       },
@@ -400,7 +457,13 @@ const stageRevisionCover = async (
 ) => {
   const staged = await stageNewsCoverBuffer(file);
   return prisma.newsCoverAsset.create({
-    data: { revisionId, ...staged, visibility: "STAGED", status: "STAGED" },
+    data: {
+      revisionId,
+      ...staged,
+      role: "COVER",
+      visibility: "STAGED",
+      status: "STAGED",
+    },
   });
 };
 
@@ -632,10 +695,11 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
       status: ["Unsupported status"],
     });
   assertNewsTransition(news.publicationStatus, to, req.body.rejectionReason);
-  const activeCover = await prisma.newsCoverAsset.findFirst({
+  const stagedAssets = await prisma.newsCoverAsset.findMany({
     where: { newsId: news.id, status: "STAGED" },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
+  const activeCover = stagedAssets.find((asset) => asset.role === "COVER");
   if (
     to === "PUBLISHED" &&
     (!news.excerpt || !news.content || !news.category || !activeCover)
@@ -645,25 +709,39 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
       "News is incomplete for publishing.",
       400,
     );
-  if (to === "PUBLISHED" && activeCover) {
+  if (to === "PUBLISHED") {
     await ensureStorageRoots();
     await fs.mkdir(publicNewsDir(), { recursive: true });
-    const publicFilename = `${crypto.randomUUID()}${path.extname(activeCover.originalFilename).toLowerCase()}`;
-    const publicPath = path.join(publicNewsDir(), publicFilename);
-    await fs.copyFile(
-      privateStagedNewsPath(path.basename(activeCover.storageKey)),
-      publicPath,
-    );
+    const promoted: Array<{
+      id: string;
+      publicPath: string;
+      publicKey: string;
+    }> = [];
     try {
-      const updated = await prisma.$transaction(async (tx) => {
-        await tx.newsCoverAsset.update({
-          where: { id: activeCover.id },
-          data: {
-            storageKey: `/uploads/news/${publicFilename}`,
-            visibility: "PUBLIC",
-            status: "PUBLIC",
-          },
+      for (const asset of stagedAssets) {
+        const publicFilename = `${crypto.randomUUID()}${path.extname(asset.originalFilename).toLowerCase()}`;
+        const publicPath = path.join(publicNewsDir(), publicFilename);
+        await fs.copyFile(
+          privateStagedNewsPath(path.basename(asset.storageKey)),
+          publicPath,
+        );
+        promoted.push({
+          id: asset.id,
+          publicPath,
+          publicKey: `/uploads/news/${publicFilename}`,
         });
+      }
+      const updated = await prisma.$transaction(async (tx) => {
+        for (const item of promoted) {
+          await tx.newsCoverAsset.update({
+            where: { id: item.id },
+            data: {
+              storageKey: item.publicKey,
+              visibility: "PUBLIC",
+              status: "PUBLIC",
+            },
+          });
+        }
         const published = await tx.news.update({
           where: { id: news.id },
           data: { publicationStatus: to, publishedAt: new Date() },
@@ -682,7 +760,9 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
       });
       return sendSuccess(res, updated);
     } catch (error) {
-      await fs.rm(publicPath, { force: true });
+      await Promise.all(
+        promoted.map((item) => fs.rm(item.publicPath, { force: true })),
+      );
       throw error;
     }
   }
@@ -711,4 +791,91 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
     },
   });
   return sendSuccess(res, updated);
+};
+
+export const addNewsGalleryAsset = async (req: CmsRequest, res: Response) => {
+  const news = await prisma.news.findUnique({ where: { id: req.params.id } });
+  if (!news || news.deletedAt)
+    throw new ApiError("NOT_FOUND", "News not found.", 404);
+  if (!req.file)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Berkas tidak ditemukan pada permintaan.",
+      400,
+    );
+  const gallery = await activeGalleryAssets(news.id);
+  if (gallery.length >= NEWS_GALLERY_LIMIT)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `Galeri maksimal ${NEWS_GALLERY_LIMIT} gambar pendukung.`,
+      400,
+    );
+  const nextOrder = gallery.length
+    ? Math.max(...gallery.map((asset) => asset.sortOrder)) + 1
+    : 1;
+  const isPublished = news.publicationStatus === "PUBLISHED";
+  const stored = isPublished
+    ? await savePublicNewsAssetBuffer(req.file)
+    : await stageNewsCoverBuffer(req.file);
+  const asset = await prisma.newsCoverAsset.create({
+    data: {
+      ...stored,
+      newsId: news.id,
+      role: "GALLERY",
+      sortOrder: nextOrder,
+      visibility: isPublished ? "PUBLIC" : "STAGED",
+      status: isPublished ? "PUBLIC" : "STAGED",
+    },
+  });
+  await audit(req.cmsSession!.cmsAccountId, "GALLERY_ADD", news.id);
+  return sendSuccess(res, asset);
+};
+
+export const orderNewsGalleryAssets = async (
+  req: CmsRequest,
+  res: Response,
+) => {
+  const news = await prisma.news.findUnique({ where: { id: req.params.id } });
+  if (!news) throw new ApiError("NOT_FOUND", "News not found.", 404);
+  const ids = req.body?.assetIds;
+  if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string"))
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "assetIds harus berupa daftar id.",
+      400,
+    );
+  const gallery = await activeGalleryAssets(news.id);
+  const galleryIds = new Set(gallery.map((asset) => asset.id));
+  if (ids.length !== gallery.length || ids.some((id) => !galleryIds.has(id)))
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "assetIds harus memuat tepat semua gambar galeri berita ini.",
+      400,
+    );
+  await prisma.$transaction(
+    ids.map((id, index) =>
+      prisma.newsCoverAsset.update({
+        where: { id },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
+  await audit(req.cmsSession!.cmsAccountId, "GALLERY_ORDER", news.id);
+  return sendSuccess(res, await activeGalleryAssets(news.id));
+};
+
+export const deleteNewsGalleryAsset = async (
+  req: CmsRequest,
+  res: Response,
+) => {
+  const news = await prisma.news.findUnique({ where: { id: req.params.id } });
+  if (!news) throw new ApiError("NOT_FOUND", "News not found.", 404);
+  const asset = await prisma.newsCoverAsset.findFirst({
+    where: { id: req.params.assetId, newsId: news.id, role: "GALLERY" },
+  });
+  if (!asset) throw new ApiError("NOT_FOUND", "Gallery asset not found.", 404);
+  await removeNewsAssetFile(asset.storageKey);
+  await prisma.newsCoverAsset.delete({ where: { id: asset.id } });
+  await audit(req.cmsSession!.cmsAccountId, "GALLERY_DELETE", news.id);
+  return sendSuccess(res, { id: asset.id });
 };

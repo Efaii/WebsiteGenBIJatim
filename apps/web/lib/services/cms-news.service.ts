@@ -91,3 +91,47 @@ export const transitionNews = async (
     { withCredentials: true },
   );
 };
+
+/** Tambah satu gambar pendukung galeri (WebP otomatis di server). */
+export const addNewsGalleryAsset = async (
+  newsId: string,
+  file: File,
+): Promise<CmsNewsAsset> => {
+  const form = new FormData();
+  form.append("file", file);
+  const response = await api.post<{ data?: CmsNewsAsset }>(
+    `/v1/news/${newsId}/gallery`,
+    form,
+    {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
+  return pickData(
+    response.data.data,
+    "Respons unggah galeri tidak berisi data.",
+  );
+};
+
+/** Tetapkan ulang urutan gambar galeri (index array = urutan tampil). */
+export const orderNewsGalleryAssets = async (
+  newsId: string,
+  assetIds: string[],
+): Promise<CmsNewsAsset[]> => {
+  const response = await api.post<{ data?: CmsNewsAsset[] }>(
+    `/v1/news/${newsId}/gallery/order`,
+    { assetIds },
+    { withCredentials: true },
+  );
+  return Array.isArray(response.data.data) ? response.data.data : [];
+};
+
+/** Hapus satu gambar pendukung (berkasnya ikut dihapus dari storage). */
+export const deleteNewsGalleryAsset = async (
+  newsId: string,
+  assetId: string,
+): Promise<void> => {
+  await api.delete(`/v1/news/${newsId}/gallery/${assetId}`, {
+    withCredentials: true,
+  });
+};

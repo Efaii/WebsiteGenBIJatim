@@ -6,12 +6,15 @@ import {
 } from "../middlewares/cms-session.middleware";
 import { CmsRole } from "@prisma/client";
 import {
+  addNewsGalleryAsset,
   cancelNewsRevision,
   createDraftNews,
   createNewsRevision,
+  deleteNewsGalleryAsset,
   getPublishedNews,
   listCmsNews,
   listPublishedNews,
+  orderNewsGalleryAssets,
   previewNews,
   transitionNews,
   transitionNewsRevision,
@@ -75,6 +78,25 @@ router.post(
   requireCmsSession,
   requireCmsRole(CmsRole.ADMIN_GLOBAL),
   asyncHandler(updateNewsSlug),
+);
+router.post(
+  "/:id/gallery",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  uploadCanonicalNewsCover.single("file"),
+  asyncHandler(addNewsGalleryAsset),
+);
+router.post(
+  "/:id/gallery/order",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  asyncHandler(orderNewsGalleryAssets),
+);
+router.delete(
+  "/:id/gallery/:assetId",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  asyncHandler(deleteNewsGalleryAsset),
 );
 router.get(
   "/:id/preview",
