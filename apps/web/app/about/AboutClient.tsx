@@ -27,15 +27,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const commissariats = [
-  { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.svg" },
-  { id: "its", name: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.svg" },
-  { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.svg" },
-  { id: "pens", name: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.svg" },
-  { id: "utm", name: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.svg" },
-  { id: "uin-madura", name: "UIN Madura", logo: "/assets/logos/uinMadura.svg" },
-  { id: "uinsa", name: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.svg" },
-  { id: "unugiri", name: "Universitas Nahdlatul Ulama Sunan Giri", logo: "/assets/logos/unugiri.svg" },
-  { id: "upnvjt", name: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.svg" },
+  { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.webp" },
+  { id: "its", name: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.webp" },
+  { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.webp" },
+  { id: "pens", name: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.webp" },
+  { id: "utm", name: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.webp" },
+  { id: "uin-madura", name: "UIN Madura", logo: "/assets/logos/uinMadura.webp" },
+  { id: "uinsa", name: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.webp" },
+  { id: "unugiri", name: "Universitas Nahdlatul Ulama Sunan Giri", logo: "/assets/logos/unugiri.webp" },
+  { id: "upnvjt", name: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.webp" },
 ];
 
 const MemberListItem = ({

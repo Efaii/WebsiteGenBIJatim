@@ -48,7 +48,13 @@ export function Mitra({ commissariats }: { commissariats: CommissariatItem[] }) 
           alt={comm.name}
           width={180}
           height={108}
-          unoptimized
+          /*
+           * `sizes` dipakai supaya Next memilih varian yang tepat: logo ini
+           * hanya tampil 56 px di mobile dan 96 px di desktop. Tanpa `sizes`,
+           * Next menganggapnya selebar viewport dan mengirim berkas yang jauh
+           * lebih besar dari kebutuhan.
+           */
+          sizes="(max-width: 768px) 56px, 96px"
           className="h-14 w-auto object-contain md:h-24"
         />
       </div>
