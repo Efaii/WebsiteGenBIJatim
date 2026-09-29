@@ -8,6 +8,12 @@ interface SectionHeaderProps {
   title: React.ReactNode;
   description?: string;
   align?: "left" | "center" | "right";
+  /**
+   * Varian tema. `"dark"` adalah bawaan supaya halaman yang sudah memakainya
+   * (mis. /profil) tidak berubah. `"light"` dipakai di atas latar terang:
+   * eyebrow memakai aksen biru, judul near-black, deskripsi abu tua.
+   */
+  tone?: "light" | "dark";
   className?: string;
   children?: React.ReactNode; // For custom content injected into description area
 }
@@ -17,6 +23,7 @@ export function SectionHeader({
   title,
   description,
   align = "center",
+  tone = "dark",
   className,
   children,
 }: SectionHeaderProps) {
@@ -25,6 +32,19 @@ export function SectionHeader({
     center: "text-center items-center mx-auto",
     right: "text-right items-end ml-auto",
   };
+
+  const nada = {
+    dark: {
+      eyebrow: "text-cyan-400",
+      title: "text-white",
+      description: "text-blue-200/80",
+    },
+    light: {
+      eyebrow: "text-genbi-blue",
+      title: "text-slate-900",
+      description: "text-slate-600",
+    },
+  }[tone];
 
   return (
     <div
@@ -36,12 +56,12 @@ export function SectionHeader({
     >
       <FadeIn once={false}>
         {eyebrow && (
-          <span className="text-cyan-400 font-bold tracking-widest text-sm uppercase mb-3 block">
+          <span className={cn("font-bold tracking-widest text-sm uppercase mb-3 block", nada.eyebrow)}>
             {/* Global Rule: mb-3 for Eyebrow-to-Heading gap */}
             {eyebrow}
           </span>
         )}
-        <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight">
+        <h2 className={cn("text-3xl md:text-4xl font-bold tracking-tight leading-tight", nada.title)}>
           {/* Global Rule: text-3xl md:text-4xl for all Section Headings */}
           {title}
         </h2>
@@ -54,7 +74,8 @@ export function SectionHeader({
             {description && (
               <p
                 className={cn(
-                  "text-lg text-blue-200/80 leading-relaxed",
+                  "text-lg leading-relaxed",
+                  nada.description,
                   align === "center" && "mx-auto max-w-2xl"
                 )}
               >
