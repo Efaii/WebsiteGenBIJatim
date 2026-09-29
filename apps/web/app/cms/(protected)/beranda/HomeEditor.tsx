@@ -94,6 +94,15 @@ export function HomeEditor({
     (draft.about?.paragraphLead.trim().length ?? 0) > 0 &&
     (draft.about?.paragraph.trim().length ?? 0) > 0 &&
     (draft.about?.emphasis.trim().length ?? 0) > 0;
+  const pilarValid =
+    draft.pilar.items.length === 3 &&
+    draft.pilar.items.every(
+      (item) =>
+        item.title.trim().length > 0 &&
+        item.description.trim().length > 0 &&
+        item.points.length === 3 &&
+        item.points.every((point) => point.trim().length > 0),
+    );
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(saved),
     [draft, saved],
@@ -168,6 +177,51 @@ export function HomeEditor({
     setMessage(null);
   };
 
+  const updatePilarCard = (
+    position: number,
+    patch: Partial<{ title: string; description: string; points: string[] }>,
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      pilar: {
+        items: prev.pilar.items.map((item) =>
+          item.position === position ? { ...item, ...patch } : item,
+        ),
+      },
+    }));
+    setStatus("idle");
+    setMessage(null);
+  };
+
+  const updatePilarPoint = (
+    position: number,
+    pointIndex: number,
+    value: string,
+  ) => {
+    const card = draft.pilar.items.find((item) => item.position === position);
+    if (!card) return;
+    updatePilarCard(position, {
+      points: card.points.map((point, index) =>
+        index === pointIndex ? value : point,
+      ),
+    });
+  };
+
+  const updatePilarImageAlt = (position: number, alt: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      pilar: {
+        items: prev.pilar.items.map((item) =>
+          item.position === position && item.image
+            ? { ...item, image: { ...item.image, alt } }
+            : item,
+        ),
+      },
+    }));
+    setStatus("idle");
+    setMessage(null);
+  };
+
   const applyMediaResponse = (updated: HomeContentResponse) => {
     // Unggahan hanya mengganti slot media; teks yang sedang diedit di draft
     // tidak boleh tertimpa. `videoEnabled` dari server dipaksa ke draft hanya
@@ -188,6 +242,16 @@ export function HomeEditor({
       about: prev.about
         ? { ...prev.about, images: updated.about?.images ?? prev.about.images }
         : prev.about,
+      pilar: prev.pilar
+        ? {
+            items: prev.pilar.items.map((item) => {
+              const match = updated.pilar.items.find(
+                (candidate) => candidate.position === item.position,
+              );
+              return match ? { ...item, image: match.image } : item;
+            }),
+          }
+        : prev.pilar,
     }));
     setSaved((prev) => ({
       ...prev,
@@ -202,6 +266,16 @@ export function HomeEditor({
       about: prev.about
         ? { ...prev.about, images: updated.about?.images ?? prev.about.images }
         : prev.about,
+      pilar: prev.pilar
+        ? {
+            items: prev.pilar.items.map((item) => {
+              const match = updated.pilar.items.find(
+                (candidate) => candidate.position === item.position,
+              );
+              return match ? { ...item, image: match.image } : item;
+            }),
+          }
+        : prev.pilar,
     }));
   };
 
@@ -264,6 +338,17 @@ export function HomeEditor({
           mediaAltUpdates[`about.image.${index + 1}`] = { alt: image.alt };
         }
       });
+      draft.pilar.items.forEach((item) => {
+        const image = item.image;
+        if (!image) return;
+        const savedAlt =
+          saved.pilar.items.find(
+            (candidate) => candidate.position === item.position,
+          )?.image?.alt ?? "";
+        if (image.alt !== savedAlt) {
+          mediaAltUpdates[`pilar.image.${item.position}`] = { alt: image.alt };
+        }
+      });
       const updated = await updateHomeContent({
         hero: {
           heading: hero.heading,
@@ -274,6 +359,16 @@ export function HomeEditor({
           paragraphLead: draft.about?.paragraphLead ?? "",
           paragraph: draft.about?.paragraph ?? "",
           emphasis: draft.about?.emphasis ?? "",
+        },
+        pilar: {
+          items: draft.pilar.items.map(
+            ({ position, title, description, points }) => ({
+              position,
+              title,
+              description,
+              points,
+            }),
+          ),
         },
         story: {
           milestones: draft.story.milestones.map(
@@ -651,6 +746,152 @@ export function HomeEditor({
         </div>
 
         <div className="mt-6 border-t border-slate-200 pt-5">
+          <h2 className="text-sm font-semibold text-slate-700">Pilar GenBI</h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            Judul, deskripsi, tiga poin, dan gambar tiap kartu. Jumlah kartu,
+            judul bagian, dan deskripsi pengantar tetap statis.
+          </p>
+          <div className="mt-4 space-y-4">
+            {draft.pilar.items.map((item) => {
+              const slot = `pilar.image.${item.position}`;
+              const image = item.image;
+              return (
+                <div
+                  key={item.position}
+                  className="rounded-xl border border-slate-200 p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Kartu {item.position}
+                  </p>
+                  <label
+                    className="mt-2 block text-sm font-medium text-slate-700"
+                    htmlFor={`pilar-title-${item.position}`}
+                  >
+                    Judul kartu
+                  </label>
+                  <input
+                    id={`pilar-title-${item.position}`}
+                    value={item.title}
+                    maxLength={120}
+                    onChange={(event) =>
+                      updatePilarCard(item.position, {
+                        title: event.target.value,
+                      })
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                  />
+                  <label
+                    className="mt-2 block text-sm font-medium text-slate-700"
+                    htmlFor={`pilar-description-${item.position}`}
+                  >
+                    Deskripsi
+                  </label>
+                  <textarea
+                    id={`pilar-description-${item.position}`}
+                    value={item.description}
+                    maxLength={600}
+                    rows={3}
+                    onChange={(event) =>
+                      updatePilarCard(item.position, {
+                        description: event.target.value,
+                      })
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                  />
+                  <p className="mt-2 text-xs font-medium text-slate-600">
+                    Poin (tiga)
+                  </p>
+                  {[0, 1, 2].map((pointIndex) => (
+                    <label
+                      key={pointIndex}
+                      className="mt-1 flex items-center gap-2 text-sm text-slate-700"
+                    >
+                      <span className="w-4 shrink-0 text-right text-xs text-slate-400">
+                        {pointIndex + 1}.
+                      </span>
+                      <input
+                        id={`pilar-point-${item.position}-${pointIndex + 1}`}
+                        value={item.points[pointIndex] ?? ""}
+                        maxLength={200}
+                        onChange={(event) =>
+                          updatePilarPoint(
+                            item.position,
+                            pointIndex,
+                            event.target.value,
+                          )
+                        }
+                        className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-genbi-blue"
+                      />
+                    </label>
+                  ))}
+                  <div className="mt-3 flex items-start gap-3">
+                    {image ? (
+                      <Image
+                        src={
+                          sections.pilar.items[item.position - 1]?.image ??
+                          image.src
+                        }
+                        alt={image.alt}
+                        width={96}
+                        height={64}
+                        className="h-16 w-24 rounded-md border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-24 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
+                        bawaan
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <label
+                        className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                      >
+                        {mediaBusy === slot ? "Mengunggah..." : "Ganti gambar"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          disabled={mediaBusy !== null}
+                          onChange={(event) => {
+                            void onUploadMedia(slot, event.target.files);
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => void onClearMedia(slot)}
+                        disabled={mediaBusy !== null}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+                  {image && (
+                    <>
+                      <label
+                        className="mt-2 block text-xs font-medium text-slate-600"
+                        htmlFor={`pilar-image-alt-${item.position}`}
+                      >
+                        Alt gambar
+                      </label>
+                      <input
+                        id={`pilar-image-alt-${item.position}`}
+                        value={image.alt}
+                        onChange={(event) =>
+                          updatePilarImageAlt(item.position, event.target.value)
+                        }
+                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                      />
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-slate-200 pt-5">
           <h2 className="text-sm font-semibold text-slate-700">
             Sejarah Perjalanan
           </h2>
@@ -721,6 +962,7 @@ export function HomeEditor({
             disabled={
               !heroValid ||
               !aboutValid ||
+              !pilarValid ||
               !storyValid ||
               !dirty ||
               status === "saving"

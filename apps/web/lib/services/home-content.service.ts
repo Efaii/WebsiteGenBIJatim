@@ -72,6 +72,14 @@ export type HomeContentUpdate = {
     paragraph: string;
     emphasis: string;
   };
+  pilar?: {
+    items: {
+      position: number;
+      title: string;
+      description: string;
+      points: string[];
+    }[];
+  };
   /** Perubahan teks media per slot (mis. alt); unggahan berkas lewat endpoint terpisah. */
   media?: Record<string, { src?: string; alt?: string }>;
   story?: {
