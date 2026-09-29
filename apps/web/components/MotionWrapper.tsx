@@ -48,7 +48,7 @@ export const FadeIn = ({
   const reduce = useReduced();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 20, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
@@ -71,7 +71,7 @@ export const SlideUp = ({
   const reduce = useReduced();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       exit={reduce ? undefined : { opacity: 0, y: 40, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
@@ -93,7 +93,7 @@ export const SlideInLeft = ({
   const reduce = useReduced();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, x: -40 }}
+      initial={{ opacity: 0, x: -40 }}
       whileInView={{ opacity: 1, x: 0 }}
       exit={reduce ? undefined : { opacity: 0, x: -40, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
@@ -115,7 +115,7 @@ export const ScaleIn = ({
   const reduce = useReduced();
   return (
     <motion.div
-      initial={reduce ? false : { opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       whileInView={{ opacity: 1, scale: 1 }}
       exit={reduce ? undefined : { opacity: 0, scale: 0.9, transition: { duration: 0.3 } }}
       viewport={{ once, amount }}
@@ -138,7 +138,7 @@ export const StaggerContainer = ({
   const reduce = useReduced();
   return (
     <motion.div
-      initial={reduce ? false : "hidden"}
+      initial="hidden"
       /*
        * Selalu "show". Saat `reduce`, yang di-nol-kan adalah durasi dan jeda
        * antar-anak, bukan nilai akhirnya — kalau labelnya dikosongkan, container
