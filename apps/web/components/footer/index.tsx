@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { FadeIn } from "../MotionWrapper";
 import { footerConfig } from "@/config/footer";
 import { FooterIdentity } from "./footerIdentity";
 import { FooterLinks } from "./footerLinks";
@@ -25,7 +24,7 @@ export function Footer() {
 
   return (
     <footer className="w-full text-slate-900 pt-16 pb-8 bg-white border-t border-slate-100 relative overflow-hidden">
-      <FadeIn className="w-full relative z-10">
+      <div className="w-full relative z-10">
         <div className="container px-6 lg:px-8 xl:px-12 mx-auto relative z-10 max-w-7xl">
           <div className="w-full lg:px-6 xl:px-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-8 lg:gap-10 mb-12">
@@ -51,7 +50,7 @@ export function Footer() {
             <FooterBottom />
           </div>
         </div>
-      </FadeIn>
+      </div>
     </footer>
   );
 }

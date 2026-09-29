@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { FadeIn } from "@/components/MotionWrapper";
 import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 import { CommissariatItem } from "@/types/home.types";
@@ -13,8 +10,8 @@ import { CommissariatItem } from "@/types/home.types";
  * judul sendiri.
  *
  * Animasi marquee TIDAK diubah: list logo tetap diduplikasi lalu digeser
- * -50% dengan `animate-marquee-loop`, dan tetap berhenti saat hover. Yang
- * berubah hanya ukuran logo dan wrapper-nya.
+ * -50% dengan `animate-marquee-loop`. Yang berubah hanya ukuran logo dan
+ * wrapper-nya. Card-nya sendiri tidak lagi beranimasi masuk.
  *
  * Salinan kedua daftar ditandai aria-hidden supaya pembaca layar tidak
  * membacakan sembilan nama kampus dua kali.
@@ -70,57 +67,54 @@ export function Mitra({ commissariats }: { commissariats: CommissariatItem[] }) 
 
           Marquee tidak disentuh: list tetap diduplikasi lalu digeser -50%
           dengan `animate-marquee-loop`, ukuran logo dan lebar slot tetap.
+
+          Padding horizontal card sengaja NOL supaya area marquee memakai
+          seluruh lebar card dan logo bisa bergerak sampai mentok ke tepinya.
+          Padding horizontal dipindahkan ke blok judul saja.
+
+          Tidak ada mask, gradient fade, atau pembatas di dalam card:
+          satu-satunya yang memotong lintasan logo adalah `overflow-hidden`
+          milik card ini, jadi card tetap menjadi batas terluar animasi.
         */}
-        <FadeIn>
-          {/*
-            Padding horizontal card sengaja NOL supaya area marquee memakai
-            seluruh lebar card dan logo bisa bergerak sampai mentok ke tepinya.
-            Padding horizontal dipindahkan ke blok judul saja.
-
-            Tidak ada mask, gradient fade, atau pembatas di dalam card:
-            satu-satunya yang memotong lintasan logo adalah `overflow-hidden`
-            milik card ini, jadi card tetap menjadi batas terluar animasi.
-          */}
-          <div className="overflow-hidden rounded-card border border-genbi-line bg-genbi-soft py-10 md:py-12">
-            {/* --- JUDUL & SUBJUDUL (di dalam card) --- */}
-            <div className="mx-auto max-w-2xl px-4 text-center md:px-8">
-              {/*
-                Sumber teks tetap Title Case di content/home.ts, huruf besar
-                dihasilkan CSS supaya pembaca layar tidak mengeja per huruf.
-                Ukurannya sengaja lebih kecil dari judul section lain karena
-                sekarang berada di dalam card.
-              */}
-              <h2 className="font-heading text-xl font-bold uppercase tracking-normal text-slate-900 md:text-2xl lg:text-[1.75rem]">
-                {heading}
-              </h2>
-              <p className="mt-3 text-sm text-slate-600 md:mt-4 md:text-base">
-                {subheading}
-              </p>
-            </div>
-
-            {/* --- DERETAN LOGO --- */}
+        <div className="overflow-hidden rounded-card border border-genbi-line bg-genbi-soft py-10 md:py-12">
+          {/* --- JUDUL & SUBJUDUL (di dalam card) --- */}
+          <div className="mx-auto max-w-2xl px-4 text-center md:px-8">
             {/*
-              Marquee TIDAK dijeda saat kursor berada di atasnya; animasi terus
-              berjalan sesuai permintaan pemilik produk. List tetap diduplikasi
-              lalu digeser -50% supaya loop-nya mulus.
+              Sumber teks tetap Title Case di content/home.ts, huruf besar
+              dihasilkan CSS supaya pembaca layar tidak mengeja per huruf.
+              Ukurannya sengaja lebih kecil dari judul section lain karena
+              sekarang berada di dalam card.
             */}
-            {/* Area marquee selebar card; card sendiri yang memotong lintasan. */}
-            <div className="mt-6 md:mt-8">
-              {/*
-                `optimize-gpu` (utilitas yang sudah ada di globals.css) menaikkan
-                lintasan ini ke layer kompositornya sendiri. Tanpa itu browser
-                menggambar ulang belasan logo SVG berat di setiap frame, dan di
-                situlah sensasi lag muncul.
-              */}
-              <div className="optimize-gpu flex w-max animate-marquee-loop">
-                <div className="flex shrink-0">{logoRow(false)}</div>
-                <div className="flex shrink-0" aria-hidden="true">
-                  {logoRow(true)}
-                </div>
+            <h2 className="font-heading text-xl font-bold uppercase tracking-normal text-slate-900 md:text-2xl lg:text-[1.75rem]">
+              {heading}
+            </h2>
+            <p className="mt-3 text-sm text-slate-600 md:mt-4 md:text-base">
+              {subheading}
+            </p>
+          </div>
+
+          {/* --- DERETAN LOGO --- */}
+          {/*
+            Marquee TIDAK dijeda saat kursor berada di atasnya; animasi terus
+            berjalan sesuai permintaan pemilik produk. List tetap diduplikasi
+            lalu digeser -50% supaya loop-nya mulus.
+          */}
+          {/* Area marquee selebar card; card sendiri yang memotong lintasan. */}
+          <div className="mt-6 md:mt-8">
+            {/*
+              `optimize-gpu` (utilitas yang sudah ada di globals.css) menaikkan
+              lintasan ini ke layer kompositornya sendiri. Tanpa itu browser
+              menggambar ulang belasan logo SVG berat di setiap frame, dan di
+              situlah sensasi lag muncul.
+            */}
+            <div className="optimize-gpu flex w-max animate-marquee-loop">
+              <div className="flex shrink-0">{logoRow(false)}</div>
+              <div className="flex shrink-0" aria-hidden="true">
+                {logoRow(true)}
               </div>
             </div>
           </div>
-        </FadeIn>
+        </div>
       </Container>
     </section>
   );

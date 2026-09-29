@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/MotionWrapper";
 import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 
@@ -28,6 +25,8 @@ import { homeContent } from "@/content/home";
  *   sejajar; tinggi kartu mengikuti tinggi foto. Hanya sudut ATAS foto yang
  *   dibulatkan (`rounded-t-media` 24px); dua sudut bawahnya siku agar bertemu
  *   border bawah kartu tanpa lekukan.
+ * - Tidak ada lagi animasi masuk: judul dan ketiga kartu langsung ter-render.
+ *   Grid-nya tetap grid yang sama, jadi tata letak tidak bergeser.
  *
  * Tiga kartu sejajar adalah permintaan eksplisit brief, jadi pola "tiga kartu
  * identik" di sini disengaja dan dicatat sebagai pengecualian.
@@ -42,25 +41,19 @@ export function Pilar() {
         {/* Label "Kenali Peran GenBI" dihapus atas permintaan pemilik produk;
             judul naik mengisi posisinya dan ukurannya disamakan dengan judul
             section Mitra. */}
-        <FadeIn>
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-heading text-[2rem] font-bold tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]">
-              {heading}
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-slate-600 md:mt-5 md:text-[17px]">
-              {description}
-            </p>
-          </div>
-        </FadeIn>
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="font-heading text-[2rem] font-bold tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]">
+            {heading}
+          </h2>
+          <p className="mt-4 text-base leading-relaxed text-slate-600 md:mt-5 md:text-[17px]">
+            {description}
+          </p>
+        </div>
 
         {/* --- KARTU --- */}
-        <StaggerContainer
-          delay={0.1}
-          staggerDelay={0.12}
-          className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8"
-        >
+        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {items.map((item) => (
-            <StaggerItem key={item.title} className="h-full">
+            <div key={item.title} className="h-full">
               {/*
                 Hover hanya berlaku pada kartu yang disorot (kelas `hover:`
                 pada elemen ini), bukan pada ketiga kartu sekaligus.
@@ -120,9 +113,9 @@ export function Pilar() {
                   </div>
                 </div>
               </article>
-            </StaggerItem>
+            </div>
           ))}
-        </StaggerContainer>
+        </div>
       </Container>
     </section>
   );

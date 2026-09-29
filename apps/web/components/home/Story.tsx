@@ -9,7 +9,6 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { FadeIn } from "@/components/MotionWrapper";
 import { Container } from "@/components/Container";
 import { homeContent } from "@/content/home";
 import { cn } from "@/lib/utils";
@@ -187,14 +186,13 @@ export function Story() {
       />
 
       <Container className="relative z-10">
-        <FadeIn>
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
-              {heading}
-            </h2>
-            <p className="mt-4 text-base text-[#DCEAFF]/85 md:text-[17px]">{description}</p>
-          </div>
-        </FadeIn>
+        {/* Heading tidak lagi beranimasi; timeline di bawahnya tetap bergerak. */}
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="font-heading text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
+            {heading}
+          </h2>
+          <p className="mt-4 text-base text-[#DCEAFF]/85 md:text-[17px]">{description}</p>
+        </div>
 
         {/* Lebar dibatasi supaya blok teks tidak terpisah terlalu jauh dari garis. */}
         <ol ref={listRef} className="relative mx-auto mt-14 w-full max-w-5xl md:mt-16">

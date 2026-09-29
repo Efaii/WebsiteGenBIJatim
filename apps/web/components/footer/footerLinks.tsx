@@ -48,7 +48,7 @@ export function FooterLinks({
       </button>
       <div
         className={cn(
-          "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out md:grid-rows-[1fr] md:opacity-100",
+          "grid md:grid-rows-[1fr] md:opacity-100",
           isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
         )}
       >

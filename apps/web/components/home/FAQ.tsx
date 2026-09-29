@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FadeIn, StaggerContainer } from "../MotionWrapper";
 import {
   MessageCircleQuestion,
   Info,
@@ -71,23 +70,17 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
               {/* MOBILE VIEWPORT HEADER */}
               <div className="lg:hidden mb-6">
                 <div className="flex flex-col">
-                  <FadeIn delay={0.1}>
-                    <div className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100/50">
-                      <MessageCircleQuestion className="w-8 h-8" />
-                    </div>
-                  </FadeIn>
-                  <FadeIn delay={0.2}>
-                    <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-[1.15] mb-6">
-                      Punya Pertanyaan? <br />
-                      <span className="text-blue-600">Temukan Jawabannya</span>
-                    </h2>
-                  </FadeIn>
-                  <FadeIn delay={0.3}>
-                    <p className="text-lg text-slate-900 leading-relaxed max-w-lg">
-                      Kami telah merangkum beberapa pertanyaan yang paling
-                      sering diajukan seputar Beasiswa Bank Indonesia.
-                    </p>
-                  </FadeIn>
+                  <div className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100/50">
+                    <MessageCircleQuestion className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight leading-[1.15] mb-6">
+                    Punya Pertanyaan? <br />
+                    <span className="text-blue-600">Temukan Jawabannya</span>
+                  </h2>
+                  <p className="text-lg text-slate-900 leading-relaxed max-w-lg">
+                    Kami telah merangkum beberapa pertanyaan yang paling
+                    sering diajukan seputar Beasiswa Bank Indonesia.
+                  </p>
                 </div>
               </div>
 
@@ -104,35 +97,27 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
                       transition={{ duration: 0.3 }}
                       className="w-full flex flex-col"
                     >
-                      <FadeIn delay={0.1}>
-                        <div className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100/50">
-                          <MessageCircleQuestion className="w-8 h-8" />
+                      <div className="w-16 h-16 bg-white text-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100/50">
+                        <MessageCircleQuestion className="w-8 h-8" />
+                      </div>
+                      <h2 className="text-2xl lg:text-4xl text-slate-900 font-bold mb-4 font-heading tracking-tight leading-[1.15]">
+                        Punya Pertanyaan? <br />
+                        <span className="text-blue-600">Temukan Jawabannya</span>
+                      </h2>
+                      <p className="text-lg text-slate-900 mb-6 leading-relaxed max-w-lg">
+                        Kami telah merangkum beberapa pertanyaan yang paling
+                        sering diajukan seputar Beasiswa Bank Indonesia dan
+                        komunitas GenBI.
+                      </p>
+                      <div className="inline-flex items-center gap-4 p-4 pr-6 bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-900">
+                        <div className="w-10 h-10 bg-slate-100 rounded-full shadow-sm flex items-center justify-center shrink-0">
+                          <ArrowRight className="w-5 h-5 text-blue-600" />
                         </div>
-                      </FadeIn>
-                      <FadeIn delay={0.2}>
-                        <h2 className="text-2xl lg:text-4xl text-slate-900 font-bold mb-4 font-heading tracking-tight leading-[1.15]">
-                          Punya Pertanyaan? <br />
-                          <span className="text-blue-600">Temukan Jawabannya</span>
-                        </h2>
-                      </FadeIn>
-                      <FadeIn delay={0.3}>
-                        <p className="text-lg text-slate-900 mb-6 leading-relaxed max-w-lg">
-                          Kami telah merangkum beberapa pertanyaan yang paling
-                          sering diajukan seputar Beasiswa Bank Indonesia dan
-                          komunitas GenBI.
-                        </p>
-                      </FadeIn>
-                      <FadeIn delay={0.4}>
-                        <div className="inline-flex items-center gap-4 p-4 pr-6 bg-white rounded-2xl border border-slate-200 shadow-sm text-slate-900">
-                          <div className="w-10 h-10 bg-slate-100 rounded-full shadow-sm flex items-center justify-center shrink-0">
-                            <ArrowRight className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">Interaksi Tersedia</p>
-                            <p className="text-sm font-medium text-blue-700">Pilih pertanyaan di kanan untuk melihat detail</p>
-                          </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Interaksi Tersedia</p>
+                          <p className="text-sm font-medium text-blue-700">Pilih pertanyaan di kanan untuk melihat detail</p>
                         </div>
-                      </FadeIn>
+                      </div>
                     </motion.div>
                   ) : (
                     /* Active state: Dynamic answer rendering */
@@ -179,48 +164,46 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
             
             {/* MOBILE LIST: Sequential vertical cards */}
             <div className="lg:hidden">
-              <StaggerContainer className="space-y-4">
+              <div className="space-y-4">
                 {faqs.map((faq, index) => (
-                  <FadeIn key={`mobile-${index}`} delay={index * 0.05}>
-                    <button
-                      onClick={() => setMobileActiveIndex(index)}
-                      className="w-full flex items-center justify-between p-5 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-200/50 active:bg-slate-50 transition-all text-left"
-                    >
-                      <span className="font-bold text-[15px] text-slate-900 pr-4 leading-snug flex-1">
-                        {faq.question}
-                      </span>
-                      <div className="w-9 h-9 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
-                        <ArrowRight className="w-5 h-5 -rotate-45" strokeWidth={2.5} />
-                      </div>
-                    </button>
-                  </FadeIn>
+                  <button
+                    key={`mobile-${index}`}
+                    onClick={() => setMobileActiveIndex(index)}
+                    className="w-full flex items-center justify-between p-5 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-200/50 active:bg-slate-50 transition-all text-left"
+                  >
+                    <span className="font-bold text-[15px] text-slate-900 pr-4 leading-snug flex-1">
+                      {faq.question}
+                    </span>
+                    <div className="w-9 h-9 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                      <ArrowRight className="w-5 h-5 -rotate-45" strokeWidth={2.5} />
+                    </div>
+                  </button>
                 ))}
-              </StaggerContainer>
+              </div>
             </div>
 
             {/* DESKTOP LIST: Navigation cards triggering detail view updates */}
             <div className="hidden lg:block">
-              <StaggerContainer className="space-y-4">
+              <div className="space-y-4">
                 {faqs.map((faq, index) => (
-                  <FadeIn key={`desktop-${index}`} delay={index * 0.1}>
-                    <button
-                      onClick={() => setActiveMasterIndex(index)}
-                      className={`w-full group rounded-2xl overflow-hidden transition-all duration-300 text-left focus:outline-none cursor-pointer flex items-center justify-between p-6 ${
-                        activeMasterIndex === index
-                          ? "bg-blue-600 border border-blue-600 shadow-md shadow-blue-900/20 text-white translate-x-2 lg:scale-[1.02]"
-                          : "bg-white border border-slate-200/80 shadow-md shadow-slate-200/50 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 hover:translate-x-1"
-                      }`}
-                    >
-                      <span className={`text-lg font-semibold transition-colors duration-300 pr-4 leading-snug ${activeMasterIndex === index ? "text-white" : "text-slate-900 group-hover:text-blue-600"}`}>
-                        {faq.question}
-                      </span>
-                      <span className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${activeMasterIndex === index ? "bg-white/20 text-white shadow-inner" : "bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600"}`}>
-                        <ArrowRight className={`w-5 h-5 transition-transform duration-300 ${activeMasterIndex === index ? "" : "-rotate-45"}`} strokeWidth={2.5} />
-                      </span>
-                    </button>
-                  </FadeIn>
+                  <button
+                    key={`desktop-${index}`}
+                    onClick={() => setActiveMasterIndex(index)}
+                    className={`w-full group rounded-2xl overflow-hidden transition-all duration-300 text-left focus:outline-none cursor-pointer flex items-center justify-between p-6 ${
+                      activeMasterIndex === index
+                        ? "bg-blue-600 border border-blue-600 shadow-md shadow-blue-900/20 text-white translate-x-2 lg:scale-[1.02]"
+                        : "bg-white border border-slate-200/80 shadow-md shadow-slate-200/50 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 hover:translate-x-1"
+                    }`}
+                  >
+                    <span className={`text-lg font-semibold transition-colors duration-300 pr-4 leading-snug ${activeMasterIndex === index ? "text-white" : "text-slate-900 group-hover:text-blue-600"}`}>
+                      {faq.question}
+                    </span>
+                    <span className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${activeMasterIndex === index ? "bg-white/20 text-white shadow-inner" : "bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600"}`}>
+                      <ArrowRight className={`w-5 h-5 transition-transform duration-300 ${activeMasterIndex === index ? "" : "-rotate-45"}`} strokeWidth={2.5} />
+                    </span>
+                  </button>
                 ))}
-              </StaggerContainer>
+              </div>
             </div>
           </div>
         </div>
