@@ -25,6 +25,5 @@ export const siteConfig = {
   navItems,
   links: {
     instagram: "https://instagram.com/genbijatim",
-    admin: "/admin",
   },
 };

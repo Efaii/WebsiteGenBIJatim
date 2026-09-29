@@ -20,20 +20,12 @@ const eslintConfig = defineConfig([
   {
     files: [
       "**/app/about/AboutClient.tsx",
-      "**/app/admin/faqs/page.tsx",
-      "**/app/admin/login/page.tsx",
-      "**/app/admin/news/page.tsx",
-      "**/app/admin/testimonials/page.tsx",
       "**/app/commissariat/page.tsx",
       "**/app/news/*/page.tsx",
       "**/components/Card.tsx",
       "**/components/home/About.tsx",
       "**/components/home/FAQ.tsx",
-      "**/components/admin/ProtectedRoute.tsx",
       "**/lib/services/commissariat.service.ts",
-      "**/lib/services/google.ts",
-      "**/services/news.service.ts",
-      "**/services/testimonial.service.ts",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

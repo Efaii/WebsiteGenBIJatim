@@ -1,12 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import homeRoutes from "./routes/home.route";
-import authRoutes from "./routes/auth.route";
-import faqRoutes from "./routes/faq.route";
-import testimonialRoutes from "./routes/testimonial.route";
-import dashboardRoutes from "./routes/dashboard.route";
-import newsRoutes from "./routes/news.route";
 import commissariatRoutes from "./routes/commissariat.route";
 import contactRoutes from "./routes/contact.route";
 import awardeeRoutes from "./routes/awardee.route";
@@ -60,12 +54,6 @@ app.use(
 app.use(readinessRoutes);
 
 // Feature Routes
-app.use("/api/home", homeRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/faqs", faqRoutes);
-app.use("/api/testimonials", testimonialRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/news", newsRoutes);
 app.use("/api/commissariats", commissariatRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/awardee", awardeeRoutes);

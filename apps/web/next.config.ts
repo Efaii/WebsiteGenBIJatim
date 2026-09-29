@@ -5,7 +5,9 @@ import type { NextConfig } from "next";
  * dioptimasi ketika `NEXT_PUBLIC_API_URL` menunjuk ke staging atau produksi.
  * Default (tanpa env): API development di localhost:5000.
  */
-const apiUrl = new URL(process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api");
+const apiUrl = new URL(
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api",
+);
 const apiProtocol = apiUrl.protocol.replace(":", "") as "http" | "https";
 const apiPort = apiUrl.port || (apiProtocol === "https" ? "443" : "80");
 /*
@@ -32,6 +34,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/about", destination: "/profil", permanent: true },
+      /*
+       * Jalur admin lama dipensiunkan; CMS kanonik hidup di /cms. Pengalihan
+       * menjaga tautan lama tidak menjadi 404.
+       */
+      { source: "/admin", destination: "/cms", permanent: true },
+      { source: "/admin/:path*", destination: "/cms", permanent: true },
     ];
   },
 };

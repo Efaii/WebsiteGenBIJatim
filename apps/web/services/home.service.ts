@@ -11,36 +11,73 @@ import { HomeDataResponse } from "../types/home.types";
 // Versi WebP-nya 189 KB untuk sembilan berkas (turun 96%), dan tetap tajam
 // karena dirender pada 288 px untuk ukuran tampil maksimum 96 px.
 export const STATIC_COMMISSARIATS = [
-  { id: "unair", name: "Universitas Airlangga", logo: "/assets/logos/unair.webp" },
-  { id: "unesa", name: "Universitas Negeri Surabaya", logo: "/assets/logos/unesa.webp" },
-  { id: "its", name: "Institut Teknologi Sepuluh Nopember", logo: "/assets/logos/its.webp" },
-  { id: "upnvjt", name: "UPN Veteran Jawa Timur", logo: "/assets/logos/upnvjt.webp" },
-  { id: "uinsa", name: "UIN Sunan Ampel Surabaya", logo: "/assets/logos/uinsa.webp" },
-  { id: "pens", name: "Politeknik Elektronika Negeri Surabaya", logo: "/assets/logos/pens.webp" },
-  { id: "utm", name: "Universitas Trunojoyo Madura", logo: "/assets/logos/utm.webp" },
-  { id: "unugiri", name: "UNU Sunan Giri Bojonegoro", logo: "/assets/logos/unugiri.webp" },
-  { id: "uin-madura", name: "UIN Madura", logo: "/assets/logos/uinMadura.webp" },
+  {
+    id: "unair",
+    name: "Universitas Airlangga",
+    logo: "/assets/logos/unair.webp",
+  },
+  {
+    id: "unesa",
+    name: "Universitas Negeri Surabaya",
+    logo: "/assets/logos/unesa.webp",
+  },
+  {
+    id: "its",
+    name: "Institut Teknologi Sepuluh Nopember",
+    logo: "/assets/logos/its.webp",
+  },
+  {
+    id: "upnvjt",
+    name: "UPN Veteran Jawa Timur",
+    logo: "/assets/logos/upnvjt.webp",
+  },
+  {
+    id: "uinsa",
+    name: "UIN Sunan Ampel Surabaya",
+    logo: "/assets/logos/uinsa.webp",
+  },
+  {
+    id: "pens",
+    name: "Politeknik Elektronika Negeri Surabaya",
+    logo: "/assets/logos/pens.webp",
+  },
+  {
+    id: "utm",
+    name: "Universitas Trunojoyo Madura",
+    logo: "/assets/logos/utm.webp",
+  },
+  {
+    id: "unugiri",
+    name: "UNU Sunan Giri Bojonegoro",
+    logo: "/assets/logos/unugiri.webp",
+  },
+  {
+    id: "uin-madura",
+    name: "UIN Madura",
+    logo: "/assets/logos/uinMadura.webp",
+  },
 ];
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+/*
+ * Data Beranda dari jalur kanonik: FAQ publik `/v1/faqs` (aktif, terurut);
+ * logo komisariat tetap aset statis. Jalur lama `/api/home` dipensiunkan.
+ * Kegagalan dilempar supaya Beranda menampilkan state gagal per bagian.
+ */
 export const getHomeData = async (): Promise<HomeDataResponse> => {
-  // Endpoint publik tunggal untuk konten Beranda (menghindari endpoint admin).
-  // Kegagalan dilempar: Beranda menangkapnya per bagian dan menampilkan state
-  // gagal, bukan area kosong.
-  const response = await fetch(`${API_BASE}/home`, {
-    next: { revalidate: 60 }
+  const response = await fetch(`${API_BASE}/v1/faqs`, {
+    next: { revalidate: 60 },
   });
 
   if (!response.ok) {
-    throw new Error(`Home API responded with status: ${response.status}`);
+    throw new Error(`FAQ API responded with status: ${response.status}`);
   }
 
-  const data = await response.json();
+  const payload = await response.json();
 
   return {
-    faqs: data.faqs || [],
-    testimonials: data.testimonials || [],
-    commissariats: STATIC_COMMISSARIATS, // Logo komisariat tetap aset statis
+    faqs: Array.isArray(payload?.data) ? payload.data : [],
+    commissariats: STATIC_COMMISSARIATS,
   };
 };
