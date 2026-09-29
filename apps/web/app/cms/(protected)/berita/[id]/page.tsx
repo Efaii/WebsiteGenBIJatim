@@ -4,6 +4,7 @@ import { cmsApiGet } from "@/lib/cms-api";
 import { getCmsPageSession } from "@/lib/cms-guard";
 import type { CmsNewsItem } from "@/lib/services/cms-news.service";
 import { NewsActions } from "../NewsActions";
+import { NewsFeatureSlot } from "../NewsFeatureSlot";
 import { NewsForm } from "../NewsForm";
 import { NewsGallery } from "../NewsGallery";
 
@@ -31,6 +32,7 @@ export default async function CmsNewsDetailPage({
         </h1>
         <NewsActions news={item} />
       </div>
+      <NewsFeatureSlot news={item} />
       <NewsForm news={item} />
       <NewsGallery news={item} />
     </section>

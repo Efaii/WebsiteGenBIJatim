@@ -16,6 +16,7 @@ import {
   listPublishedNews,
   orderNewsGalleryAssets,
   previewNews,
+  setNewsFeaturedOrder,
   transitionNews,
   transitionNewsRevision,
   updateDraftNews,
@@ -78,6 +79,12 @@ router.post(
   requireCmsSession,
   requireCmsRole(CmsRole.ADMIN_GLOBAL),
   asyncHandler(updateNewsSlug),
+);
+router.post(
+  "/:id/featured",
+  requireCmsSession,
+  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  asyncHandler(setNewsFeaturedOrder),
 );
 router.post(
   "/:id/gallery",

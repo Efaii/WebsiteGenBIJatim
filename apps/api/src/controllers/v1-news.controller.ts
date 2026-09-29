@@ -673,6 +673,45 @@ export const updateNewsSlug = async (req: CmsRequest, res: Response) => {
   return sendSuccess(res, updated);
 };
 
+/*
+ * Slot beranda (ADR 0012/0013): `featuredOrder` 1-3 hanya untuk berita terbit;
+ * satu slot hanya diisi satu berita — slot yang sama dilepas otomatis dari
+ * berita lain.
+ */
+export const setNewsFeaturedOrder = async (req: CmsRequest, res: Response) => {
+  const news = await prisma.news.findUnique({ where: { id: req.params.id } });
+  if (!news || news.deletedAt)
+    throw new ApiError("NOT_FOUND", "News not found.", 404);
+  const raw = req.body?.featuredOrder;
+  const order = raw === null || raw === undefined ? null : Number(raw);
+  if (order !== null && (!Number.isInteger(order) || order < 1 || order > 3))
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "featuredOrder harus 1-3 atau null.",
+      400,
+    );
+  if (order !== null && news.publicationStatus !== "PUBLISHED")
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Hanya berita terbit yang dapat menempati slot beranda.",
+      400,
+    );
+  const updated = await prisma.$transaction(async (tx) => {
+    if (order !== null) {
+      await tx.news.updateMany({
+        where: { featuredOrder: order, id: { not: news.id } },
+        data: { featuredOrder: null },
+      });
+    }
+    return tx.news.update({
+      where: { id: news.id },
+      data: { featuredOrder: order },
+    });
+  });
+  await audit(req.cmsSession!.cmsAccountId, "FEATURED_ORDER", news.id);
+  return sendSuccess(res, updated);
+};
+
 export const previewNews = async (req: CmsRequest, res: Response) => {
   const news = await prisma.news.findUnique({
     where: { id: req.params.id },
@@ -700,9 +739,23 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
     orderBy: { createdAt: "asc" },
   });
   const activeCover = stagedAssets.find((asset) => asset.role === "COVER");
+  /*
+   * Terbit ulang setelah "tarik ke draft" boleh memakai cover publik yang
+   * sudah ada (tidak wajib mengunggah cover baru); draft yang belum pernah
+   * punya cover tetap ditolak.
+   */
+  const publicCoverCount =
+    activeCover === undefined
+      ? await prisma.newsCoverAsset.count({
+          where: { newsId: news.id, role: "COVER", status: "PUBLIC" },
+        })
+      : 0;
   if (
     to === "PUBLISHED" &&
-    (!news.excerpt || !news.content || !news.category || !activeCover)
+    (!news.excerpt ||
+      !news.content ||
+      !news.category ||
+      (!activeCover && publicCoverCount === 0))
   )
     throw new ApiError(
       "VALIDATION_ERROR",

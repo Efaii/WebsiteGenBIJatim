@@ -65,10 +65,29 @@ export default async function Home() {
       getHomeContent(),
     ]);
   /*
-   * Beranda menampilkan pilihan admin global (`featuredOrder`). Bila admin
-   * belum memilih, jatuh ke berita terbaru supaya beranda tidak kosong.
+   * Beranda menampilkan tiga slot pilihan admin global (`featuredOrder`).
+   * Slot yang kosong atau tidak valid (berita tidak lagi terbit) diisi berita
+   * terbaru tanpa duplikasi supaya beranda tidak pernah pincang (ADR 0012/0013).
    */
-  const homeNews = featuredNews?.length ? featuredNews : latestNews;
+  const homeNews = (() => {
+    const chosen = featuredNews ?? [];
+    if (chosen.length === 0) return latestNews;
+    const used = new Set(chosen.map((item) => item.id));
+    const slots: typeof chosen = [];
+    for (let order = 1; order <= 3; order += 1) {
+      const pick = chosen.find((item) => item.featuredOrder === order);
+      if (pick) {
+        slots.push(pick);
+        continue;
+      }
+      const filler = (latestNews ?? []).find((item) => !used.has(item.id));
+      if (filler) {
+        used.add(filler.id);
+        slots.push(filler);
+      }
+    }
+    return slots;
+  })();
 
   /*
    * Konten empat bagian dirakit dari database (kontrak v1) dan jatuh ke kamus

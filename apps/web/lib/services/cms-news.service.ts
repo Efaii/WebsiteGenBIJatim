@@ -126,6 +126,21 @@ export const orderNewsGalleryAssets = async (
   return Array.isArray(response.data.data) ? response.data.data : [];
 };
 
+/**
+ * Setel slot beranda berita (`featuredOrder` 1-3, `null` = tidak tampil).
+ * Slot yang sama dilepas otomatis dari berita lain oleh API.
+ */
+export const setNewsFeaturedOrder = async (
+  newsId: string,
+  featuredOrder: number | null,
+): Promise<void> => {
+  await api.post(
+    `/v1/news/${newsId}/featured`,
+    { featuredOrder },
+    { withCredentials: true },
+  );
+};
+
 /** Hapus satu gambar pendukung (berkasnya ikut dihapus dari storage). */
 export const deleteNewsGalleryAsset = async (
   newsId: string,

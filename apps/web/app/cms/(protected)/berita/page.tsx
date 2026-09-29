@@ -48,6 +48,7 @@ export default async function CmsNewsListPage() {
                 <th className="px-4 py-3">Judul</th>
                 <th className="px-4 py-3">Kategori</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Beranda</th>
                 <th className="px-4 py-3">Diperbarui</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -66,6 +67,24 @@ export default async function CmsNewsListPage() {
                       {STATUS_LABEL[item.publicationStatus] ??
                         item.publicationStatus}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {item.featuredOrder ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.publicationStatus === "PUBLISHED"
+                            ? "bg-blue-50 text-genbi-blue"
+                            : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        Slot {item.featuredOrder}
+                        {item.publicationStatus === "PUBLISHED"
+                          ? ""
+                          : " (tidak valid)"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">–</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-500">
                     {new Date(item.updatedAt).toLocaleString("id-ID")}
