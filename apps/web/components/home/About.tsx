@@ -30,18 +30,29 @@ export function About() {
 
           {/* --- KOLASE --- */}
           {/*
-            Empat tile, dua per baris, lebar sama. Sebelumnya baris bawah dibagi
-            5/7 sehingga seam vertikalnya meleset satu kolom dari baris atas dan
-            terbaca sebagai tata letak yang salah, bukan sebagai komposisi yang
-            disengaja. Menyejajarkannya juga mendekatkan rasio render ke rasio
-            asli berkasnya: background.jpg 1,80 -> 1,53 (aslinya 1,33), dan
-            bnsp.JPG 1,26 -> 1,53 (aslinya 1,50).
+            Empat tile dengan komposisi ASIMETRIS: baris atas terbagi rata
+            (6/6), baris bawah sengaja dibagi 5/7 sehingga kolom kirinya lebih
+            sempit dan kolom kanannya lebih lebar.
+
+            Ketidaksamaan lebar itu DISENGAJA, tujuannya supaya kolase terasa
+            disusun, bukan grid sama rata. JANGAN diratakan menjadi 6/6. Itu
+            pernah terjadi atas dasar pembacaan yang keliru, dan membuat
+            desainnya kehilangan komposisinya.
           */}
           <div className="grid aspect-[4/3] grid-cols-12 grid-rows-[1.28fr_1fr] gap-3 md:gap-4">
-            {images.map((image) => (
+            {images.map((image, index) => (
               <div
                 key={image.src}
-                className="group col-span-6 relative overflow-hidden rounded-card bg-genbi-light"
+                className={[
+                  "group relative overflow-hidden rounded-card bg-genbi-light",
+                  // Baris atas: dua tile besar. Baris bawah: satu sempit, satu lebar.
+                  index === 0 ? "col-span-6" : "",
+                  index === 1 ? "col-span-6" : "",
+                  index === 2 ? "col-span-5" : "",
+                  index === 3 ? "col-span-7" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 <Image
                   src={image.src}
