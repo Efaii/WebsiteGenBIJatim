@@ -83,6 +83,13 @@ export function HomeEditor({
     hero.heading.line2.trim().length > 0 &&
     heroWords > 0 &&
     heroWords <= HERO_DESCRIPTION_MAX_WORDS;
+  const storyValid =
+    draft.story.milestones.length === 4 &&
+    draft.story.milestones.every(
+      (milestone) =>
+        milestone.title.trim().length > 0 &&
+        milestone.description.trim().length > 0,
+    );
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(saved),
     [draft, saved],
@@ -94,6 +101,24 @@ export function HomeEditor({
     setDraft((prev) => ({
       ...prev,
       hero: { ...(prev.hero ?? EMPTY_HERO), ...patch },
+    }));
+    setStatus("idle");
+    setMessage(null);
+  };
+
+  const updateMilestone = (
+    position: number,
+    patch: Partial<{ title: string; description: string }>,
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      story: {
+        milestones: prev.story.milestones.map((milestone) =>
+          milestone.position === position
+            ? { ...milestone, ...patch }
+            : milestone,
+        ),
+      },
     }));
     setStatus("idle");
     setMessage(null);
@@ -188,6 +213,15 @@ export function HomeEditor({
           description: hero.description,
           videoEnabled: hero.videoEnabled,
         },
+        story: {
+          milestones: draft.story.milestones.map(
+            ({ position, title, description }) => ({
+              position,
+              title,
+              description,
+            }),
+          ),
+        },
         ...(poster && posterAlt !== savedPosterAlt
           ? { media: { "hero.poster": { alt: posterAlt } } }
           : {}),
@@ -209,9 +243,9 @@ export function HomeEditor({
           Editor Beranda
         </h1>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Panel ini mengubah teks hero. Struktur, judul section, metrik hero,
-          chip peran, dan tahun milestone tetap statis dan tidak memiliki kolom
-          di sini.
+          Panel ini mengubah teks hero dan milestone Sejarah Perjalanan.
+          Struktur, judul section, metrik hero, chip peran, dan tahun milestone
+          tetap statis dan tidak memiliki kolom di sini.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -404,6 +438,64 @@ export function HomeEditor({
           )}
         </div>
 
+        <div className="mt-6 border-t border-slate-200 pt-5">
+          <h2 className="text-sm font-semibold text-slate-700">
+            Sejarah Perjalanan
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            Hanya judul dan deskripsi milestone yang dapat diubah; tahun dan
+            judul section tetap statis.
+          </p>
+          <div className="mt-4 space-y-4">
+            {draft.story.milestones.map((milestone, index) => {
+              const year = sections.story.milestones[index]?.year ?? "";
+              return (
+                <div
+                  key={milestone.position}
+                  className="rounded-xl border border-slate-200 p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Tahun {year} (statis)
+                  </p>
+                  <label
+                    className="mt-2 block text-sm font-medium text-slate-700"
+                    htmlFor={`story-title-${milestone.position}`}
+                  >
+                    Judul
+                  </label>
+                  <input
+                    id={`story-title-${milestone.position}`}
+                    value={milestone.title}
+                    onChange={(event) =>
+                      updateMilestone(milestone.position, {
+                        title: event.target.value,
+                      })
+                    }
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                  />
+                  <label
+                    className="mt-2 block text-sm font-medium text-slate-700"
+                    htmlFor={`story-description-${milestone.position}`}
+                  >
+                    Deskripsi
+                  </label>
+                  <textarea
+                    id={`story-description-${milestone.position}`}
+                    value={milestone.description}
+                    onChange={(event) =>
+                      updateMilestone(milestone.position, {
+                        description: event.target.value,
+                      })
+                    }
+                    rows={3}
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {message && (
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {message}
@@ -414,7 +506,9 @@ export function HomeEditor({
           <button
             type="button"
             onClick={onSave}
-            disabled={!heroValid || !dirty || status === "saving"}
+            disabled={
+              !heroValid || !storyValid || !dirty || status === "saving"
+            }
             className="rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
           >
             {status === "saving" ? "Menyimpan..." : "Simpan"}

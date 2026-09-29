@@ -69,6 +69,9 @@ export type HomeContentUpdate = {
   hero?: HomeHeroUpdate;
   /** Perubahan teks media per slot (mis. alt); unggahan berkas lewat endpoint terpisah. */
   media?: Record<string, { src?: string; alt?: string }>;
+  story?: {
+    milestones: { position: number; title: string; description: string }[];
+  };
 };
 
 /**
