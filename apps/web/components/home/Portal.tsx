@@ -54,7 +54,7 @@ export function Portal() {
           <div className="flex flex-col md:flex-row justify-between items-end mb-6">
             <div className="flex flex-col">
               <FadeIn delay={0.1}>
-                <h2 className="text-3xl md:text-4xl font-bold font-heading text-slate-900 tracking-tight mb-6">
+                <h2 className="font-heading text-[2rem] font-bold text-slate-900 tracking-tight mb-6 md:text-[2.5rem] lg:text-[2.75rem]">
                   Akses <span className="text-blue-600">Platform Digital</span>
                 </h2>
               </FadeIn>

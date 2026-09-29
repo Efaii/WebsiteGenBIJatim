@@ -91,7 +91,14 @@ export function Mitra({ commissariats }: { commissariats: CommissariatItem[] }) 
               Ukurannya sengaja lebih kecil dari judul section lain karena
               sekarang berada di dalam card.
             */}
-            <h2 className="font-heading text-xl font-bold uppercase tracking-normal text-slate-900 md:text-2xl lg:text-[1.75rem]">
+            {/*
+              Ukuran disamakan dengan tier section yang lain (44 px di desktop,
+              32 px di mobile). Sebelumnya heading ini hanya 28 px / 20 px,
+              lebih kecil dari body text section yang sama (17 px) di mobile.
+              `tracking-tight` dipakai karena pada 44 px huruf besar tanpa
+              rapat huruf terasa terlalu renggang.
+            */}
+            <h2 className="font-heading text-[2rem] font-bold uppercase tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]">
               {heading}
             </h2>
             <p className="mt-3 text-sm text-slate-600 md:mt-4 md:text-base">

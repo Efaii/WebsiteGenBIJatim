@@ -60,7 +60,7 @@ export function News({ initialNews }: { initialNews: PublicNewsSummary[] }) {
           referensi desain.
         */}
         <div className="flex flex-wrap items-end justify-center gap-4 text-center md:justify-between md:text-left">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-[2.75rem]">
+          <h2 className="font-heading text-[2rem] font-bold tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]">
             {title}
           </h2>
 

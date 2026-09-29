@@ -188,7 +188,7 @@ export function Story() {
       <Container className="relative z-10">
         {/* Heading tidak lagi beranimasi; timeline di bawahnya tetap bergerak. */}
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-heading text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
+          <h2 className="font-heading text-[2rem] font-bold tracking-tight text-white md:text-[2.5rem] lg:text-[2.75rem]">
             {heading}
           </h2>
           <p className="mt-4 text-base text-genbi-haze/85 md:text-[17px]">{description}</p>
