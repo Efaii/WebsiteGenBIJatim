@@ -97,7 +97,12 @@ export const homeContent = {
       "Bukan hanya tempat untuk belajar dan berkembang, GenBI juga menjadi ruang untuk membangun kepedulian, menciptakan perubahan, dan memberikan kontribusi nyata bagi masyarakat.",
     images: [
       { src: "/assets/images/raker.jpg", alt: "Rapat kerja GenBI Jawa Timur" },
-      { src: "/assets/images/individu.jpg", alt: "Aktivitas anggota GenBI" },
+      /*
+       * Sebelumnya berkas ini berisi gambar karakter game yang tidak
+       * berhubungan dengan GenBI. Untuk sementara diganti foto dokumentasi
+       * program kerja, sampai pemilik produk mengganti seluruh foto beranda.
+       */
+      { src: "/uploads/proker/upnvjt/1ea05c84-2f55-45da-ab83-8932099598e9/foto6.webp", alt: "Aktivitas anggota GenBI" },
       { src: "/assets/images/bnsp.JPG", alt: "Pelatihan peningkatan kapasitas anggota" },
       { src: "/assets/images/background.jpg", alt: "Kolaborasi GenBI Jawa Timur" },
     ],
