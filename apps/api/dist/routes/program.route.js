@@ -1,0 +1,25 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
+const client_1 = require("@prisma/client");
+const asyncHandler_1 = require("../middlewares/asyncHandler");
+const cms_session_middleware_1 = require("../middlewares/cms-session.middleware");
+const program_controller_1 = require("../controllers/program.controller");
+const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, file.mimetype === 'application/pdf' && file.originalname.toLowerCase().endsWith('.pdf')) });
+router.get('/', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.listCmsPrograms));
+router.post('/', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.createProgram));
+router.post('/preview', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.previewProgram));
+router.patch('/:id', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.updateProgram));
+router.post('/:id/revisions', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.createProgramRevision));
+router.post('/:id/revisions/:revisionId/preview', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI, client_1.CmsRole.SEKRETARIS_UMUM), (0, asyncHandler_1.asyncHandler)(program_controller_1.previewProgramRevision));
+router.post('/:id/revisions/:revisionId/transition', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.transitionProgramRevision));
+router.post('/:id/transition', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.transitionProgram));
+router.post('/:id/execution-transition', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.transitionProgramExecution));
+router.post('/:id/artifacts', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_DIVISI), upload.single('file'), (0, asyncHandler_1.asyncHandler)(program_controller_1.uploadProgramArtifact));
+router.get('/:id/artifacts/:artifactId', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(program_controller_1.downloadProgramArtifact));
+exports.default = router;

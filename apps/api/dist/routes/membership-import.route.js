@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const multer_1 = __importDefault(require("multer"));
+const client_1 = require("@prisma/client");
+const asyncHandler_1 = require("../middlewares/asyncHandler");
+const cms_session_middleware_1 = require("../middlewares/cms-session.middleware");
+const membership_import_controller_1 = require("../controllers/membership-import.controller");
+const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 }, fileFilter: (_req, file, cb) => cb(null, file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' && file.originalname.toLowerCase().endsWith('.xlsx')) });
+router.post('/preview', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM), upload.single('file'), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.previewMembershipImport));
+router.post('/commit', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.commitMembershipImport));
+router.get('/:id', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.getMembershipImport));
+router.post('/:id/submit', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.submitMembershipImport));
+router.post('/:id/approve', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.approveMembershipImport));
+router.post('/:id/reject', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.rejectMembershipImport));
+router.post('/aliases/review', cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL), (0, asyncHandler_1.asyncHandler)(membership_import_controller_1.reviewMembershipImportAlias));
+exports.default = router;

@@ -6,18 +6,25 @@ const prisma = new client_1.PrismaClient();
 const getDashboardStats = async (req, res) => {
     try {
         // Run all count aggregations concurrently for absolute maximum speed
-        const [faqCount, testimonialCount, commissariatCount, newsCount] = await Promise.all([
+        const [faqCount, testimonialCount, commissariatCount, newsCount, prokerCount, totalMembers] = await Promise.all([
             prisma.faq.count(),
             prisma.testimonial.count(),
             prisma.commissariat.count(),
-            prisma.news.count(), // handle typescript strict type temporarily
+            prisma.news.count(),
+            prisma.programKerja.count(),
+            prisma.commissariat.aggregate({
+                _sum: {
+                    memberCount: true
+                }
+            })
         ]);
         res.status(200).json({
             faqs: faqCount,
             testimonials: testimonialCount,
             commissariats: commissariatCount,
             news: newsCount,
-            // You can add logic for 'online' status directly on frontend, but we'll return a static flag for the backend health
+            proker: prokerCount,
+            members: totalMembers._sum.memberCount || 0,
             systemStatus: 'Online',
         });
     }

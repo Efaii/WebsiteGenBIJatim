@@ -1,0 +1,41 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const strict_1 = __importDefault(require("node:assert/strict"));
+const reconcile_proker_1 = require("../scripts/reconcile_proker");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.normalizeDivision("Social Environment"), "sosling");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.normalizeDivision("Organizational Development"), "psdm");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.normalizeDivision("Public Relation"), "hublu");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.normalizeCommissariat("UIN"), "uin-madura");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.sameProgramTitle("Aksi Sehat : Check UP Kesehatan (genBi Mancing)", "Aksi Sehat : Check UP Kesehatan"), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.statusToExecution("cancelled"), "CANCELLED");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.statusToExecution("Cancel"), "CANCELLED");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.statusToExecution("On Progress"), "ONGOING");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.isPublicProgram({ publicationStatus: "PUBLISHED", executionStatus: "COMPLETED", status: "Cancel" }), false);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.statusFromExcludedSheet({ status_excel: "cancel" }), "cancelled");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.statusFromExcludedSheet({
+    original_status: "On Progress",
+}), "ongoing");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.excelDate(null, "2026-01-28"), "2026-01-28");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.excelDate("28 Januari 2026", null), "2026-01-28");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.excelDate("28-30 Januari 2026", null), null);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.excelDate("28-01-2026", null), "2026-01-28");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoActionFor("UPDATE", false), "LEGACY_PHOTO_REGISTRATION");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoActionFor("UPDATE", false, true), "NEW_WEBP");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoActionFor("ACTIVE_INSERT", false), "NEW_WEBP");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoActionFor("UPDATE", true), "DUPLICATE");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("CANCELLED_SKIP"), false);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("CANCELLED_EXISTING_ARCHIVE"), false);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("REVIEW"), false);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("DATABASE_UNAVAILABLE"), false);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("UPDATE"), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.photoMayTarget("ACTIVE_INSERT"), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.legacyOnlyAction(true), "DOCUMENTED_DATABASE_ONLY_ARCHIVE");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.legacyOnlyAction(false), "UNDOCUMENTED_DATABASE_ONLY_ARCHIVE");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.cancelledAction(true), "CANCELLED_EXISTING_ARCHIVE");
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.isPlaceholder("—"), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.isPlaceholder("-"), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.isPlaceholder(""), true);
+strict_1.default.equal(reconcile_proker_1.reconciliationRules.isPlaceholder("GenBI Sowan"), false);

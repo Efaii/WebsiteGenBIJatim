@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const asyncHandler_1 = require("../middlewares/asyncHandler");
+const cms_session_middleware_1 = require("../middlewares/cms-session.middleware");
+const cms_auth_controller_1 = require("../controllers/cms-auth.controller");
+const router = (0, express_1.Router)();
+router.post('/login', (0, asyncHandler_1.asyncHandler)(cms_auth_controller_1.loginCms));
+router.post('/logout', cms_session_middleware_1.requireCmsSession, (0, asyncHandler_1.asyncHandler)(cms_auth_controller_1.logoutCms));
+exports.default = router;
