@@ -59,7 +59,11 @@ artifacts/initial-production/
 
 # ─── Kebersihan repo ───
 # Media mentah input pipeline foto proker (diproses ke apps/web/public/uploads/proker).
-# Catatan: apps/api/data/images/ TIDAK diabaikan karena sudah ter-track sejak lama.
+# Di-untrack dan dibersihkan dari riwayat: file tetap ada di disk, tidak di GitHub.
+# Backup wajib ada sebelum menjalankan process_images.ts.
+apps/api/data/images/
+
+# Media mentah proker (duplikat sebagian, tetap lokal)
 data/proker/
 
 # Environment / perangkat alat lokal
