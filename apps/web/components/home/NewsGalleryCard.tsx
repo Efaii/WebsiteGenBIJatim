@@ -94,7 +94,7 @@ export function NewsGalleryCard({
           </div>
         )}
 
-        <h3 className="mt-6 text-lg font-bold leading-snug text-slate-900">
+        <h3 className="mt-6 min-h-[2lh] text-lg font-bold leading-snug text-slate-900">
           <Link
             href={`/news/${item.slug}`}
             className="rounded-sm transition-colors duration-200 hover:text-genbi-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60"

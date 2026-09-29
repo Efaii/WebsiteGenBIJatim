@@ -29,20 +29,19 @@ export function About() {
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
 
           {/* --- KOLASE --- */}
+          {/*
+            Empat tile, dua per baris, lebar sama. Sebelumnya baris bawah dibagi
+            5/7 sehingga seam vertikalnya meleset satu kolom dari baris atas dan
+            terbaca sebagai tata letak yang salah, bukan sebagai komposisi yang
+            disengaja. Menyejajarkannya juga mendekatkan rasio render ke rasio
+            asli berkasnya: background.jpg 1,80 -> 1,53 (aslinya 1,33), dan
+            bnsp.JPG 1,26 -> 1,53 (aslinya 1,50).
+          */}
           <div className="grid aspect-[4/3] grid-cols-12 grid-rows-[1.28fr_1fr] gap-3 md:gap-4">
-            {images.map((image, index) => (
+            {images.map((image) => (
               <div
                 key={image.src}
-                className={[
-                  "group relative overflow-hidden rounded-card bg-genbi-light",
-                  // Baris atas: dua tile besar. Baris bawah: satu sempit, satu lebar.
-                  index === 0 ? "col-span-6" : "",
-                  index === 1 ? "col-span-6" : "",
-                  index === 2 ? "col-span-5" : "",
-                  index === 3 ? "col-span-7" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                className="group col-span-6 relative overflow-hidden rounded-card bg-genbi-light"
               >
                 <Image
                   src={image.src}

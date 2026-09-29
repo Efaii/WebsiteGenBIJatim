@@ -8,8 +8,6 @@ import {
   Newspaper,
   ArrowRight,
   LucideIcon,
-  Building2,
-  FileStack,
 } from "lucide-react";
 import { FadeIn, StaggerContainer } from "@/components/MotionWrapper";
 import { Container } from "@/components/Container";
@@ -37,7 +35,15 @@ const ICON_MAP: Record<string, LucideIcon> = {
  * - Animation: Implements staggered entry animations for optimized perceived performance.
  */
 export function Portal() {
-  const { description, items } = homeContent.portalGrid;
+  const { title, description, items } = homeContent.portalGrid;
+
+  /*
+   * Kata pertama judul dibiarkan gelap dan sisanya diberi aksen biru, sama
+   * seperti tampilan sebelumnya. Isinya sendiri dibaca dari content/home.ts,
+   * bukan ditulis ulang di sini, supaya copy tidak bisa menyimpang dari
+   * sumbernya.
+   */
+  const [judulAwal, ...judulSisa] = title.split(" ");
 
   return (
     <section data-section="portal" className="py-24 md:py-28 lg:py-32 bg-white relative overflow-hidden">
@@ -55,7 +61,13 @@ export function Portal() {
             <div className="flex flex-col">
               <FadeIn delay={0.1}>
                 <h2 className="font-heading text-[2rem] font-bold text-slate-900 tracking-tight mb-6 md:text-[2.5rem] lg:text-[2.75rem]">
-                  Akses <span className="text-genbi-blue">Platform Digital</span>
+                  {judulAwal}
+                  {judulSisa.length > 0 && (
+                    <>
+                      {" "}
+                      <span className="text-genbi-blue">{judulSisa.join(" ")}</span>
+                    </>
+                  )}
                 </h2>
               </FadeIn>
               <FadeIn delay={0.2}>
@@ -69,16 +81,15 @@ export function Portal() {
           <StaggerContainer className="grid w-full grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 md:auto-rows-[280px] items-stretch">
             {items.map((item, idx) => {
               const Icon = ICON_MAP[item.iconName] || LayoutDashboard;
-              const iconName = item.iconName as string;
 
               return (
                 <FadeIn key={item.title} delay={0.3 + idx * 0.15} className="h-50 lg:h-full min-w-0">
                   <Link
                     href={item.link}
-                    className="group relative flex flex-col justify-between h-full bg-slate-50/50 rounded-card p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-genbi-haze hover:shadow-lg transition-all duration-200 overflow-hidden"
+                    className="group relative flex flex-col h-full bg-slate-50/50 rounded-card p-5 md:p-6 border border-slate-200/80 shadow-sm shadow-slate-200/50 hover:bg-white hover:border-genbi-haze hover:shadow-lg transition-all duration-200 overflow-hidden"
                   >
                     {/* --- CARD HEADER: NAVIGATION & ICONOGRAPHY --- */}
-                    <div className="relative z-10 flex justify-between items-start mb-4 md:mb-6">
+                    <div className="relative z-10 flex justify-between items-start mb-4 md:mb-5">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-white border border-slate-200 text-genbi-blue group-hover:bg-genbi-blue group-hover:text-white transition-all duration-300 relative overflow-hidden">
                         <Icon
                           className="w-8 h-8 md:w-10 md:h-10 relative z-10"
@@ -88,34 +99,6 @@ export function Portal() {
                       <div className="flex items-center gap-2">
                         <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-slate-500 -rotate-45 group-hover:rotate-0 group-hover:text-genbi-blue transition-all duration-300" />
                       </div>
-                    </div>
-
-                    {/* --- VISUAL DECORATIONS LAYER --- */}
-                    {/* Absolute-positioned elements that react to parent hover states */}
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                      {iconName === "LayoutDashboard" && (
-                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Building2 className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
-                        </div>
-                      )}
-
-                      {iconName === "FileText" && (
-                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <FileStack className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
-                        </div>
-                      )}
-
-                      {iconName === "GraduationCap" && (
-                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <GraduationCap className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
-                        </div>
-                      )}
-
-                      {iconName === "Newspaper" && (
-                        <div className="absolute -right-6 -bottom-6 opacity-[0.1] group-hover:opacity-20 group-hover:-translate-y-2 transition-all duration-500">
-                          <Newspaper className="w-24 h-24 md:w-32 md:h-32 text-genbi-blue" strokeWidth={2} />
-                        </div>
-                      )}
                     </div>
 
                     {/* --- CARD NARRATIVE LAYER --- */}
