@@ -90,6 +90,10 @@ export function HomeEditor({
         milestone.title.trim().length > 0 &&
         milestone.description.trim().length > 0,
     );
+  const aboutValid =
+    (draft.about?.paragraphLead.trim().length ?? 0) > 0 &&
+    (draft.about?.paragraph.trim().length ?? 0) > 0 &&
+    (draft.about?.emphasis.trim().length ?? 0) > 0;
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(saved),
     [draft, saved],
@@ -124,46 +128,84 @@ export function HomeEditor({
     setMessage(null);
   };
 
-  const applyMediaResponse = (updated: HomeContentResponse) => {
-    // Unggahan hanya mengganti slot media hero; teks yang sedang diedit di
-    // draft tidak boleh tertimpa. `videoEnabled` dari server dipaksa ke draft
-    // hanya saat server menonaktifkannya (video dikosongkan).
-    setDraft((prev) =>
-      prev.hero
-        ? {
-            ...prev,
-            hero: {
-              ...prev.hero,
-              poster: updated.hero?.poster ?? null,
-              video: updated.hero?.video ?? null,
-              videoEnabled:
-                updated.hero?.videoEnabled === false
-                  ? false
-                  : prev.hero.videoEnabled,
-            },
-          }
-        : prev,
-    );
-    setSaved((prev) =>
-      prev.hero
-        ? {
-            ...prev,
-            hero: {
-              ...prev.hero,
-              poster: updated.hero?.poster ?? null,
-              video: updated.hero?.video ?? null,
-              videoEnabled:
-                updated.hero?.videoEnabled ?? prev.hero.videoEnabled,
-            },
-          }
-        : prev,
-    );
+  const updateAbout = (
+    patch: Partial<{
+      paragraphLead: string;
+      paragraph: string;
+      emphasis: string;
+    }>,
+  ) => {
+    setDraft((prev) => ({
+      ...prev,
+      about: {
+        paragraphLead: "",
+        paragraph: "",
+        emphasis: "",
+        images: [null, null, null, null],
+        ...(prev.about ?? {}),
+        ...patch,
+      },
+    }));
+    setStatus("idle");
+    setMessage(null);
   };
 
-  const onUploadMedia = async (
-    slot: "hero.poster" | "hero.video",
-    files: FileList | null,
-  ) => {
+  const updateAboutImageAlt = (index: number, alt: string) => {
+    setDraft((prev) =>
+      prev.about
+        ? {
+            ...prev,
+            about: {
+              ...prev.about,
+              images: prev.about.images.map((image, i) =>
+                i === index && image ? { ...image, alt } : image,
+              ),
+            },
+          }
+        : prev,
+    );
+    setStatus("idle");
+    setMessage(null);
+  };
+
+  const applyMediaResponse = (updated: HomeContentResponse) => {
+    // Unggahan hanya mengganti slot media; teks yang sedang diedit di draft
+    // tidak boleh tertimpa. `videoEnabled` dari server dipaksa ke draft hanya
+    // saat server menonaktifkannya (video dikosongkan).
+    setDraft((prev) => ({
+      ...prev,
+      hero: prev.hero
+        ? {
+            ...prev.hero,
+            poster: updated.hero?.poster ?? null,
+            video: updated.hero?.video ?? null,
+            videoEnabled:
+              updated.hero?.videoEnabled === false
+                ? false
+                : prev.hero.videoEnabled,
+          }
+        : prev.hero,
+      about: prev.about
+        ? { ...prev.about, images: updated.about?.images ?? prev.about.images }
+        : prev.about,
+    }));
+    setSaved((prev) => ({
+      ...prev,
+      hero: prev.hero
+        ? {
+            ...prev.hero,
+            poster: updated.hero?.poster ?? null,
+            video: updated.hero?.video ?? null,
+            videoEnabled: updated.hero?.videoEnabled ?? prev.hero.videoEnabled,
+          }
+        : prev.hero,
+      about: prev.about
+        ? { ...prev.about, images: updated.about?.images ?? prev.about.images }
+        : prev.about,
+    }));
+  };
+
+  const onUploadMedia = async (slot: string, files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
     setMediaBusy(slot);
@@ -174,7 +216,9 @@ export function HomeEditor({
       setMediaMessage(
         slot === "hero.poster"
           ? "Poster tersimpan dan sudah tayang di Beranda."
-          : 'Video tersimpan. Aktifkan "Tampilkan di hero" lalu Simpan untuk menayangkannya.',
+          : slot === "hero.video"
+            ? 'Video tersimpan. Aktifkan "Tampilkan di hero" lalu Simpan untuk menayangkannya.'
+            : "Gambar tersimpan dan sudah tayang di Beranda.",
       );
     } catch (error) {
       setMediaMessage(extractErrorMessage(error));
@@ -183,7 +227,7 @@ export function HomeEditor({
     }
   };
 
-  const onClearMedia = async (slot: "hero.poster" | "hero.video") => {
+  const onClearMedia = async (slot: string) => {
     setMediaBusy(slot);
     setMediaMessage(null);
     try {
@@ -192,7 +236,9 @@ export function HomeEditor({
       setMediaMessage(
         slot === "hero.poster"
           ? "Poster dikembalikan ke bawaan (aset statis)."
-          : "Video dihapus dan dinonaktifkan.",
+          : slot === "hero.video"
+            ? "Video dihapus dan dinonaktifkan."
+            : "Gambar dikembalikan ke bawaan (aset statis).",
       );
     } catch (error) {
       setMediaMessage(extractErrorMessage(error));
@@ -207,11 +253,27 @@ export function HomeEditor({
     try {
       const posterAlt = poster?.alt ?? "";
       const savedPosterAlt = saved.hero?.poster?.alt ?? "";
+      const mediaAltUpdates: Record<string, { alt: string }> = {};
+      if (poster && posterAlt !== savedPosterAlt) {
+        mediaAltUpdates["hero.poster"] = { alt: posterAlt };
+      }
+      (draft.about?.images ?? []).forEach((image, index) => {
+        if (!image) return;
+        const savedAlt = saved.about?.images[index]?.alt ?? "";
+        if (image.alt !== savedAlt) {
+          mediaAltUpdates[`about.image.${index + 1}`] = { alt: image.alt };
+        }
+      });
       const updated = await updateHomeContent({
         hero: {
           heading: hero.heading,
           description: hero.description,
           videoEnabled: hero.videoEnabled,
+        },
+        about: {
+          paragraphLead: draft.about?.paragraphLead ?? "",
+          paragraph: draft.about?.paragraph ?? "",
+          emphasis: draft.about?.emphasis ?? "",
         },
         story: {
           milestones: draft.story.milestones.map(
@@ -222,8 +284,8 @@ export function HomeEditor({
             }),
           ),
         },
-        ...(poster && posterAlt !== savedPosterAlt
-          ? { media: { "hero.poster": { alt: posterAlt } } }
+        ...(Object.keys(mediaAltUpdates).length > 0
+          ? { media: mediaAltUpdates }
           : {}),
       });
       setDraft(updated);
@@ -243,9 +305,10 @@ export function HomeEditor({
           Editor Beranda
         </h1>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Panel ini mengubah teks hero dan milestone Sejarah Perjalanan.
-          Struktur, judul section, metrik hero, chip peran, dan tahun milestone
-          tetap statis dan tidak memiliki kolom di sini.
+          Panel ini mengubah teks konten Beranda (hero, Tentang GenBI, dan
+          milestone Sejarah Perjalanan) beserta slot medianya. Struktur, judul
+          section, metrik hero, chip peran, dan tahun milestone tetap statis dan
+          tidak memiliki kolom di sini.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -440,6 +503,155 @@ export function HomeEditor({
 
         <div className="mt-6 border-t border-slate-200 pt-5">
           <h2 className="text-sm font-semibold text-slate-700">
+            Tentang GenBI
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-slate-500">
+            Tiga blok paragraf dan empat gambar kolase (posisi tetap). Eyebrow
+            dan judul bagian tetap statis.
+          </p>
+          <div className="mt-4 space-y-4">
+            <div>
+              <label
+                className="block text-sm font-medium text-slate-700"
+                htmlFor="about-paragraphLead"
+              >
+                Paragraf pembuka (lead)
+              </label>
+              <textarea
+                id="about-paragraphLead"
+                value={draft.about?.paragraphLead ?? ""}
+                maxLength={200}
+                rows={2}
+                onChange={(event) =>
+                  updateAbout({ paragraphLead: event.target.value })
+                }
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              />
+              <p className="mt-1 text-right text-xs text-slate-400">
+                {draft.about?.paragraphLead?.length ?? 0}/200
+              </p>
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-slate-700"
+                htmlFor="about-paragraph"
+              >
+                Paragraf utama
+              </label>
+              <textarea
+                id="about-paragraph"
+                value={draft.about?.paragraph ?? ""}
+                maxLength={2000}
+                rows={4}
+                onChange={(event) =>
+                  updateAbout({ paragraph: event.target.value })
+                }
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              />
+              <p className="mt-1 text-right text-xs text-slate-400">
+                {draft.about?.paragraph?.length ?? 0}/2000
+              </p>
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-slate-700"
+                htmlFor="about-emphasis"
+              >
+                Paragraf penekanan
+              </label>
+              <textarea
+                id="about-emphasis"
+                value={draft.about?.emphasis ?? ""}
+                maxLength={2000}
+                rows={3}
+                onChange={(event) =>
+                  updateAbout({ emphasis: event.target.value })
+                }
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              />
+              <p className="mt-1 text-right text-xs text-slate-400">
+                {draft.about?.emphasis?.length ?? 0}/2000
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-4">
+            {[0, 1, 2, 3].map((index) => {
+              const image = draft.about?.images[index] ?? null;
+              const slot = `about.image.${index + 1}`;
+              return (
+                <div
+                  key={slot}
+                  className="rounded-xl border border-slate-200 p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Gambar {index + 1} (posisi tetap)
+                  </p>
+                  <div className="mt-2 flex items-start gap-3">
+                    {image ? (
+                      <Image
+                        src={sections.about.images[index]?.src ?? image.src}
+                        alt={image.alt}
+                        width={96}
+                        height={64}
+                        className="h-16 w-24 rounded-md border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-24 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
+                        bawaan
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      <label
+                        className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                      >
+                        {mediaBusy === slot ? "Mengunggah..." : "Ganti gambar"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          disabled={mediaBusy !== null}
+                          onChange={(event) => {
+                            void onUploadMedia(slot, event.target.files);
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => void onClearMedia(slot)}
+                        disabled={mediaBusy !== null}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Kosongkan
+                      </button>
+                    </div>
+                  </div>
+                  {image && (
+                    <>
+                      <label
+                        className="mt-2 block text-xs font-medium text-slate-600"
+                        htmlFor={`about-image-alt-${index + 1}`}
+                      >
+                        Alt gambar
+                      </label>
+                      <input
+                        id={`about-image-alt-${index + 1}`}
+                        value={image.alt}
+                        onChange={(event) =>
+                          updateAboutImageAlt(index, event.target.value)
+                        }
+                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                      />
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-slate-200 pt-5">
+          <h2 className="text-sm font-semibold text-slate-700">
             Sejarah Perjalanan
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
@@ -507,7 +719,11 @@ export function HomeEditor({
             type="button"
             onClick={onSave}
             disabled={
-              !heroValid || !storyValid || !dirty || status === "saving"
+              !heroValid ||
+              !aboutValid ||
+              !storyValid ||
+              !dirty ||
+              status === "saving"
             }
             className="rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
           >
