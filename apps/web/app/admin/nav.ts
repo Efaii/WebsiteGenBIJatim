@@ -164,7 +164,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: ListChecks,
         roles: GLOBAL_ONLY,
       },
-      // Awardee menyusul dari tiket #89.
+      {
+        href: "/admin/persetujuan/awardee",
+        label: "Awardee",
+        icon: Award,
+        roles: GLOBAL_ONLY,
+      },
     ],
   },
 ];

@@ -312,3 +312,103 @@ export const submitMembershipChanges = async (
 
   return sendSuccess(res, { submitted: pending.length });
 };
+
+/*
+ * Antrean Persetujuan Awardee (khusus admin global).
+ *
+ * Pengajuan manual dari sekretaris umum masuk status SUBMITTED. Admin global
+ * menyetujui sekaligus menerbitkan (PUBLISHED) atau menolak dengan catatan
+ * wajib yang dibaca pengaju di halaman Data Awardee. Batch impor diantre dan
+ * diputuskan lewat endpoint /v1/membership-imports.
+ */
+
+export const listMembershipReviewQueue = async (
+  _req: CmsRequest,
+  res: Response,
+) => {
+  const items = await prisma.membership.findMany({
+    where: { publicationStatus: PublicationStatus.SUBMITTED },
+    include: {
+      commissariat: { select: { name: true } },
+      period: { select: { label: true } },
+      division: { select: { name: true } },
+    },
+    orderBy: [{ updatedAt: "asc" }, { id: "asc" }],
+  });
+  return sendSuccess(res, items);
+};
+
+export const approveMembership = async (req: CmsRequest, res: Response) => {
+  const membership = await prisma.membership.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!membership)
+    throw new ApiError("NOT_FOUND", "Awardee tidak ditemukan.", 404);
+  if (membership.publicationStatus !== PublicationStatus.SUBMITTED)
+    throw new ApiError(
+      "CONFLICT",
+      "Hanya pengajuan berstatus menunggu yang dapat disetujui.",
+      409,
+    );
+  const updated = await prisma.membership.update({
+    where: { id: membership.id },
+    data: {
+      publicationStatus: PublicationStatus.PUBLISHED,
+      rejectionReason: null,
+    },
+  });
+  await prisma.auditEvent.create({
+    data: {
+      cmsAccountId: req.cmsSession!.cmsAccountId,
+      action: "APPROVED",
+      entity: "MEMBERSHIP",
+      entityId: membership.id,
+      oldStatus: membership.publicationStatus,
+      newStatus: "PUBLISHED",
+    },
+  });
+  return sendSuccess(res, updated);
+};
+
+export const rejectMembership = async (req: CmsRequest, res: Response) => {
+  const reason =
+    typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
+  if (!reason)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Catatan penolakan wajib diisi.",
+      400,
+      {
+        reason: ["REQUIRED"],
+      },
+    );
+  const membership = await prisma.membership.findUnique({
+    where: { id: req.params.id },
+  });
+  if (!membership)
+    throw new ApiError("NOT_FOUND", "Awardee tidak ditemukan.", 404);
+  if (membership.publicationStatus !== PublicationStatus.SUBMITTED)
+    throw new ApiError(
+      "CONFLICT",
+      "Hanya pengajuan berstatus menunggu yang dapat ditolak.",
+      409,
+    );
+  const updated = await prisma.membership.update({
+    where: { id: membership.id },
+    data: {
+      publicationStatus: PublicationStatus.REJECTED,
+      rejectionReason: reason.slice(0, 2000),
+    },
+  });
+  await prisma.auditEvent.create({
+    data: {
+      cmsAccountId: req.cmsSession!.cmsAccountId,
+      action: "REJECTED",
+      entity: "MEMBERSHIP",
+      entityId: membership.id,
+      oldStatus: membership.publicationStatus,
+      newStatus: "REJECTED",
+    },
+  });
+  return sendSuccess(res, updated);
+};

@@ -31,3 +31,37 @@ export const submitMembershipImport = async (req: CmsRequest, res: Response) => 
 export const approveMembershipImport = async (req: CmsRequest, res: Response) => sendSuccess(res, await transitionMembershipImport(req.cmsSession!, req.params.id, 'APPROVED'));
 export const rejectMembershipImport = async (req: CmsRequest, res: Response) => sendSuccess(res, await transitionMembershipImport(req.cmsSession!, req.params.id, 'REJECTED', req.body.reason));
 export const reviewMembershipImportAlias = async (req: CmsRequest, res: Response) => sendSuccess(res, await reviewImportAlias(req.cmsSession!, req.body));
+
+/** Antrean batch impor untuk admin global, default status SUBMITTED. */
+export const listMembershipImports = async (req: CmsRequest, res: Response) => {
+  const { prisma } = await import('../lib/prisma');
+  const requested = typeof req.query.status === 'string' ? req.query.status : 'SUBMITTED';
+  const allowed = ['PREVIEW_READY', 'COMMITTED', 'SUBMITTED', 'APPROVED', 'REJECTED', 'EXPIRED', 'FAILED'];
+  if (!allowed.includes(requested)) throw new ApiError('VALIDATION_ERROR', 'Status filter is invalid.', 400, { status: ['INVALID_STATUS'] });
+  const previews = await prisma.membershipImportPreview.findMany({
+    where: { status: requested as never },
+    include: {
+      cmsAccount: { select: { user: { select: { name: true, username: true } } } },
+      commissariat: { select: { name: true } },
+      period: { select: { label: true } },
+    },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+  });
+  return sendSuccess(res, previews.map((preview) => ({
+    id: preview.id,
+    sourceFilename: preview.sourceFilename,
+    status: preview.status,
+    totalRows: preview.totalRows,
+    newCount: preview.newCount,
+    updatedCount: preview.updatedCount,
+    unchangedCount: preview.unchangedCount,
+    invalidCount: preview.invalidCount,
+    ambiguousCount: preview.ambiguousCount,
+    duplicateCount: preview.duplicateCount,
+    committedAt: preview.committedAt,
+    createdAt: preview.createdAt,
+    uploaderName: preview.cmsAccount.user.name || preview.cmsAccount.user.username,
+    commissariatName: preview.commissariat.name,
+    periodLabel: preview.period.label,
+  })));
+};

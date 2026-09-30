@@ -10,6 +10,7 @@ import { NAV_LINK, NAV_LINK_ACTIVE } from "../ui";
 
 const PENDING_NEWS_HREF = "/admin/persetujuan/berita";
 const PENDING_PROGRAMS_HREF = "/admin/persetujuan/program-kerja";
+const PENDING_AWARDEE_HREF = "/admin/persetujuan/awardee";
 
 /**
  * Daftar navigasi sidebar admin.
@@ -64,24 +65,40 @@ export function AdminSidebarNav({
       const counts: Record<string, number> = {
         [PENDING_NEWS_HREF]: 0,
         [PENDING_PROGRAMS_HREF]: 0,
+        [PENDING_AWARDEE_HREF]: 0,
       };
       try {
-        const [news, programs] = await Promise.all([
-          api.get<{ data?: unknown[] }>("/v1/news/cms", {
-            params: { status: "SUBMITTED" },
-            withCredentials: true,
-          }),
-          api.get<{ data?: unknown[] }>("/v1/programs", {
-            params: { status: "SUBMITTED", scope: "all" },
-            withCredentials: true,
-          }),
-        ]);
+        const [news, programs, membershipQueue, importBatches] =
+          await Promise.all([
+            api.get<{ data?: unknown[] }>("/v1/news/cms", {
+              params: { status: "SUBMITTED" },
+              withCredentials: true,
+            }),
+            api.get<{ data?: unknown[] }>("/v1/programs", {
+              params: { status: "SUBMITTED", scope: "all" },
+              withCredentials: true,
+            }),
+            api.get<{ data?: unknown[] }>("/v1/memberships/cms/review", {
+              withCredentials: true,
+            }),
+            api.get<{ data?: unknown[] }>("/v1/membership-imports", {
+              params: { status: "SUBMITTED" },
+              withCredentials: true,
+            }),
+          ]);
         counts[PENDING_NEWS_HREF] = Array.isArray(news.data.data)
           ? news.data.data.length
           : 0;
         counts[PENDING_PROGRAMS_HREF] = Array.isArray(programs.data.data)
           ? programs.data.data.length
           : 0;
+        counts[PENDING_AWARDEE_HREF] =
+          (Array.isArray(membershipQueue.data.data)
+            ? membershipQueue.data.data.length
+            : 0) +
+          (Array.isArray(importBatches.data.data)
+            ? importBatches.data.data.length
+            : 0);
       } catch {
         // Badge hanya informatif; kegagalan dibiarkan tanpa angka.
       }

@@ -198,3 +198,114 @@ export const reviewCmsAwardeeImportAlias = async (payload: {
     withCredentials: true,
   });
 };
+
+/** Antrean pengajuan manual (SUBMITTED) untuk halaman Persetujuan Awardee. */
+export const getCmsAwardeeReviewQueue = async (): Promise<CmsAwardee[]> => {
+  const response = await api.get<{ data?: CmsAwardee[] }>(
+    "/v1/memberships/cms/review",
+    { withCredentials: true },
+  );
+  return response.data.data ?? [];
+};
+
+/** Setujui pengajuan manual sekaligus terbitkan (khusus admin global). */
+export const approveCmsAwardee = async (id: string): Promise<void> => {
+  await api.post(
+    `/v1/memberships/cms/${id}/approve`,
+    {},
+    { withCredentials: true },
+  );
+};
+
+/** Tolak pengajuan manual dengan catatan wajib (khusus admin global). */
+export const rejectCmsAwardee = async (
+  id: string,
+  reason: string,
+): Promise<void> => {
+  await api.post(
+    `/v1/memberships/cms/${id}/reject`,
+    { reason },
+    { withCredentials: true },
+  );
+};
+
+export type CmsImportBatch = {
+  id: string;
+  sourceFilename: string;
+  status: string;
+  totalRows: number;
+  newCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+  invalidCount: number;
+  ambiguousCount: number;
+  duplicateCount: number;
+  committedAt: string | null;
+  createdAt: string;
+  uploaderName: string;
+  commissariatName: string;
+  periodLabel: string;
+};
+
+export type CmsImportBatchRow = {
+  id: string;
+  rowNumber: number;
+  classification: string;
+  errorCode: string | null;
+  errorMessage: string | null;
+  rawValues: Record<string, unknown>;
+  normalizedValues: {
+    komisariat?: string | null;
+    nama?: string | null;
+    jabatan?: string | null;
+    divisi?: string | null;
+    prodi?: string | null;
+  } | null;
+};
+
+export type CmsImportBatchDetail = CmsImportBatch & {
+  rows: CmsImportBatchRow[];
+};
+
+/** Antrean batch impor untuk admin global, default status SUBMITTED. */
+export const getCmsImportBatches = async (
+  status = "SUBMITTED",
+): Promise<CmsImportBatch[]> => {
+  const response = await api.get<{ data?: CmsImportBatch[] }>(
+    "/v1/membership-imports",
+    { params: { status }, withCredentials: true },
+  );
+  return response.data.data ?? [];
+};
+
+/** Isi satu batch impor untuk pratinjau di halaman persetujuan. */
+export const getCmsImportBatchDetail = async (
+  id: string,
+): Promise<CmsImportBatchDetail> => {
+  const response = await api.get<{ data?: CmsImportBatchDetail }>(
+    `/v1/membership-imports/${id}`,
+    { withCredentials: true },
+  );
+  return pickData(response.data.data, "Respons pratinjau batch kosong.");
+};
+
+/** Setujui batch impor sekaligus terbitkan barisnya (khusus admin global). */
+export const approveCmsImportBatch = async (id: string): Promise<void> => {
+  await api.post(
+    `/v1/membership-imports/${id}/approve`,
+    {},
+    { withCredentials: true },
+  );
+};
+
+/** Tolak batch impor dengan catatan wajib (khusus admin global). */
+export const rejectCmsImportBatch = async (
+  id: string,
+  reason: string,
+): Promise<void> => {
+  await api.post(
+    `/v1/membership-imports/${id}/reject`,
+    { reason },
+    { withCredentials: true },
+  );
+};
