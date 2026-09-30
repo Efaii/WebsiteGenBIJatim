@@ -15,5 +15,6 @@ import { readCmsSession, type CmsSessionInfo } from "@/lib/cms-session";
 export const getCmsPageSession = async (): Promise<CmsSessionInfo> => {
   const session = await readCmsSession();
   if (!session) redirect("/admin/login?reason=required");
+  if (session.mustChangePassword) redirect("/admin/ganti-password");
   return session;
 };

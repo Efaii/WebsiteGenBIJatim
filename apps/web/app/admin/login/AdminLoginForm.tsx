@@ -27,8 +27,10 @@ export function AdminLoginForm() {
     setSubmitting(true);
     setError(null);
     try {
-      await loginCms(username.trim(), password);
-      router.push("/admin");
+      const result = await loginCms(username.trim(), password);
+      router.push(
+        result.mustChangePassword ? "/admin/ganti-password" : "/admin",
+      );
       router.refresh();
     } catch {
       setError(

@@ -21,6 +21,7 @@ import programRoutes from "./routes/program.route";
 import publicPeriodRoutes from "./routes/public-periods.route";
 import publicStructureRoutes from "./routes/public-structure.route";
 import publicAwardeeRoutes from "./routes/public-awardee.route";
+import cmsAccountRoutes from "./routes/cms-account.route";
 
 dotenv.config();
 
@@ -68,6 +69,7 @@ app.use("/api/v1/programs", programRoutes);
 app.use("/api/v1/periods", publicPeriodRoutes);
 app.use("/api/v1/commissariats", publicStructureRoutes);
 app.use("/api/v1/awardees", publicAwardeeRoutes);
+app.use("/api/v1/cms-accounts", cmsAccountRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);

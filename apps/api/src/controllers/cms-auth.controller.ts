@@ -64,6 +64,66 @@ export const logoutCms = async (req: CmsRequest, res: Response) => {
 };
 
 /*
+ * Ganti password mandiri untuk akun yang sedang masuk. Dipakai alur wajib
+ * ganti password saat login pertama akun operator; sesudah berhasil akun
+ * dapat memakai area admin seperti biasa.
+ */
+export const changeCmsPassword = async (req: CmsRequest, res: Response) => {
+  const currentPassword =
+    typeof req.body?.currentPassword === "string"
+      ? req.body.currentPassword
+      : "";
+  const newPassword =
+    typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  if (!currentPassword || newPassword.length < 8)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Password lama dan password baru minimal 8 karakter wajib diisi.",
+      400,
+    );
+  if (currentPassword === newPassword)
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "Password baru harus berbeda dari password lama.",
+      400,
+      { newPassword: ["SAME_AS_CURRENT"] },
+    );
+
+  const account = req.cmsSession!.cmsAccount;
+  const user = await prisma.user.findUnique({
+    where: { id: account.userId },
+    select: { id: true, password: true },
+  });
+  if (!user || !(await bcrypt.compare(currentPassword, user.password)))
+    throw new ApiError("VALIDATION_ERROR", "Password lama tidak cocok.", 400, {
+      currentPassword: ["INVALID"],
+    });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: user.id },
+      data: { password: hashed },
+    });
+    await tx.cmsAccount.update({
+      where: { id: account.id },
+      data: { mustChangePassword: false },
+    });
+  });
+
+  await prisma.auditEvent.create({
+    data: {
+      cmsAccountId: account.id,
+      action: "PASSWORD_CHANGED",
+      entity: "CMS_ACCOUNT",
+      entityId: account.id,
+    },
+  });
+
+  return sendSuccess(res, { mustChangePassword: false });
+};
+
+/*
  * Dipakai aplikasi web untuk memverifikasi sesi yang sedang aktif dan
  * memutuskan apakah halaman CMS boleh dirender (hanya `ADMIN_GLOBAL`).
  */

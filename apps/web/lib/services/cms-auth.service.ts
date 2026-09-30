@@ -29,3 +29,20 @@ export const loginCms = async (
 export const logoutCms = async (): Promise<void> => {
   await api.post("/v1/auth/logout", null, { withCredentials: true });
 };
+
+/**
+ * Ganti password mandiri untuk akun yang sedang masuk.
+ *
+ * Dipakai alur wajib ganti password saat login pertama akun operator;
+ * setelah berhasil akun dapat memakai area admin seperti biasa.
+ */
+export const changeCmsPassword = async (
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> => {
+  await api.post(
+    "/v1/auth/change-password",
+    { currentPassword, newPassword },
+    { withCredentials: true },
+  );
+};

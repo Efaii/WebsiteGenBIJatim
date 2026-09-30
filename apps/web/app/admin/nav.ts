@@ -10,6 +10,7 @@ import {
   Newspaper,
   Plus,
   Upload,
+  UserCog,
 } from "lucide-react";
 
 /**
@@ -168,6 +169,17 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: "/admin/persetujuan/awardee",
         label: "Awardee",
         icon: Award,
+        roles: GLOBAL_ONLY,
+      },
+    ],
+  },
+  {
+    label: "Sistem",
+    items: [
+      {
+        href: "/admin/sistem/akun",
+        label: "Akun Operator",
+        icon: UserCog,
         roles: GLOBAL_ONLY,
       },
     ],
