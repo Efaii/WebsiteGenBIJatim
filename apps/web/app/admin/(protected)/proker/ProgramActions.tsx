@@ -8,6 +8,7 @@ import {
   type CmsProgramItem,
 } from "@/lib/services/cms-program.service";
 import { BTN_PRIMARY, BTN_SECONDARY, PANEL } from "../../ui";
+import { ProgramApprovalButtons } from "./ProgramApprovalButtons";
 import {
   PROGRAM_EXECUTION_LABEL,
   PROGRAM_STATUS_BADGE,
@@ -47,6 +48,16 @@ const VIEWER_HINT: Record<string, string> = {
   ARCHIVED: "Program Kerja sudah diarsipkan.",
 };
 
+const APPROVER_HINT: Record<string, string> = {
+  DRAFT: "Masih draf sekretaris divisi; belum diajukan untuk persetujuan.",
+  REJECTED: "Sudah ditolak; menunggu perbaikan sekretaris divisi.",
+  SUBMITTED:
+    "Tinjau isi dan berkas, lalu setujui untuk menerbitkan atau tolak dengan catatan.",
+  APPROVED: "Sudah disetujui; menunggu penerbitan.",
+  PUBLISHED: "Tayang di halaman program publik.",
+  ARCHIVED: "Program Kerja sudah diarsipkan.",
+};
+
 /**
  * Kartu status Program Kerja untuk sekretaris divisi: pengajuan ke admin
  * global dan tautan publik setelah terbit. Persetujuan dan penerbitan
@@ -55,16 +66,20 @@ const VIEWER_HINT: Record<string, string> = {
 export function ProgramActions({
   program,
   canManage = true,
+  canApprove = false,
 }: {
   program: CmsProgramItem;
   canManage?: boolean;
+  canApprove?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const status = program.publicationStatus;
-  const hint = (canManage ? HINT : VIEWER_HINT)[status];
+  const hint = (canApprove ? APPROVER_HINT : canManage ? HINT : VIEWER_HINT)[
+    status
+  ];
 
   const submit = async () => {
     setBusy(true);
@@ -102,6 +117,9 @@ export function ProgramActions({
       ) : null}
 
       <div className="mt-4 flex flex-col gap-2">
+        {canApprove && status === "SUBMITTED" && (
+          <ProgramApprovalButtons programId={program.id} />
+        )}
         {canManage && (status === "DRAFT" || status === "REJECTED") && (
           <button
             type="button"

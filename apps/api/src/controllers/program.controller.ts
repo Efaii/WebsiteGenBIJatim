@@ -90,6 +90,7 @@ export const transitionProgramRevision = async (req: CmsRequest, res: Response) 
     }
     return next;
   });
+  await prisma.auditEvent.create({ data: { cmsAccountId: req.cmsSession!.cmsAccount.id, action: to, entity: 'PROGRAM_REVISION', entityId: revision.id, oldStatus: revision.publicationStatus, newStatus: to } });
   return sendSuccess(res, updated);
 };
 
@@ -120,6 +121,7 @@ export const transitionProgram = async (req: CmsRequest, res: Response) => {
   assertPublicationTransition(program.publicationStatus, to, req.body.rejectionReason);
   assertProgramRoleTransition(req.cmsSession!.cmsAccount.role, to);
   const updated = await prisma.programKerja.update({ where: { id: program.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
+  await prisma.auditEvent.create({ data: { cmsAccountId: req.cmsSession!.cmsAccountId, action: to, entity: 'PROGRAM', entityId: program.id, oldStatus: program.publicationStatus, newStatus: to } });
   return sendSuccess(res, updated);
 };
 

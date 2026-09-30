@@ -133,7 +133,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: ClipboardCheck,
         roles: GLOBAL_ONLY,
       },
-      // Program Kerja dan Awardee menyusul dari tiket #86 dan #89.
+      {
+        href: "/admin/persetujuan/program-kerja",
+        label: "Program Kerja",
+        icon: ListChecks,
+        roles: GLOBAL_ONLY,
+      },
+      // Awardee menyusul dari tiket #89.
     ],
   },
 ];

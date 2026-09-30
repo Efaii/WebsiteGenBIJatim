@@ -24,6 +24,7 @@ export default async function AdminProgramDetailPage({
 }) {
   const session = await getCmsPageSession();
   const canManage = session.role === "SEKRETARIS_DIVISI";
+  const canApprove = session.role === "ADMIN_GLOBAL";
 
   const { id } = await params;
   const items =
@@ -54,7 +55,11 @@ export default async function AdminProgramDetailPage({
           <ProgramArtifacts program={item} canManage={canManage} />
         </div>
         <div className="space-y-6 xl:sticky xl:top-24">
-          <ProgramActions program={item} canManage={canManage} />
+          <ProgramActions
+            program={item}
+            canManage={canManage}
+            canApprove={canApprove}
+          />
         </div>
       </div>
     </div>

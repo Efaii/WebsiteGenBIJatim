@@ -9,6 +9,7 @@ import { navGroupsForRole, type AdminRole } from "../nav";
 import { NAV_LINK, NAV_LINK_ACTIVE } from "../ui";
 
 const PENDING_NEWS_HREF = "/admin/persetujuan/berita";
+const PENDING_PROGRAMS_HREF = "/admin/persetujuan/program-kerja";
 
 /**
  * Daftar navigasi sidebar admin.
@@ -34,7 +35,7 @@ export function AdminSidebarNav({
   const pathname = usePathname();
   const groups = navGroupsForRole(role);
   const isGlobal = role === "ADMIN_GLOBAL";
-  const [pendingNews, setPendingNews] = useState(0);
+  const [pending, setPending] = useState<Record<string, number>>({});
 
   const allItems = groups.flatMap((group) => group.items);
   /*
@@ -60,18 +61,31 @@ export function AdminSidebarNav({
     if (!isGlobal) return;
     let cancelled = false;
     const load = async () => {
+      const counts: Record<string, number> = {
+        [PENDING_NEWS_HREF]: 0,
+        [PENDING_PROGRAMS_HREF]: 0,
+      };
       try {
-        const response = await api.get<{ data?: unknown[] }>("/v1/news/cms", {
-          params: { status: "SUBMITTED" },
-          withCredentials: true,
-        });
-        const count = Array.isArray(response.data.data)
-          ? response.data.data.length
+        const [news, programs] = await Promise.all([
+          api.get<{ data?: unknown[] }>("/v1/news/cms", {
+            params: { status: "SUBMITTED" },
+            withCredentials: true,
+          }),
+          api.get<{ data?: unknown[] }>("/v1/programs", {
+            params: { status: "SUBMITTED", scope: "all" },
+            withCredentials: true,
+          }),
+        ]);
+        counts[PENDING_NEWS_HREF] = Array.isArray(news.data.data)
+          ? news.data.data.length
           : 0;
-        if (!cancelled) setPendingNews(count);
+        counts[PENDING_PROGRAMS_HREF] = Array.isArray(programs.data.data)
+          ? programs.data.data.length
+          : 0;
       } catch {
-        if (!cancelled) setPendingNews(0);
+        // Badge hanya informatif; kegagalan dibiarkan tanpa angka.
       }
+      if (!cancelled) setPending(counts);
     };
     void load();
     const onChanged = () => void load();
@@ -95,7 +109,7 @@ export function AdminSidebarNav({
             {group.items.map((item) => {
               const active = item.href === bestHref;
               const Icon = item.icon;
-              const badge = item.href === PENDING_NEWS_HREF ? pendingNews : 0;
+              const badge = pending[item.href] ?? 0;
               return (
                 <li key={item.href}>
                   <Link
