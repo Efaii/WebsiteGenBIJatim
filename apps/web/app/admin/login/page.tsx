@@ -44,8 +44,8 @@ export default function AdminLoginPage() {
             Energi Baru untuk Indonesia
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-genbi-haze/90">
-            Satu tempat untuk mengelola beranda, berita, dan FAQ GenBI Jawa
-            Timur. Khusus admin global.
+            Satu tempat untuk mengelola konten dan operasional GenBI Jawa Timur,
+            sesuai wewenang peran akun.
           </p>
         </div>
 

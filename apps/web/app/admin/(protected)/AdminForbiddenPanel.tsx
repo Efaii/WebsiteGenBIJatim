@@ -1,13 +1,16 @@
-import type { CmsSessionInfo } from "@/lib/cms-session";
+import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
-import { AdminLogoutButton } from "./AdminLogoutButton";
-import { PANEL } from "../ui";
+import type { CmsSessionInfo } from "@/lib/cms-session";
+import { ADMIN_ROLE_LABELS } from "../nav";
+import { BTN_SECONDARY, PANEL } from "../ui";
 
 /**
- * Pesan tolakan untuk peran selain admin global.
+ * Pesan tolakan untuk halaman yang bukan wewenang peran.
  *
  * Dirender di level halaman (bukan layout) supaya boundary Suspense tetap
- * selesai pada hard load; lihat catatan di `lib/cms-guard.ts`.
+ * selesai pada hard load; lihat catatan di `lib/cms-guard.ts`. Peran sekretaris
+ * tidak lagi melihat panel ini di Ringkasan; panel hanya muncul ketika halaman
+ * khusus admin global dibuka langsung dari alamat.
  */
 export function AdminForbiddenPanel({ session }: { session: CmsSessionInfo }) {
   return (
@@ -16,19 +19,23 @@ export function AdminForbiddenPanel({ session }: { session: CmsSessionInfo }) {
         <ShieldAlert className="h-7 w-7" aria-hidden />
       </span>
       <h1 className="mt-5 font-heading text-xl font-bold text-slate-900">
-        Area khusus admin global
+        Halaman ini khusus admin global
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
-        Halaman pengelolaan konten hanya bisa dibuka oleh admin global. Akun{" "}
+        Akun{" "}
         <strong className="font-semibold text-slate-900">
           {session.username ?? session.accountId}
         </strong>{" "}
         masuk sebagai{" "}
-        <strong className="font-semibold text-slate-900">{session.role}</strong>
-        , jadi konten admin tidak ditampilkan.
+        <strong className="font-semibold text-slate-900">
+          {ADMIN_ROLE_LABELS[session.role]}
+        </strong>
+        , jadi halaman pengelolaan ini tidak termasuk wewenangnya.
       </p>
-      <div className="mt-6 flex justify-center">
-        <AdminLogoutButton />
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Link href="/admin" className={BTN_SECONDARY}>
+          Kembali ke Ringkasan
+        </Link>
       </div>
     </section>
   );

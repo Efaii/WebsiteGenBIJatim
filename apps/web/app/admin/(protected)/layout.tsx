@@ -5,19 +5,20 @@ import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { Container } from "@/components/Container";
 import { readCmsSession } from "@/lib/cms-session";
+import { ADMIN_ROLE_LABELS, type AdminRole } from "../nav";
 import { AdminLogoutButton } from "./AdminLogoutButton";
-import { AdminNav } from "./AdminNav";
+import { AdminMobileNav } from "./AdminMobileNav";
+import { AdminSidebarNav } from "./AdminSidebarNav";
 
 /**
- * Kerangka area admin.
+ * Kerangka area admin multi-peran.
  *
- * Layout hanya menangani pengunjung tanpa sesi (redirect ke halaman masuk).
- * Pemeriksaan peran dilakukan di level halaman (`getCmsPageSession`) karena
- * layout yang mengembalikan pohon tanpa `children` membuat boundary Suspense
- * tidak pernah selesai pada hard load (terjebak di fallback "Memuat halaman").
- *
- * Navigasi hanya dirender untuk admin global supaya peran lain tidak melihat
- * menu pengelolaan sama sekali.
+ * Header menjaga identitas, info akun, Lihat situs, dan Keluar; navigasi
+ * utama hidup di sidebar kiri (drawer di layar kecil). Pemeriksaan peran tetap
+ * di level halaman (`getCmsPageSession`) karena layout yang mengembalikan pohon
+ * tanpa `children` membuat boundary Suspense tidak pernah selesai pada hard
+ * load. Sidebar hanya menyaring item menu sesuai peran; penegakan akses yang
+ * sebenarnya ada di masing-masing halaman dan API.
  */
 export default async function AdminProtectedLayout({
   children,
@@ -27,14 +28,15 @@ export default async function AdminProtectedLayout({
   const session = await readCmsSession();
   if (!session) redirect("/admin/login?reason=required");
 
-  const isGlobalAdmin = session.role === "ADMIN_GLOBAL";
+  const role: AdminRole = session.role;
 
   return (
-    <div className="min-h-screen bg-genbi-soft">
+    <div className="flex min-h-screen flex-col bg-genbi-soft">
       <header className="sticky top-0 z-50 border-b border-genbi-line bg-white/92 backdrop-blur-xl">
         <Container>
           <div className="flex h-16 items-center justify-between gap-3 md:h-[72px]">
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <AdminMobileNav role={role} />
               <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
                 <span className="relative h-9 w-9 shrink-0 md:h-10 md:w-10">
                   <Image
@@ -55,14 +57,13 @@ export default async function AdminProtectedLayout({
               </span>
             </div>
 
-            {isGlobalAdmin && <AdminNav className="hidden lg:flex" />}
-
             <div className="flex items-center gap-2">
               <span className="hidden text-sm text-slate-500 xl:block">
                 Masuk sebagai{" "}
                 <span className="font-semibold text-slate-700">
                   {session.username ?? "admin"}
-                </span>
+                </span>{" "}
+                ({ADMIN_ROLE_LABELS[role]})
               </span>
               <a
                 href="/"
@@ -76,15 +77,15 @@ export default async function AdminProtectedLayout({
               <AdminLogoutButton />
             </div>
           </div>
-
-          {isGlobalAdmin && (
-            <AdminNav className="-mx-1 overflow-x-auto pb-3 lg:hidden" />
-          )}
         </Container>
       </header>
-      <main className="py-8 md:py-10">
-        <Container>{children}</Container>
-      </main>
+
+      <Container className="flex w-full flex-1 items-start gap-8 py-8 md:py-10">
+        <aside className="sticky top-[88px] hidden w-60 shrink-0 lg:block">
+          <AdminSidebarNav role={role} />
+        </aside>
+        <main className="min-w-0 flex-1">{children}</main>
+      </Container>
     </div>
   );
 }

@@ -37,3 +37,11 @@ export const LABEL = "block text-sm font-medium text-slate-700";
 
 export const FILE_INPUT =
   "block w-full text-sm text-slate-500 file:mr-3 file:cursor-pointer file:rounded-full file:border-0 file:bg-genbi-light file:px-4 file:py-2 file:text-sm file:font-semibold file:text-genbi-blue file:transition-colors hover:file:bg-genbi-haze disabled:pointer-events-none disabled:opacity-60";
+
+/** Tautan navigasi sidebar admin. */
+export const NAV_LINK =
+  "flex items-center gap-2.5 rounded-thumb px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-genbi-soft hover:text-genbi-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/50";
+
+/** Keadaan aktif NAV_LINK: latar aksen lembut dengan teks biru. */
+export const NAV_LINK_ACTIVE =
+  "bg-genbi-light font-semibold text-genbi-blue hover:bg-genbi-light hover:text-genbi-blue";

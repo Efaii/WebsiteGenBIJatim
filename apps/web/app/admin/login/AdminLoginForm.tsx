@@ -44,7 +44,8 @@ export function AdminLoginForm() {
         Masuk ke admin
       </h1>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">
-        Area ini khusus admin global GenBI Jawa Timur.
+        Area pengelolaan GenBI Jawa Timur. Menu mengikuti wewenang peran akun
+        Anda.
       </p>
 
       {NOTICES[reason] && (
