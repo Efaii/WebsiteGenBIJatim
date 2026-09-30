@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/services/home-content.service";
 import type { PublicNewsSummary } from "@/lib/services/news.service";
 import type { CommissariatItem, FAQItem } from "@/types/home.types";
+import { BTN_PRIMARY, BTN_SECONDARY, FIELD, PANEL } from "../../ui";
 
 const HERO_DESCRIPTION_MAX_WORDS = 20;
 
@@ -393,17 +395,17 @@ export function HomeEditor({
   };
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[380px_1fr]">
+    <div className="grid items-start gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
       {/* --- PANEL FORMULIR --- */}
-      <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:sticky xl:top-6">
+      <aside className={`${PANEL} p-6 xl:sticky xl:top-24`}>
         <h1 className="font-heading text-lg font-bold text-slate-900">
           Editor Beranda
         </h1>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Panel ini mengubah teks konten Beranda (hero, Tentang GenBI, dan
-          milestone Sejarah Perjalanan) beserta slot medianya. Struktur, judul
-          section, metrik hero, chip peran, dan tahun milestone tetap statis dan
-          tidak memiliki kolom di sini.
+          Panel ini mengubah teks konten Beranda (hero, Tentang GenBI, Pilar
+          GenBI, dan milestone Sejarah Perjalanan) beserta slot medianya.
+          Struktur, judul section, metrik hero, chip peran, dan tahun milestone
+          tetap statis dan tidak memiliki kolom di sini.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -422,7 +424,7 @@ export function HomeEditor({
                   heading: { ...hero.heading, line1: event.target.value },
                 })
               }
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              className={`${FIELD} mt-1`}
             />
           </div>
           <div>
@@ -440,7 +442,7 @@ export function HomeEditor({
                   heading: { ...hero.heading, line2: event.target.value },
                 })
               }
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              className={`${FIELD} mt-1`}
             />
           </div>
           <div>
@@ -457,21 +459,21 @@ export function HomeEditor({
                 updateHero({ description: event.target.value })
               }
               rows={4}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+              className={`${FIELD} mt-1`}
             />
             <p
               className={`mt-1 text-xs ${heroWords > HERO_DESCRIPTION_MAX_WORDS ? "font-semibold text-red-600" : "text-slate-500"}`}
             >
               {heroWords}/{HERO_DESCRIPTION_MAX_WORDS} kata
               {heroWords > HERO_DESCRIPTION_MAX_WORDS
-                ? " — maksimal 20 kata"
+                ? " (maksimal 20 kata)"
                 : ""}
             </p>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <h2 className="text-sm font-semibold text-slate-700">Media hero</h2>
+        <div className="mt-6 border-t border-genbi-line pt-5">
+          <h2 className="text-sm font-semibold text-slate-900">Media hero</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
             Unggahan menggantikan slot langsung di database (tanpa draft per
             media). Poster langsung tayang; video baru tampil setelah diaktifkan
@@ -487,11 +489,11 @@ export function HomeEditor({
                   alt={sections.hero.poster.alt}
                   width={112}
                   height={64}
-                  className="h-16 w-28 rounded-md border border-slate-200 object-cover"
+                  className="h-16 w-28 rounded-thumb border border-genbi-line object-cover"
                 />
                 <div className="flex flex-wrap items-center gap-2">
                   <label
-                    className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                    className={`${BTN_SECONDARY} cursor-pointer ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
                   >
                     {mediaBusy === "hero.poster"
                       ? "Mengunggah..."
@@ -511,7 +513,7 @@ export function HomeEditor({
                     type="button"
                     onClick={() => void onClearMedia("hero.poster")}
                     disabled={mediaBusy !== null}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    className={BTN_SECONDARY}
                   >
                     Kosongkan
                   </button>
@@ -534,7 +536,7 @@ export function HomeEditor({
                           poster: { ...poster, alt: event.target.value },
                         });
                     }}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                    className={`${FIELD} mt-1`}
                   />
                 </div>
               )}
@@ -551,7 +553,7 @@ export function HomeEditor({
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <label
-                  className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                  className={`${BTN_SECONDARY} cursor-pointer ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
                 >
                   {mediaBusy === "hero.video"
                     ? "Mengunggah..."
@@ -571,13 +573,14 @@ export function HomeEditor({
                   type="button"
                   onClick={() => void onClearMedia("hero.video")}
                   disabled={mediaBusy !== null || !hero.video}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  className={BTN_SECONDARY}
                 >
                   Kosongkan
                 </button>
                 <label className="ml-1 inline-flex items-center gap-2 text-sm text-slate-600">
                   <input
                     type="checkbox"
+                    className="accent-genbi-blue"
                     checked={hero.videoEnabled}
                     onChange={(event) =>
                       updateHero({ videoEnabled: event.target.checked })
@@ -590,14 +593,14 @@ export function HomeEditor({
           </div>
 
           {mediaMessage && (
-            <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-600">
+            <p className="mt-3 rounded-2xl border border-genbi-haze bg-genbi-light px-3.5 py-2.5 text-xs leading-relaxed text-genbi-ink">
               {mediaMessage}
             </p>
           )}
         </div>
 
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <h2 className="text-sm font-semibold text-slate-700">
+        <div className="mt-6 border-t border-genbi-line pt-5">
+          <h2 className="text-sm font-semibold text-slate-900">
             Tentang GenBI
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
@@ -620,7 +623,7 @@ export function HomeEditor({
                 onChange={(event) =>
                   updateAbout({ paragraphLead: event.target.value })
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                className={`${FIELD} mt-1`}
               />
               <p className="mt-1 text-right text-xs text-slate-400">
                 {draft.about?.paragraphLead?.length ?? 0}/200
@@ -641,7 +644,7 @@ export function HomeEditor({
                 onChange={(event) =>
                   updateAbout({ paragraph: event.target.value })
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                className={`${FIELD} mt-1`}
               />
               <p className="mt-1 text-right text-xs text-slate-400">
                 {draft.about?.paragraph?.length ?? 0}/2000
@@ -662,7 +665,7 @@ export function HomeEditor({
                 onChange={(event) =>
                   updateAbout({ emphasis: event.target.value })
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                className={`${FIELD} mt-1`}
               />
               <p className="mt-1 text-right text-xs text-slate-400">
                 {draft.about?.emphasis?.length ?? 0}/2000
@@ -676,7 +679,7 @@ export function HomeEditor({
               return (
                 <div
                   key={slot}
-                  className="rounded-xl border border-slate-200 p-3"
+                  className="rounded-2xl border border-genbi-line bg-genbi-soft/50 p-3.5"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                     Gambar {index + 1} (posisi tetap)
@@ -688,16 +691,16 @@ export function HomeEditor({
                         alt={image.alt}
                         width={96}
                         height={64}
-                        className="h-16 w-24 rounded-md border border-slate-200 object-cover"
+                        className="h-16 w-24 rounded-thumb border border-genbi-line object-cover"
                       />
                     ) : (
-                      <div className="flex h-16 w-24 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
+                      <div className="flex h-16 w-24 items-center justify-center rounded-thumb border border-dashed border-slate-300 text-xs text-slate-400">
                         bawaan
                       </div>
                     )}
                     <div className="flex flex-col gap-2">
                       <label
-                        className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                        className={`${BTN_SECONDARY} cursor-pointer ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
                       >
                         {mediaBusy === slot ? "Mengunggah..." : "Ganti gambar"}
                         <input
@@ -715,7 +718,7 @@ export function HomeEditor({
                         type="button"
                         onClick={() => void onClearMedia(slot)}
                         disabled={mediaBusy !== null}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                        className={BTN_SECONDARY}
                       >
                         Kosongkan
                       </button>
@@ -735,7 +738,7 @@ export function HomeEditor({
                         onChange={(event) =>
                           updateAboutImageAlt(index, event.target.value)
                         }
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                        className={`${FIELD} mt-1`}
                       />
                     </>
                   )}
@@ -745,8 +748,8 @@ export function HomeEditor({
           </div>
         </div>
 
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <h2 className="text-sm font-semibold text-slate-700">Pilar GenBI</h2>
+        <div className="mt-6 border-t border-genbi-line pt-5">
+          <h2 className="text-sm font-semibold text-slate-900">Pilar GenBI</h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
             Judul, deskripsi, tiga poin, dan gambar tiap kartu. Jumlah kartu,
             judul bagian, dan deskripsi pengantar tetap statis.
@@ -758,7 +761,7 @@ export function HomeEditor({
               return (
                 <div
                   key={item.position}
-                  className="rounded-xl border border-slate-200 p-3"
+                  className="rounded-2xl border border-genbi-line bg-genbi-soft/50 p-3.5"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                     Kartu {item.position}
@@ -778,7 +781,7 @@ export function HomeEditor({
                         title: event.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                    className={`${FIELD} mt-1`}
                   />
                   <label
                     className="mt-2 block text-sm font-medium text-slate-700"
@@ -796,7 +799,7 @@ export function HomeEditor({
                         description: event.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                    className={`${FIELD} mt-1`}
                   />
                   <p className="mt-2 text-xs font-medium text-slate-600">
                     Poin (tiga)
@@ -820,7 +823,7 @@ export function HomeEditor({
                             event.target.value,
                           )
                         }
-                        className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-genbi-blue"
+                        className={FIELD}
                       />
                     </label>
                   ))}
@@ -834,16 +837,16 @@ export function HomeEditor({
                         alt={image.alt}
                         width={96}
                         height={64}
-                        className="h-16 w-24 rounded-md border border-slate-200 object-cover"
+                        className="h-16 w-24 rounded-thumb border border-genbi-line object-cover"
                       />
                     ) : (
-                      <div className="flex h-16 w-24 items-center justify-center rounded-md border border-dashed border-slate-300 text-xs text-slate-400">
+                      <div className="flex h-16 w-24 items-center justify-center rounded-thumb border border-dashed border-slate-300 text-xs text-slate-400">
                         bawaan
                       </div>
                     )}
                     <div className="flex flex-col gap-2">
                       <label
-                        className={`cursor-pointer rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
+                        className={`${BTN_SECONDARY} cursor-pointer ${mediaBusy ? "pointer-events-none opacity-60" : ""}`}
                       >
                         {mediaBusy === slot ? "Mengunggah..." : "Ganti gambar"}
                         <input
@@ -861,7 +864,7 @@ export function HomeEditor({
                         type="button"
                         onClick={() => void onClearMedia(slot)}
                         disabled={mediaBusy !== null}
-                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                        className={BTN_SECONDARY}
                       >
                         Kosongkan
                       </button>
@@ -881,7 +884,7 @@ export function HomeEditor({
                         onChange={(event) =>
                           updatePilarImageAlt(item.position, event.target.value)
                         }
-                        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                        className={`${FIELD} mt-1`}
                       />
                     </>
                   )}
@@ -891,8 +894,8 @@ export function HomeEditor({
           </div>
         </div>
 
-        <div className="mt-6 border-t border-slate-200 pt-5">
-          <h2 className="text-sm font-semibold text-slate-700">
+        <div className="mt-6 border-t border-genbi-line pt-5">
+          <h2 className="text-sm font-semibold text-slate-900">
             Sejarah Perjalanan
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
@@ -905,7 +908,7 @@ export function HomeEditor({
               return (
                 <div
                   key={milestone.position}
-                  className="rounded-xl border border-slate-200 p-3"
+                  className="rounded-2xl border border-genbi-line bg-genbi-soft/50 p-3.5"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                     Tahun {year} (statis)
@@ -924,7 +927,7 @@ export function HomeEditor({
                         title: event.target.value,
                       })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                    className={`${FIELD} mt-1`}
                   />
                   <label
                     className="mt-2 block text-sm font-medium text-slate-700"
@@ -941,7 +944,7 @@ export function HomeEditor({
                       })
                     }
                     rows={3}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+                    className={`${FIELD} mt-1`}
                   />
                 </div>
               );
@@ -950,7 +953,7 @@ export function HomeEditor({
         </div>
 
         {message && (
-          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-relaxed text-red-700">
             {message}
           </p>
         )}
@@ -967,8 +970,11 @@ export function HomeEditor({
               !dirty ||
               status === "saving"
             }
-            className="rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className={BTN_PRIMARY}
           >
+            {status === "saving" && (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            )}
             {status === "saving" ? "Menyimpan..." : "Simpan"}
           </button>
           <button
@@ -979,7 +985,7 @@ export function HomeEditor({
               setMessage(null);
             }}
             disabled={!dirty || status === "saving"}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+            className={BTN_SECONDARY}
           >
             Batalkan perubahan
           </button>
@@ -988,7 +994,7 @@ export function HomeEditor({
           {status === "saved" && !dirty
             ? "Tersimpan dan sudah tayang di beranda publik."
             : dirty
-              ? "Ada perubahan yang belum disimpan — belum terlihat di situs publik."
+              ? "Ada perubahan yang belum disimpan, belum terlihat di situs publik."
               : "Tidak ada perubahan."}
         </p>
       </aside>
@@ -996,11 +1002,11 @@ export function HomeEditor({
       {/* --- PRATINJAU (KOMPONEN ASLI) --- */}
       <section className="min-w-0">
         <div className="mb-2 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-slate-700">
-            Pratinjau Beranda (komponen asli, state draft)
+          <h2 className="text-sm font-semibold text-slate-900">
+            Pratinjau Beranda
           </h2>
           <span className="text-xs text-slate-400">
-            geser horizontal bila perlu
+            tampilan draft, geser horizontal bila perlu
           </span>
         </div>
         {/*
@@ -1008,7 +1014,7 @@ export function HomeEditor({
           memberi contain untuk elemen `fixed` (navbar) lewat transform, supaya
           pratinjau tidak menutupi antarmuka CMS.
         */}
-        <div className="max-h-[80vh] overflow-auto rounded-2xl border border-slate-300 bg-white">
+        <div className="max-h-[80vh] overflow-auto rounded-2xl border border-genbi-line bg-white">
           <div className="min-w-[1280px]">
             <div className="relative" style={{ transform: "translateZ(0)" }}>
               <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">

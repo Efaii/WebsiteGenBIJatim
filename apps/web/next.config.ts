@@ -35,11 +35,16 @@ const nextConfig: NextConfig = {
     return [
       { source: "/about", destination: "/profil", permanent: true },
       /*
-       * Jalur admin lama dipensiunkan; CMS kanonik hidup di /cms. Pengalihan
-       * menjaga tautan lama tidak menjadi 404.
+       * Satu area admin kanonik hidup di /admin. Alamat /cms beserta seluruh
+       * path di dalamnya dialihkan agar tautan dan bookmark lama tetap hidup.
+       * Lihat ADR 0015.
        */
-      { source: "/admin", destination: "/cms", permanent: true },
-      { source: "/admin/:path*", destination: "/cms", permanent: true },
+      { source: "/cms", destination: "/admin", permanent: true },
+      {
+        source: "/cms/:path*",
+        destination: "/admin/:path*",
+        permanent: true,
+      },
     ];
   },
 };

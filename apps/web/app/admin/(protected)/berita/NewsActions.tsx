@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ExternalLink, Loader2 } from "lucide-react";
 import {
   transitionNews,
   type CmsNewsItem,
   type PublicationStatusValue,
 } from "@/lib/services/cms-news.service";
+import { BTN_PRIMARY, BTN_SECONDARY, PANEL } from "../../ui";
+import {
+  NEWS_STATUS_BADGE,
+  NEWS_STATUS_LABEL,
+  newsStatusClass,
+} from "./status";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -18,13 +25,19 @@ const extractMessage = (error: unknown): string => {
   return "Gagal menjalankan transisi status.";
 };
 
-const primaryClass =
-  "rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50";
-const secondaryClass =
-  "rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50";
+const STATUS_HINT: Record<string, string> = {
+  DRAFT: "Terbitkan akan menyetujui sekaligus menayangkan berita ke publik.",
+  REJECTED:
+    "Berita ditolak. Setelah diperbaiki, terbitkan untuk menyetujui dan menayangkannya.",
+  SUBMITTED:
+    "Berita menunggu persetujuan. Setujui untuk melanjutkan ke penerbitan.",
+  APPROVED: "Berita sudah disetujui. Terbitkan untuk menayangkannya.",
+  PUBLISHED:
+    "Berita tayang di publik. Menarik ke draft akan menyembunyikannya dari publik.",
+};
 
 /**
- * Aksi alur terbit berita (jalur kanonik DRAFT → SUBMITTED → APPROVED →
+ * Aksi alur terbit berita (jalur kanonik DRAFT -> SUBMITTED -> APPROVED ->
  * PUBLISHED). Admin global menjalankan ketiganya berurutan; validasi
  * kelengkapan (kategori/ringkasan/isi/cover) ditegakkan API dan pesannya
  * ditampilkan apa adanya.
@@ -52,15 +65,23 @@ export function NewsActions({ news }: { news: CmsNewsItem }) {
   const status = news.publicationStatus;
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <section className={`${PANEL} p-6`}>
+      <h2 className="text-sm font-semibold text-slate-900">Status terbit</h2>
+      <p className="mt-3">
+        <span className={`${NEWS_STATUS_BADGE} ${newsStatusClass(status)}`}>
+          {NEWS_STATUS_LABEL[status] ?? status}
+        </span>
+      </p>
+
+      <div className="mt-4 flex flex-col gap-2">
         {(status === "DRAFT" || status === "REJECTED") && (
           <button
             type="button"
             disabled={busy}
             onClick={() => void run(["SUBMITTED", "APPROVED", "PUBLISHED"])}
-            className={primaryClass}
+            className={`${BTN_PRIMARY} w-full`}
           >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {busy ? "Memproses..." : "Terbitkan"}
           </button>
         )}
@@ -69,8 +90,9 @@ export function NewsActions({ news }: { news: CmsNewsItem }) {
             type="button"
             disabled={busy}
             onClick={() => void run(["APPROVED", "PUBLISHED"])}
-            className={primaryClass}
+            className={`${BTN_PRIMARY} w-full`}
           >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {busy ? "Memproses..." : "Setujui & terbitkan"}
           </button>
         )}
@@ -79,8 +101,9 @@ export function NewsActions({ news }: { news: CmsNewsItem }) {
             type="button"
             disabled={busy}
             onClick={() => void run(["PUBLISHED"])}
-            className={primaryClass}
+            className={`${BTN_PRIMARY} w-full`}
           >
+            {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
             {busy ? "Memproses..." : "Terbitkan"}
           </button>
         )}
@@ -90,29 +113,35 @@ export function NewsActions({ news }: { news: CmsNewsItem }) {
               href={`/news/${news.slug}`}
               target="_blank"
               rel="noreferrer"
-              className={secondaryClass}
+              className={`${BTN_SECONDARY} w-full`}
             >
+              <ExternalLink className="h-4 w-4" aria-hidden />
               Lihat publik
             </a>
             <button
               type="button"
               disabled={busy}
               onClick={() => void run(["DRAFT"])}
-              className={secondaryClass}
+              className={`${BTN_SECONDARY} w-full`}
             >
+              {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
               {busy ? "Memproses..." : "Tarik ke draft"}
             </button>
           </>
         )}
       </div>
-      <p className="text-xs text-slate-500">
-        Status: <span className="font-medium text-slate-700">{status}</span>
-      </p>
+
+      {STATUS_HINT[status] && (
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">
+          {STATUS_HINT[status]}
+        </p>
+      )}
+
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs leading-relaxed text-red-700">
           {error}
         </p>
       )}
-    </div>
+    </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import {
   NEWS_CATEGORIES,
   createNews,
@@ -9,6 +10,7 @@ import {
   type CmsNewsItem,
   type NewsCategoryValue,
 } from "@/lib/services/cms-news.service";
+import { BTN_PRIMARY, FIELD, FILE_INPUT, LABEL, PANEL } from "../../ui";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -19,9 +21,6 @@ const extractMessage = (error: unknown): string => {
   }
   return "Gagal menyimpan berita. Periksa koneksi ke API lalu coba lagi.";
 };
-
-const inputClass =
-  "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue";
 
 /**
  * Formulir berita (buat draft baru / sunting draft) memakai jalur kanonik.
@@ -72,7 +71,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
         router.refresh();
       } else {
         const created = await createNews(form);
-        router.push(`/cms/berita/${created.id}`);
+        router.push(`/admin/berita/${created.id}`);
       }
     } catch (err) {
       setError(extractMessage(err));
@@ -81,16 +80,23 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
     }
   };
 
+  const coverTone =
+    activeCover?.status === "PUBLIC"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : "border-amber-200 bg-amber-50 text-amber-700";
+
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-    >
+    <form onSubmit={onSubmit} className={`${PANEL} space-y-5 p-6`}>
       <div>
-        <label
-          className="block text-sm font-medium text-slate-700"
-          htmlFor="news-title"
-        >
+        <h2 className="text-sm font-semibold text-slate-900">Isi berita</h2>
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          Lengkapi judul, kategori, ringkasan, isi, dan cover. Draft bisa
+          disimpan kapan saja.
+        </p>
+      </div>
+
+      <div>
+        <label className={LABEL} htmlFor="news-title">
           Judul
         </label>
         <input
@@ -99,15 +105,12 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           maxLength={160}
           disabled={!editable}
           onChange={(event) => setTitle(event.target.value)}
-          className={inputClass}
+          className={`${FIELD} mt-1`}
         />
       </div>
 
       <div>
-        <label
-          className="block text-sm font-medium text-slate-700"
-          htmlFor="news-category"
-        >
+        <label className={LABEL} htmlFor="news-category">
           Kategori
         </label>
         <select
@@ -117,7 +120,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           onChange={(event) =>
             setCategory(event.target.value as NewsCategoryValue | "")
           }
-          className={inputClass}
+          className={`${FIELD} mt-1`}
         >
           <option value="">(pilih kategori)</option>
           {NEWS_CATEGORIES.map((value) => (
@@ -129,10 +132,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       </div>
 
       <div>
-        <label
-          className="block text-sm font-medium text-slate-700"
-          htmlFor="news-excerpt"
-        >
+        <label className={LABEL} htmlFor="news-excerpt">
           Ringkasan (maks 280)
         </label>
         <textarea
@@ -142,7 +142,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           rows={3}
           disabled={!editable}
           onChange={(event) => setExcerpt(event.target.value)}
-          className={inputClass}
+          className={`${FIELD} mt-1`}
         />
         <p className="mt-1 text-right text-xs text-slate-400">
           {excerpt.length}/280
@@ -150,10 +150,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       </div>
 
       <div>
-        <label
-          className="block text-sm font-medium text-slate-700"
-          htmlFor="news-content"
-        >
+        <label className={LABEL} htmlFor="news-content">
           Isi berita
         </label>
         <textarea
@@ -163,54 +160,68 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           rows={14}
           disabled={!editable}
           onChange={(event) => setContent(event.target.value)}
-          className={inputClass}
+          className={`${FIELD} mt-1`}
         />
       </div>
 
       <div>
-        <p className="text-sm font-medium text-slate-700">Cover</p>
-        <p className="mt-1 break-all text-xs text-slate-500">
-          {activeCover
-            ? `${activeCover.storageKey} (${activeCover.status})`
-            : "Belum ada cover."}
-        </p>
+        <p className={LABEL}>Cover</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          {activeCover ? (
+            <>
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${coverTone}`}
+              >
+                {activeCover.status}
+              </span>
+              <span className="break-all text-xs text-slate-500">
+                {activeCover.storageKey}
+              </span>
+            </>
+          ) : (
+            <span className="text-xs text-slate-500">Belum ada cover.</span>
+          )}
+        </div>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
           disabled={!editable}
           onChange={(event) => setCover(event.target.files?.[0] ?? null)}
-          className="mt-2 block w-full text-sm text-slate-600"
+          className={`${FILE_INPUT} mt-3`}
         />
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-2 text-xs leading-relaxed text-slate-400">
           Otomatis dikonversi ke WebP (maks 1920px) saat diunggah. Wajib ada
           sebelum terbit.
         </p>
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm leading-relaxed text-red-700">
           {error}
         </p>
       )}
       {message && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm leading-relaxed text-emerald-700">
           {message}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={busy || !valid || !editable}
-        className="rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-      >
-        {busy ? "Menyimpan..." : editing ? "Simpan perubahan" : "Buat draft"}
-      </button>
-      {!editable && (
-        <p className="text-xs text-slate-500">
-          Berita berstatus {news?.publicationStatus} tidak dapat disunting;
-          tarik ke draft dulu lewat tombol di atas formulir.
-        </p>
-      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={busy || !valid || !editable}
+          className={BTN_PRIMARY}
+        >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+          {busy ? "Menyimpan..." : editing ? "Simpan perubahan" : "Buat draft"}
+        </button>
+        {!editable && (
+          <p className="text-xs text-slate-500">
+            Berita berstatus {news?.publicationStatus} tidak dapat disunting.
+            Tarik ke draft dulu lewat kartu status.
+          </p>
+        )}
+      </div>
     </form>
   );
 }

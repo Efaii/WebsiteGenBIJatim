@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { newsAssetUrl } from "@/lib/services/news.service";
 import {
   addNewsGalleryAsset,
@@ -10,6 +11,7 @@ import {
   orderNewsGalleryAssets,
   type CmsNewsItem,
 } from "@/lib/services/cms-news.service";
+import { BTN_ICON, FILE_INPUT, PANEL } from "../../ui";
 
 const GALLERY_LIMIT = 4;
 
@@ -66,8 +68,8 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="font-heading text-base font-bold text-slate-900">
+    <section className={`${PANEL} p-6`}>
+      <h2 className="text-sm font-semibold text-slate-900">
         Galeri pendukung ({gallery.length}/{GALLERY_LIMIT})
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">
@@ -81,14 +83,14 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
         </p>
       )}
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-4 space-y-2">
         {gallery.length === 0 && (
           <p className="text-xs text-slate-400">Belum ada gambar pendukung.</p>
         )}
         {gallery.map((asset, index) => (
           <div
             key={asset.id}
-            className="flex items-center gap-3 rounded-xl border border-slate-200 p-2"
+            className="flex items-center gap-3 rounded-2xl border border-genbi-line bg-genbi-soft/40 p-2.5"
           >
             {asset.status === "PUBLIC" ? (
               <Image
@@ -96,10 +98,10 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
                 alt=""
                 width={80}
                 height={48}
-                className="h-12 w-20 rounded-md border border-slate-200 object-cover"
+                className="h-12 w-20 rounded-thumb border border-genbi-line object-cover"
               />
             ) : (
-              <div className="flex h-12 w-20 items-center justify-center rounded-md border border-dashed border-slate-300 text-[10px] text-slate-400">
+              <div className="flex h-12 w-20 items-center justify-center rounded-thumb border border-dashed border-slate-300 text-[10px] text-slate-400">
                 staged
               </div>
             )}
@@ -108,25 +110,27 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
                 {asset.storageKey}
               </p>
               <p className="text-[11px] text-slate-400">
-                {asset.status} · urutan {index + 1}
+                {asset.status}, urutan {index + 1}
               </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => move(index, -1)}
                 disabled={busy || index === 0}
-                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+                aria-label="Naikkan urutan"
+                className={BTN_ICON}
               >
-                ↑
+                <ArrowUp className="h-4 w-4" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => move(index, 1)}
                 disabled={busy || index === gallery.length - 1}
-                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-50 disabled:opacity-40"
+                aria-label="Turunkan urutan"
+                className={BTN_ICON}
               >
-                ↓
+                <ArrowDown className="h-4 w-4" aria-hidden />
               </button>
               <button
                 type="button"
@@ -134,8 +138,9 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
                   void run(() => deleteNewsGalleryAsset(news.id, asset.id))
                 }
                 disabled={busy}
-                className="rounded-md border border-red-200 px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-red-200 bg-white px-3.5 text-xs font-semibold text-red-600 transition-colors duration-200 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:pointer-events-none disabled:opacity-40"
               >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
                 Hapus
               </button>
             </div>
@@ -143,7 +148,7 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
         ))}
       </div>
 
-      <div className="mt-3">
+      <div className="mt-4">
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -153,10 +158,10 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
             event.target.value = "";
             if (file) void run(() => addNewsGalleryAsset(news.id, file));
           }}
-          className="block w-full text-sm text-slate-600"
+          className={FILE_INPUT}
         />
         {gallery.length >= GALLERY_LIMIT && (
-          <p className="mt-1 text-xs text-amber-700">
+          <p className="mt-2 text-xs text-amber-700">
             Batas {GALLERY_LIMIT} gambar pendukung tercapai; hapus salah satu
             untuk menambah.
           </p>
@@ -164,7 +169,7 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
       </div>
 
       {error && (
-        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs leading-relaxed text-red-700">
           {error}
         </p>
       )}

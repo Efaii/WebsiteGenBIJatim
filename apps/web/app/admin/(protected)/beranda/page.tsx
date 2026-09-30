@@ -1,11 +1,11 @@
 import { HomeEditor } from "./HomeEditor";
-import { CmsForbiddenPanel } from "../CmsForbiddenPanel";
+import { AdminForbiddenPanel } from "../AdminForbiddenPanel";
 import { getCmsPageSession } from "@/lib/cms-guard";
 import { getHomeContent } from "@/lib/services/home-content.service";
 import { getHomeData, STATIC_COMMISSARIATS } from "@/services/home.service";
 import { getFeaturedNews, getRecentNews } from "@/lib/services/news.service";
 
-export const metadata = { title: "Editor Beranda | CMS GenBI Jatim" };
+export const metadata = { title: "Beranda" };
 
 /**
  * Editor Konten Beranda (panel + pratinjau dengan komponen asli).
@@ -16,7 +16,7 @@ export const metadata = { title: "Editor Beranda | CMS GenBI Jatim" };
 export default async function CmsBerandaPage() {
   const session = await getCmsPageSession();
   if (session.role !== "ADMIN_GLOBAL")
-    return <CmsForbiddenPanel session={session} />;
+    return <AdminForbiddenPanel session={session} />;
 
   const [homeData, latestNews, featuredNews, content] = await Promise.all([
     getHomeData().catch(() => null),
@@ -27,7 +27,7 @@ export default async function CmsBerandaPage() {
 
   if (!content) {
     return (
-      <section className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+      <section className="rounded-card border border-amber-200 bg-amber-50 p-6 text-sm leading-relaxed text-amber-900">
         Konten Beranda tidak dapat dimuat dari API. Pastikan server API berjalan
         dan seed konten beranda sudah dijalankan (
         <code className="font-mono">npm run seed:home</code>).

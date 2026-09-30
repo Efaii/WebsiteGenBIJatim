@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import {
   setNewsFeaturedOrder,
   type CmsNewsItem,
 } from "@/lib/services/cms-news.service";
+import { BTN_PRIMARY, FIELD_BASE, PANEL } from "../../ui";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -51,14 +53,22 @@ export function NewsFeatureSlot({ news }: { news: CmsNewsItem }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-medium text-slate-700">Slot beranda</p>
-      <div className="flex flex-wrap items-center gap-2">
+    <section className={`${PANEL} p-6`}>
+      <h2 className="text-sm font-semibold text-slate-900">Slot beranda</h2>
+      <p className="mt-2 text-xs leading-relaxed text-slate-500">
+        Pilih posisi tampil di bagian Berita pada beranda. Hanya berita terbit
+        yang bisa mengisi slot; satu slot hanya untuk satu berita.
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <select
           value={value}
-          onChange={(event) => setValue(event.target.value)}
+          onChange={(event) => {
+            setValue(event.target.value);
+            setMessage(null);
+            setError(null);
+          }}
           disabled={busy}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-genbi-blue"
+          className={`${FIELD_BASE} disabled:bg-slate-50 disabled:text-slate-400`}
         >
           <option value="">Tidak tampil</option>
           <option value="1" disabled={!published}>
@@ -75,25 +85,33 @@ export function NewsFeatureSlot({ news }: { news: CmsNewsItem }) {
           type="button"
           onClick={() => void save()}
           disabled={busy}
-          className="rounded-lg bg-genbi-blue px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+          className={BTN_PRIMARY}
         >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {busy ? "Menyimpan..." : "Simpan slot"}
         </button>
       </div>
       {!published && (
-        <p className="text-xs text-amber-700">
+        <p className="mt-3 text-xs leading-relaxed text-amber-700">
           Hanya berita terbit yang dapat menempati slot; berita ini berstatus{" "}
           {news.publicationStatus}.
         </p>
       )}
       {invalidPick && (
-        <p className="text-xs text-amber-700">
+        <p className="mt-3 text-xs leading-relaxed text-amber-700">
           Pilihan slot {news.featuredOrder} tidak valid karena berita tidak
-          terbit — beranda mengisinya otomatis dari berita terbit terbaru.
+          terbit, sehingga beranda mengisinya otomatis dari berita terbit
+          terbaru.
         </p>
       )}
-      {message && <p className="text-xs text-emerald-700">{message}</p>}
-      {error && <p className="text-xs text-red-700">{error}</p>}
-    </div>
+      {message && (
+        <p className="mt-3 text-xs font-semibold text-emerald-700">{message}</p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs leading-relaxed text-red-700">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }
