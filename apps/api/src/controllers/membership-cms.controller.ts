@@ -76,7 +76,11 @@ const parseMembershipFields = async (
     membershipStatus !== MembershipStatus.ACTIVE &&
     membershipStatus !== MembershipStatus.INACTIVE
   )
-    throw new ApiError("VALIDATION_ERROR", "membershipStatus tidak valid.", 400);
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      "membershipStatus tidak valid.",
+      400,
+    );
 
   return { name, position, studyProgram, divisionId, membershipStatus };
 };
@@ -94,7 +98,10 @@ export const listCmsMemberships = async (req: CmsRequest, res: Response) => {
     where.commissariatId = scope.commissariatId;
     where.periodId = scope.periodId;
   } else {
-    if (typeof req.query.commissariatId === "string" && req.query.commissariatId)
+    if (
+      typeof req.query.commissariatId === "string" &&
+      req.query.commissariatId
+    )
       where.commissariatId = req.query.commissariatId;
     if (typeof req.query.periodId === "string" && req.query.periodId)
       where.periodId = req.query.periodId;
@@ -119,7 +126,61 @@ export const listCmsMemberships = async (req: CmsRequest, res: Response) => {
   return sendSuccess(res, items);
 };
 
-export const getMembershipCmsOptions = async (req: CmsRequest, res: Response) => {
+export const getMembershipCmsOptions = async (
+  req: CmsRequest,
+  res: Response,
+) => {
+  const role = req.cmsSession!.cmsAccount.role;
+
+  if (role === "ADMIN_GLOBAL") {
+    const commissariatId =
+      typeof req.query.commissariatId === "string"
+        ? req.query.commissariatId
+        : "";
+    const periodId =
+      typeof req.query.periodId === "string" ? req.query.periodId : "";
+    if (commissariatId && periodId) {
+      const [commissariat, period] = await Promise.all([
+        prisma.commissariat.findUnique({
+          where: { id: commissariatId },
+          select: { id: true, name: true },
+        }),
+        prisma.period.findFirst({
+          where: { id: periodId, commissariatId },
+          select: { id: true, label: true },
+        }),
+      ]);
+      if (!commissariat || !period)
+        throw new ApiError("VALIDATION_ERROR", "Scope tidak valid.", 400);
+      const divisions = await prisma.division.findMany({
+        where: { commissariatId, periodId },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      });
+      return sendSuccess(res, {
+        period,
+        commissariat,
+        divisions,
+        periods: [],
+      });
+    }
+    const periods = await prisma.period.findMany({
+      include: { commissariat: { select: { name: true } } },
+      orderBy: [{ label: "desc" }, { commissariatId: "asc" }],
+    });
+    return sendSuccess(res, {
+      period: null,
+      commissariat: null,
+      divisions: [],
+      periods: periods.map((item) => ({
+        id: item.id,
+        label: item.label,
+        commissariatId: item.commissariatId,
+        commissariatName: item.commissariat.name,
+      })),
+    });
+  }
+
   const scope = scopeOf(req);
   const [divisions, period, commissariat] = await Promise.all([
     prisma.division.findMany({
@@ -136,7 +197,7 @@ export const getMembershipCmsOptions = async (req: CmsRequest, res: Response) =>
       select: { id: true, name: true },
     }),
   ]);
-  return sendSuccess(res, { period, commissariat, divisions });
+  return sendSuccess(res, { period, commissariat, divisions, periods: [] });
 };
 
 export const createMembership = async (req: CmsRequest, res: Response) => {
@@ -206,7 +267,10 @@ export const updateMembership = async (req: CmsRequest, res: Response) => {
   return sendSuccess(res, updated);
 };
 
-export const submitMembershipChanges = async (req: CmsRequest, res: Response) => {
+export const submitMembershipChanges = async (
+  req: CmsRequest,
+  res: Response,
+) => {
   const scope = scopeOf(req);
   assertScopeAccess(
     req.cmsSession!,
@@ -217,7 +281,9 @@ export const submitMembershipChanges = async (req: CmsRequest, res: Response) =>
     where: {
       commissariatId: scope.commissariatId,
       periodId: scope.periodId,
-      publicationStatus: { in: [PublicationStatus.DRAFT, PublicationStatus.REJECTED] },
+      publicationStatus: {
+        in: [PublicationStatus.DRAFT, PublicationStatus.REJECTED],
+      },
     },
     select: { id: true, publicationStatus: true },
   });

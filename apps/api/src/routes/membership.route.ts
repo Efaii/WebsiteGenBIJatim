@@ -8,7 +8,7 @@ import { createMembership, getMembershipCmsOptions, listCmsMemberships, submitMe
 const router = Router();
 router.get('/', asyncHandler(listPublishedMemberships));
 router.get('/cms', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_UMUM), asyncHandler(listCmsMemberships));
-router.get('/cms/options', requireCmsSession, requireCmsRole(CmsRole.SEKRETARIS_UMUM), asyncHandler(getMembershipCmsOptions));
+router.get('/cms/options', requireCmsSession, requireCmsRole(CmsRole.ADMIN_GLOBAL, CmsRole.SEKRETARIS_UMUM), asyncHandler(getMembershipCmsOptions));
 router.post('/cms', requireCmsSession, requireCmsRole(CmsRole.SEKRETARIS_UMUM), asyncHandler(createMembership));
 router.post('/cms/submit', requireCmsSession, requireCmsRole(CmsRole.SEKRETARIS_UMUM), asyncHandler(submitMembershipChanges));
 router.patch('/cms/:id', requireCmsSession, requireCmsRole(CmsRole.SEKRETARIS_UMUM), asyncHandler(updateMembership));

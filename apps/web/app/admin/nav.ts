@@ -9,6 +9,7 @@ import {
   ListChecks,
   Newspaper,
   Plus,
+  Upload,
 } from "lucide-react";
 
 /**
@@ -122,7 +123,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: Award,
         roles: ["SEKRETARIS_UMUM"],
       },
-      // Impor Awardee menyusul dari tiket #88.
+      {
+        href: "/admin/awardee/impor",
+        label: "Impor Awardee",
+        icon: Upload,
+        roles: ["SEKRETARIS_UMUM"],
+      },
     ],
   },
   {
@@ -134,7 +140,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: ListChecks,
         roles: GLOBAL_ONLY,
       },
-      // Awardee per periode menyusul dari tiket #87.
+      {
+        href: "/admin/awardee/impor",
+        label: "Impor Awardee",
+        icon: Upload,
+        roles: GLOBAL_ONLY,
+      },
+      // Awardee per periode menyusul dari tiket #87/#89.
     ],
   },
   {

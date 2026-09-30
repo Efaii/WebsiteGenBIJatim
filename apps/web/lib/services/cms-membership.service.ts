@@ -29,6 +29,12 @@ export type CmsAwardeeOptions = {
   period: { id: string; label: string } | null;
   commissariat: { id: string; name: string } | null;
   divisions: Array<{ id: string; name: string }>;
+  periods?: Array<{
+    id: string;
+    label: string;
+    commissariatId: string;
+    commissariatName: string;
+  }>;
 };
 
 export type AwardeeWritePayload = {
@@ -77,4 +83,118 @@ export const submitCmsAwardeeChanges = async (): Promise<number> => {
     { withCredentials: true },
   );
   return response.data.data?.submitted ?? 0;
+};
+
+/** Opsi divisi per scope; khusus admin global untuk tinjauan pemetaan impor. */
+export const getCmsAwardeeScopeOptions = async (
+  commissariatId: string,
+  periodId: string,
+): Promise<CmsAwardeeOptions> => {
+  const query = `commissariatId=${encodeURIComponent(commissariatId)}&periodId=${encodeURIComponent(periodId)}`;
+  const response = await api.get<{ data?: CmsAwardeeOptions }>(
+    `/v1/memberships/cms/options?${query}`,
+    { withCredentials: true },
+  );
+  return pickData(response.data.data, "Respons opsi scope kosong.");
+};
+
+export type AwardeeImportRowClassification =
+  | "NEW"
+  | "UPDATED"
+  | "UNCHANGED"
+  | "INVALID"
+  | "AMBIGUOUS_MATCH"
+  | "DUPLICATE_IN_FILE";
+
+export type AwardeeImportRow = {
+  rowNumber: number;
+  classification: AwardeeImportRowClassification;
+  errors: string[];
+  rawValues: Record<string, unknown>;
+  normalizedValues: {
+    komisariat?: string | null;
+    nama?: string | null;
+    jabatan?: string | null;
+    divisi?: string | null;
+    prodi?: string | null;
+  } | null;
+  matchedMembershipId: string | null;
+  mappedDivisionId: string | null;
+};
+
+export type AwardeeImportPreviewResult = {
+  previewId: string;
+  sourceFileHash: string;
+  sourceSheet: string;
+  totalRows: number;
+  newCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+  invalidCount: number;
+  ambiguousCount: number;
+  duplicateCount: number;
+  rows: AwardeeImportRow[];
+};
+
+/** Unggah berkas Excel dan buat pratinjau impor Awardee. */
+export const previewCmsAwardeeImport = async (
+  file: File,
+  commissariatId: string,
+  periodId: string,
+): Promise<AwardeeImportPreviewResult> => {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("commissariatId", commissariatId);
+  form.append("periodId", periodId);
+  const response = await api.post<{ data?: AwardeeImportPreviewResult }>(
+    "/v1/membership-imports/preview",
+    form,
+    {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
+  return pickData(response.data.data, "Respons pratinjau impor kosong.");
+};
+
+/** Simpan pratinjau ke data (status COMMITTED). */
+export const commitCmsAwardeeImport = async (
+  previewId: string,
+  options: { confirmLargeImport?: boolean; backupEvidenceId?: string } = {},
+): Promise<{ previewId: string; status: string }> => {
+  const response = await api.post<{
+    data?: { previewId: string; status: string };
+  }>(
+    "/v1/membership-imports/commit",
+    { previewId, ...options },
+    { withCredentials: true },
+  );
+  return pickData(response.data.data, "Respons commit impor kosong.");
+};
+
+/** Ajukan batch impor untuk disetujui admin global. */
+export const submitCmsAwardeeImport = async (
+  previewId: string,
+): Promise<{ previewId: string; status: string }> => {
+  const response = await api.post<{
+    data?: { previewId: string; status: string };
+  }>(
+    `/v1/membership-imports/${previewId}/submit`,
+    {},
+    { withCredentials: true },
+  );
+  return pickData(response.data.data, "Respons pengajuan impor kosong.");
+};
+
+/** Setujui pemetaan divisi (khusus admin global) agar pratinjau ulang mengenalinya. */
+export const reviewCmsAwardeeImportAlias = async (payload: {
+  kind: "DIVISION";
+  rawValue: string;
+  commissariatId: string;
+  periodId: string;
+  divisionId: string;
+}): Promise<void> => {
+  await api.post("/v1/membership-imports/aliases/review", payload, {
+    withCredentials: true,
+  });
 };
