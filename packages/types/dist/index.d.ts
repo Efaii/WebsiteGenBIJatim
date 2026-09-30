@@ -266,6 +266,7 @@ export declare const newsWriteSchema: z.ZodObject<{
         EDUKASI: "EDUKASI";
         PELATIHAN: "PELATIHAN";
     }>>>;
+    author: z.ZodOptional<z.ZodString>;
 }, z.core.$strict>;
 export declare const membershipImportErrorCodeSchema: z.ZodEnum<{
     INVALID_FILE: "INVALID_FILE";

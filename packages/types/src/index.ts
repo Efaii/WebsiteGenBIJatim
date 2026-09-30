@@ -44,7 +44,7 @@ export interface ProkerData {
   impact?: string[];
   benefits?: string[];
   evaluation?: string;
-  
+
   // Real DB Fields mapped from backend
   kpiTukTarget?: string;
   dampak?: string;
@@ -156,8 +156,19 @@ export interface KorkomData {
 
 import { z } from "zod";
 
-export const CMS_ROLES = ["ADMIN_GLOBAL", "SEKRETARIS_UMUM", "SEKRETARIS_DIVISI"] as const;
-export const PUBLICATION_STATUSES = ["DRAFT", "SUBMITTED", "APPROVED", "PUBLISHED", "REJECTED", "ARCHIVED"] as const;
+export const CMS_ROLES = [
+  "ADMIN_GLOBAL",
+  "SEKRETARIS_UMUM",
+  "SEKRETARIS_DIVISI",
+] as const;
+export const PUBLICATION_STATUSES = [
+  "DRAFT",
+  "SUBMITTED",
+  "APPROVED",
+  "PUBLISHED",
+  "REJECTED",
+  "ARCHIVED",
+] as const;
 export const MEMBERSHIP_STATUSES = ["ACTIVE", "INACTIVE"] as const;
 
 export type CmsRole = (typeof CMS_ROLES)[number];
@@ -209,37 +220,66 @@ const canonicalScopeSchema = z.object({
   divisionId: z.string().uuid().nullable(),
 });
 
-export const membershipWriteSchema = canonicalScopeSchema.extend({
-  name: z.string().trim().min(1),
-  position: z.string().trim().min(1),
-  studyProgram: z.string().trim().min(1),
-  publicationStatus: publicationStatusSchema.optional(),
-  membershipStatus: membershipStatusSchema.optional(),
-}).strict();
+export const membershipWriteSchema = canonicalScopeSchema
+  .extend({
+    name: z.string().trim().min(1),
+    position: z.string().trim().min(1),
+    studyProgram: z.string().trim().min(1),
+    publicationStatus: publicationStatusSchema.optional(),
+    membershipStatus: membershipStatusSchema.optional(),
+  })
+  .strict();
 
-export const periodWriteSchema = z.object({
-  label: z.string().trim().regex(/^\d{4}\/\d{4}$/),
-}).strict();
+export const periodWriteSchema = z
+  .object({
+    label: z
+      .string()
+      .trim()
+      .regex(/^\d{4}\/\d{4}$/),
+  })
+  .strict();
 
-export const divisionWriteSchema = z.object({
-  name: z.string().trim().min(1),
-  commissariatId: z.string().uuid(),
-  periodId: z.string().uuid(),
-}).strict();
+export const divisionWriteSchema = z
+  .object({
+    name: z.string().trim().min(1),
+    commissariatId: z.string().uuid(),
+    periodId: z.string().uuid(),
+  })
+  .strict();
 
 export const canonicalResourceIdSchema = z.string().uuid();
 
-export const newsCategorySchema = z.enum(["KEGIATAN", "WEBINAR", "SOSIAL", "EDUKASI", "PELATIHAN"]);
-export const newsWriteSchema = z.object({
-  title: z.string().trim().min(1).max(160),
-  excerpt: z.string().trim().max(280),
-  content: z.string().trim().max(50000),
-  category: newsCategorySchema.nullable().optional(),
-}).strict();
+export const newsCategorySchema = z.enum([
+  "KEGIATAN",
+  "WEBINAR",
+  "SOSIAL",
+  "EDUKASI",
+  "PELATIHAN",
+]);
+export const newsWriteSchema = z
+  .object({
+    title: z.string().trim().min(1).max(160),
+    excerpt: z.string().trim().max(280),
+    content: z.string().trim().max(50000),
+    category: newsCategorySchema.nullable().optional(),
+    author: z.string().trim().min(1).max(120).optional(),
+  })
+  .strict();
 
 export const membershipImportErrorCodeSchema = z.enum([
-  "INVALID_FILE", "INVALID_HEADER", "INVALID_ROW", "INVALID_SCOPE", "INVALID_COMMISSARIAT", "INVALID_DIVISION",
-  "UNMAPPED_DIVISION", "AMBIGUOUS_MATCH", "DUPLICATE_IN_FILE", "AMBIGUOUS_SHEET", "PREVIEW_EXPIRED", "PREVIEW_STALE", "PREVIEW_ALREADY_COMMITTED",
+  "INVALID_FILE",
+  "INVALID_HEADER",
+  "INVALID_ROW",
+  "INVALID_SCOPE",
+  "INVALID_COMMISSARIAT",
+  "INVALID_DIVISION",
+  "UNMAPPED_DIVISION",
+  "AMBIGUOUS_MATCH",
+  "DUPLICATE_IN_FILE",
+  "AMBIGUOUS_SHEET",
+  "PREVIEW_EXPIRED",
+  "PREVIEW_STALE",
+  "PREVIEW_ALREADY_COMMITTED",
 ]);
 
 export type MembershipWrite = z.infer<typeof membershipWriteSchema>;

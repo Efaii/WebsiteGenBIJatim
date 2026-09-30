@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { AdminForbiddenPanel } from "../../AdminForbiddenPanel";
 import { cmsApiGet } from "@/lib/cms-api";
 import { getCmsPageSession } from "@/lib/cms-guard";
 import type { CmsNewsItem } from "@/lib/services/cms-news.service";
@@ -18,8 +17,7 @@ export default async function AdminNewsDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await getCmsPageSession();
-  if (session.role !== "ADMIN_GLOBAL")
-    return <AdminForbiddenPanel session={session} />;
+  const isGlobal = session.role === "ADMIN_GLOBAL";
 
   const { id } = await params;
   const items = (await cmsApiGet<CmsNewsItem[]>("/v1/news/cms")) ?? [];
@@ -44,11 +42,11 @@ export default async function AdminNewsDetailPage({
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">
           <NewsForm news={item} />
-          <NewsGallery news={item} />
+          {isGlobal && <NewsGallery news={item} />}
         </div>
         <div className="space-y-6 xl:sticky xl:top-24">
-          <NewsActions news={item} />
-          <NewsFeatureSlot news={item} />
+          <NewsActions news={item} role={session.role} />
+          {isGlobal && <NewsFeatureSlot news={item} />}
         </div>
       </div>
     </div>

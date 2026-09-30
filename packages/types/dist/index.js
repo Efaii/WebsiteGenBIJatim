@@ -65,6 +65,7 @@ exports.newsWriteSchema = zod_1.z.object({
     excerpt: zod_1.z.string().trim().max(280),
     content: zod_1.z.string().trim().max(50000),
     category: exports.newsCategorySchema.nullable().optional(),
+    author: zod_1.z.string().trim().min(1).max(120).optional(),
 }).strict();
 exports.membershipImportErrorCodeSchema = zod_1.z.enum([
     "INVALID_FILE", "INVALID_HEADER", "INVALID_ROW", "INVALID_SCOPE", "INVALID_COMMISSARIAT", "INVALID_DIVISION",

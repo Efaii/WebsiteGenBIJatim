@@ -39,6 +39,9 @@ export type CmsNewsItem = {
   publishedAt: string | null;
   updatedAt: string;
   featuredOrder: number | null;
+  author: string;
+  publisher: string | null;
+  rejectionReason: string | null;
   coverAssets: CmsNewsAsset[];
 };
 

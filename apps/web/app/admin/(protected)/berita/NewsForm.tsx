@@ -29,6 +29,7 @@ const extractMessage = (error: unknown): string => {
 export function NewsForm({ news }: { news?: CmsNewsItem }) {
   const router = useRouter();
   const [title, setTitle] = useState(news?.title ?? "");
+  const [author, setAuthor] = useState(news?.author ?? "");
   const [category, setCategory] = useState<NewsCategoryValue | "">(
     news?.category ?? "",
   );
@@ -61,6 +62,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       form.append("title", title.trim());
       form.append("excerpt", excerpt.trim());
       form.append("content", content.trim());
+      if (author.trim()) form.append("author", author.trim());
       if (category) form.append("category", category);
       if (cover) form.append("cover", cover);
 
@@ -90,8 +92,8 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       <div>
         <h2 className="text-sm font-semibold text-slate-900">Isi berita</h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Lengkapi judul, kategori, ringkasan, isi, dan cover. Draft bisa
-          disimpan kapan saja.
+          Lengkapi judul, nama penerbit, kategori, ringkasan, isi, dan cover.
+          Draft bisa disimpan kapan saja.
         </p>
       </div>
 
@@ -107,6 +109,24 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           onChange={(event) => setTitle(event.target.value)}
           className={`${FIELD} mt-1`}
         />
+      </div>
+
+      <div>
+        <label className={LABEL} htmlFor="news-author">
+          Nama penerbit
+        </label>
+        <input
+          id="news-author"
+          value={author}
+          maxLength={120}
+          disabled={!editable}
+          onChange={(event) => setAuthor(event.target.value)}
+          className={`${FIELD} mt-1`}
+        />
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          Nama orang yang menerbitkan berita ini; tampil di halaman berita
+          publik bersama asal komisariat.
+        </p>
       </div>
 
       <div>

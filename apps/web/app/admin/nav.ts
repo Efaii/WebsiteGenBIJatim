@@ -67,11 +67,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         roles: GLOBAL_ONLY,
       },
       {
-        // #82 membuka Berita untuk sekretaris umum dan sekretaris divisi.
         href: "/admin/berita",
         label: "Berita",
         icon: Newspaper,
-        roles: GLOBAL_ONLY,
+        roles: ALL_ROLES,
       },
       {
         href: "/admin/faq",

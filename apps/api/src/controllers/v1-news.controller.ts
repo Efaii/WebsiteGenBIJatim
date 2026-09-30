@@ -5,9 +5,11 @@ import { ApiError } from "../lib/api-error";
 import { CmsRequest } from "../middlewares/cms-session.middleware";
 import { sendSuccess } from "../middlewares/request-context.middleware";
 import {
+  assertNewsRoleTransition,
   assertNewsTransition,
   newsSlug,
   normalizeNewsText,
+  resolveNewsAuthor,
 } from "../domain/news-lifecycle";
 import { newsWriteSchema } from "@repo/types";
 import fs from "fs/promises";
@@ -215,6 +217,39 @@ const audit = (
     },
   });
 
+/*
+ * Scope Berita: admin global lintas komisariat; sekretaris terikat komisariat
+ * pada assignment aktifnya. Penerbit (publisher) dan komisariat asal diisi
+ * dari scope ini sehingga tidak bisa dipalsukan lewat body (ADR 0016).
+ */
+const newsScope = (req: CmsRequest) => {
+  const account = req.cmsSession!.cmsAccount;
+  if (account.role === "ADMIN_GLOBAL") return null;
+  const assignment = account.assignments[0];
+  const commissariatId = assignment?.commissariatId;
+  if (!commissariatId)
+    throw new ApiError(
+      "FORBIDDEN",
+      "The active CMS assignment has no commissariat scope.",
+      403,
+    );
+  return { ...assignment, commissariatId };
+};
+
+const assertNewsScope = (
+  req: CmsRequest,
+  news: { commissariatId: string | null },
+) => {
+  const scope = newsScope(req);
+  if (!scope) return;
+  if (!news.commissariatId || news.commissariatId !== scope.commissariatId)
+    throw new ApiError(
+      "FORBIDDEN",
+      "The requested News is outside the active CMS scope.",
+      403,
+    );
+};
+
 export const listPublishedNews = async (req: Request, res: Response) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 25));
@@ -275,9 +310,11 @@ export const listCmsNews = async (req: CmsRequest, res: Response) => {
     categories.includes(req.query.category as NewsCategory)
       ? (req.query.category as NewsCategory)
       : undefined;
+  const scope = newsScope(req);
   const items = await prisma.news.findMany({
     where: {
       deletedAt: null,
+      ...(scope ? { commissariatId: scope.commissariatId } : {}),
       ...(status ? { publicationStatus: status } : {}),
       ...(category ? { category } : {}),
     },
@@ -300,7 +337,30 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
   const parsed = parseNewsFields(req.body);
   const title = normalizeNewsText(parsed.title ?? "Untitled", "title", 160);
   const slug = newsSlug(title);
-  const accountId = req.cmsSession!.cmsAccountId;
+  const session = req.cmsSession!;
+  const accountId = session.cmsAccountId;
+  const scope = newsScope(req);
+  const author = resolveNewsAuthor(
+    parsed.author,
+    session.cmsAccount.role,
+    session.cmsAccount.user.name,
+  );
+  let publisher: string | null = null;
+  let commissariatId: string | null = null;
+  if (scope) {
+    const commissariat = await prisma.commissariat.findUnique({
+      where: { id: scope.commissariatId },
+      select: { name: true },
+    });
+    if (!commissariat)
+      throw new ApiError(
+        "FORBIDDEN",
+        "The active CMS assignment points to a missing commissariat.",
+        403,
+      );
+    publisher = commissariat.name;
+    commissariatId = scope.commissariatId;
+  }
   let cover = undefined as
     | {
         storageKey: string;
@@ -320,7 +380,9 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
       content: parsed.content ?? "",
       category: parsed.category ?? null,
       image: "",
-      author: "GenBI Jatim",
+      author,
+      publisher,
+      commissariatId,
       authorAccountId: accountId,
       publicationStatus: "DRAFT",
     },
@@ -350,6 +412,7 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
 export const updateDraftNews = async (req: CmsRequest, res: Response) => {
   const news = await prisma.news.findUnique({ where: { id: req.params.id } });
   if (!news) throw new ApiError("NOT_FOUND", "News not found.", 404);
+  assertNewsScope(req, news);
   if (
     news.publicationStatus !== "DRAFT" &&
     news.publicationStatus !== "REJECTED"
@@ -373,6 +436,9 @@ export const updateDraftNews = async (req: CmsRequest, res: Response) => {
         ? { content: fields.content.trim() }
         : {}),
       ...(fields.category !== undefined ? { category: fields.category } : {}),
+      ...(fields.author !== undefined
+        ? { author: normalizeNewsText(fields.author, "author", 120) }
+        : {}),
       ...(news.publicationStatus === "REJECTED"
         ? { publicationStatus: "DRAFT" }
         : {}),
@@ -733,7 +799,13 @@ export const transitionNews = async (req: CmsRequest, res: Response) => {
     throw new ApiError("VALIDATION_ERROR", "Invalid News status.", 400, {
       status: ["Unsupported status"],
     });
-  assertNewsTransition(news.publicationStatus, to, req.body.rejectionReason);
+  assertNewsScope(req, news);
+  assertNewsRoleTransition(
+    req.cmsSession!.cmsAccount.role,
+    news.publicationStatus,
+    to,
+    req.body.rejectionReason,
+  );
   const stagedAssets = await prisma.newsCoverAsset.findMany({
     where: { newsId: news.id, status: "STAGED" },
     orderBy: { createdAt: "asc" },

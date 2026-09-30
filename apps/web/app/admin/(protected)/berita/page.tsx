@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, Newspaper, Plus } from "lucide-react";
-import { AdminForbiddenPanel } from "../AdminForbiddenPanel";
 import { cmsApiGet } from "@/lib/cms-api";
 import { getCmsPageSession } from "@/lib/cms-guard";
 import type { CmsNewsItem } from "@/lib/services/cms-news.service";
@@ -15,8 +14,7 @@ export const metadata = { title: "Berita" };
 
 export default async function AdminNewsListPage() {
   const session = await getCmsPageSession();
-  if (session.role !== "ADMIN_GLOBAL")
-    return <AdminForbiddenPanel session={session} />;
+  const isGlobal = session.role === "ADMIN_GLOBAL";
 
   const items = (await cmsApiGet<CmsNewsItem[]>("/v1/news/cms")) ?? [];
 
@@ -28,7 +26,9 @@ export default async function AdminNewsListPage() {
             Berita
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-            Tulis dan terbitkan berita, lalu atur posisinya di beranda.
+            {isGlobal
+              ? "Tulis dan terbitkan berita, lalu atur posisinya di beranda."
+              : "Tulis dan ajukan berita komisariat Anda. Admin global yang menyetujui dan menerbitkannya."}
           </p>
         </div>
         <Link href="/admin/berita/baru" className={BTN_PRIMARY}>
@@ -64,7 +64,9 @@ export default async function AdminNewsListPage() {
                   <th className="px-5 py-3 font-semibold">Judul</th>
                   <th className="px-5 py-3 font-semibold">Kategori</th>
                   <th className="px-5 py-3 font-semibold">Status</th>
-                  <th className="px-5 py-3 font-semibold">Beranda</th>
+                  {isGlobal && (
+                    <th className="px-5 py-3 font-semibold">Beranda</th>
+                  )}
                   <th className="px-5 py-3 font-semibold">Diperbarui</th>
                   <th className="px-5 py-3" />
                 </tr>
@@ -91,24 +93,26 @@ export default async function AdminNewsListPage() {
                           item.publicationStatus}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
-                      {item.featuredOrder ? (
-                        <span
-                          className={`${NEWS_STATUS_BADGE} ${
-                            item.publicationStatus === "PUBLISHED"
-                              ? "border-genbi-haze bg-genbi-light text-genbi-blue"
-                              : "border-amber-200 bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          Slot {item.featuredOrder}
-                          {item.publicationStatus === "PUBLISHED"
-                            ? ""
-                            : " (tidak valid)"}
-                        </span>
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
+                    {isGlobal && (
+                      <td className="px-5 py-4">
+                        {item.featuredOrder ? (
+                          <span
+                            className={`${NEWS_STATUS_BADGE} ${
+                              item.publicationStatus === "PUBLISHED"
+                                ? "border-genbi-haze bg-genbi-light text-genbi-blue"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            Slot {item.featuredOrder}
+                            {item.publicationStatus === "PUBLISHED"
+                              ? ""
+                              : " (tidak valid)"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </td>
+                    )}
                     <td className="whitespace-nowrap px-5 py-4 text-slate-500">
                       {new Date(item.updatedAt).toLocaleString("id-ID")}
                     </td>

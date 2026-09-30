@@ -25,33 +25,39 @@ import {
 } from "../controllers/v1-news.controller";
 import { uploadCanonicalNewsCover } from "../middlewares/upload.middleware";
 
+const newsWriterRoles = [
+  CmsRole.ADMIN_GLOBAL,
+  CmsRole.SEKRETARIS_UMUM,
+  CmsRole.SEKRETARIS_DIVISI,
+];
+
 const router = Router();
 router.get("/", asyncHandler(listPublishedNews));
 router.get(
   "/cms",
   requireCmsSession,
-  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  requireCmsRole(...newsWriterRoles),
   asyncHandler(listCmsNews),
 );
 router.get("/:slug", asyncHandler(getPublishedNews));
 router.post(
   "/",
   requireCmsSession,
-  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  requireCmsRole(...newsWriterRoles),
   uploadCanonicalNewsCover.single("cover"),
   asyncHandler(createDraftNews),
 );
 router.patch(
   "/:id",
   requireCmsSession,
-  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  requireCmsRole(...newsWriterRoles),
   uploadCanonicalNewsCover.single("cover"),
   asyncHandler(updateDraftNews),
 );
 router.post(
   "/:id/transition",
   requireCmsSession,
-  requireCmsRole(CmsRole.ADMIN_GLOBAL),
+  requireCmsRole(...newsWriterRoles),
   asyncHandler(transitionNews),
 );
 router.post(

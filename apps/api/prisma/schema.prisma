@@ -395,6 +395,7 @@ model Commissariat {
   assignments    CmsAssignment[]
   importPreviews MembershipImportPreview[]
   importAliases  MembershipImportAlias[]
+  news           News[]
 }
 
 model ProgramKerja {
@@ -509,16 +510,20 @@ model News {
   publicationStatus PublicationStatus @default(DRAFT)
   publishedAt       DateTime?
   authorAccountId   String?
+  /// Komisariat asal Berita; null untuk Berita kanal GenBI Jatim (tanpa scope).
+  commissariatId    String?
   rejectionReason   String?           @db.Text
   deletedAt         DateTime?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
   authorAccount CmsAccount?      @relation(fields: [authorAccountId], references: [id], onDelete: SetNull)
+  commissariat  Commissariat?    @relation(fields: [commissariatId], references: [id], onDelete: SetNull)
   revisions     NewsRevision[]
   coverAssets   NewsCoverAsset[]
   slugAliases   NewsSlugAlias[]
 
+  @@index([commissariatId])
   @@map("news")
 }
 
