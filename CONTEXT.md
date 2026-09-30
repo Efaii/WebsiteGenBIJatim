@@ -8,6 +8,10 @@ Glosarium domain untuk platform GenBI Jatim yang mengelola data komisariat, peri
 Satu organisasi GenBI pada perguruan tinggi tertentu. Platform memiliki sembilan komisariat canonical: ITS, PENS, UIN Madura, UINSA, UNAIR, UNESA, UNUGIRI, UPN Veteran Jatim, dan UTM.
 _Avoid_: Kampus, universitas, cabang (ketika yang dimaksud adalah organisasi GenBI).
 
+**Koordinator komisariat (Korkom)**:
+Organisasi koordinasi yang menaungi sembilan komisariat Jawa Timur; pendataan dan pengelolaan lintas komisariat dijalankan atas namanya oleh akun admin global.
+_Avoid_: Menyamakan Korkom dengan salah satu komisariat.
+
 **Periode**:
 Satu masa kepengurusan yang diberi label seperti `2025/2026`. Periode menyimpan histori organisasi dan dapat muncul lebih dari satu untuk setiap komisariat.
 _Avoid_: Tahun kalender, tahun import.
@@ -79,20 +83,20 @@ _Avoid_: Dokumen publik umum.
 ## Akses dan Konten
 
 **Admin global**:
-Aktor CMS lintas seluruh komisariat yang mengelola akun operator, berita, konten beranda, dan approval data.
+Aktor CMS lintas seluruh komisariat (atas nama Koordinator Komisariat) yang mengelola akun operator, berita (termasuk menerbitkan), konten beranda dan profil, seluruh approval data, serta daftar program kerja lintas komisariat beserta Proposal/LPJ-nya.
 _Avoid_: Admin komisariat scoped.
 
 **Sekretaris umum**:
-Akun operasional bersama pada scope komisariat dan periode untuk mengelola data anggota.
+Akun operasional bersama pada scope komisariat dan periode. Menulis dan mengajukan Berita komisariatnya, menelusuri program kerja lintas komisariat beserta Proposal/LPJ yang disetujui (akses sama dengan sekretaris divisi), serta mengelola data Awardee komisariatnya untuk disetujui admin global.
 _Avoid_: Admin global, membership individu.
 
 **Sekretaris divisi**:
-Akun operasional bersama pada scope komisariat, periode, dan divisi untuk mengelola program kerja divisinya.
+Akun operasional bersama pada scope komisariat, periode, dan divisi. Membuat program kerja baru untuk divisinya (program kerja lama tidak dapat diubah), menulis serta mengajukan Berita komisariatnya, dan menelusuri program kerja lintas komisariat beserta Proposal/LPJ yang disetujui.
 _Avoid_: Divisi sebagai role global.
 
 **Berita**:
-Konten publik yang dibuat dan dikelola admin global melalui CMS dengan lifecycle publikasi tersendiri. Data berita dimulai dari database kosong pada release awal.
-_Avoid_: Static news fixture sebagai source of truth.
+Konten publik hasil liputan yang diinput sekretaris umum atau sekretaris divisi pada scope komisariatnya lalu diterbitkan setelah disetujui admin global, atau ditulis dan diterbitkan langsung oleh admin global. Atribusi menampilkan nama penerbit (nama orang yang mengajukan), asal komisariat, dan tanggal terbit; divisi tidak ditampilkan. Data berita dimulai dari database kosong pada release awal.
+_Avoid_: Static news fixture sebagai source of truth, menampilkan divisi pada atribusi.
 
 **Akun bersama**:
 Akun CMS berbasis scope operasional, bukan identitas personal. Audit hanya dapat mengidentifikasi scope akun; admin global dapat mereset password atau menonaktifkan assignment.
@@ -317,8 +321,8 @@ Artefak Proposal atau LPJ Program kerja yang diakses melalui endpoint privat ter
 _Avoid_: Menampilkan Proposal/LPJ pada tab Arsip komisariat atau menaruhnya sebagai static/public asset.
 
 **Awardee**:
-Subset atau projection publik dari Membership yang berstatus `ACTIVE` dan `PUBLISHED`, ditampilkan berdasarkan komisariat dan periode. Field tampilan awalnya adalah nama, jabatan, dan prodi; Awardee bukan source data terpisah dari Membership.
-_Avoid_: Membuat mock Awardee sebagai source of truth atau mencampur Awardee lintas periode tanpa filter.
+Subset atau projection publik dari Membership yang berstatus `ACTIVE` dan `PUBLISHED`, ditampilkan berdasarkan komisariat dan periode. Field tampilan awalnya adalah nama, jabatan, dan prodi; Awardee bukan source data terpisah dari Membership. Awardee lama dan baru dipisahkan berdasarkan periode; pengelolaannya dilakukan sekretaris umum komisariatnya melalui input manual atau impor batch, untuk disetujui admin global.
+_Avoid_: Membuat mock Awardee sebagai source of truth, mencampur Awardee lintas periode tanpa filter, atau menamai permukaannya "Anggota" (gunakan "Awardee").
 
 **Initial production source**:
 Database local baru yang bersih dari record test dan dipakai sebagai sumber initial production setelah schema, Program Kerja, dan Membership menerima verifikasi local. Ini bukan staging environment dan bukan database development yang memuat fixture/test data.

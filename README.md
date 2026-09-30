@@ -253,7 +253,7 @@ cd apps/api && npm run start
 | `/awardee`             | Static  | Database penerima beasiswa          |
 | `/contact`             | Static  | Form kontak (Server Action)         |
 | `/program/[id]`        | SSG     | Detail program kerja                |
-| `/admin`               | Static  | Dashboard admin                     |
+| `/admin`               | Dynamic | Admin konten (beranda, berita, FAQ); login admin global |
 
 **Keterangan Tipe:**
 
@@ -381,7 +381,6 @@ components/
 | 1   | **`news/[slug]/page.tsx` masih `"use client"`** | `app/news/[slug]/page.tsx`             | Seluruh halaman detail berita menggunakan CSR dengan data hardcoded sebagai JSX. Harus di-refactor menjadi Server Component + Client Component terpisah. |
 | 2   | **Mock data di beberapa service**               | `lib/services/commissariat.service.ts` | Menggunakan `setTimeout` untuk simulasi latency. Harus diganti dengan real API call saat backend ready.                                                  |
 | 3   | **Backend API masih mock**                      | `apps/api/src/routes/*.ts`             | Semua endpoint return hardcoded data. Belum terhubung ke database.                                                                                       |
-| 4   | **Halaman Admin belum fungsional**              | `app/admin/page.tsx`                   | Hanya UI static, belum ada CRUD, autentikasi, atau otorisasi.                                                                                            |
 
 ### 🟡 Sedang (Perlu Diperbaiki)
 
