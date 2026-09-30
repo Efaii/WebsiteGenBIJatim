@@ -36,6 +36,26 @@ export function AdminSidebarNav({
   const isGlobal = role === "ADMIN_GLOBAL";
   const [pendingNews, setPendingNews] = useState(0);
 
+  const allItems = groups.flatMap((group) => group.items);
+  /*
+   * Satu item paling cocok yang menyala: kecocokan persis menang atas
+   * kecocokan awalan, dan awalan terpanjang menang (mis. /admin/proker/baru
+   * menyalakan Tambah, bukan Riwayat).
+   */
+  const bestHref = allItems.reduce<string | null>((best, item) => {
+    const exact = pathname === item.href;
+    const prefix = !exact && pathname.startsWith(`${item.href}/`);
+    if (!exact && !prefix) return best;
+    const score = exact ? 100000 + item.href.length : item.href.length;
+    const bestScore =
+      best === null
+        ? -1
+        : pathname === best
+          ? 100000 + best.length
+          : best.length;
+    return score > bestScore ? item.href : best;
+  }, null);
+
   useEffect(() => {
     if (!isGlobal) return;
     let cancelled = false;
@@ -73,11 +93,7 @@ export function AdminSidebarNav({
           ) : null}
           <ul className="space-y-1">
             {group.items.map((item) => {
-              const active =
-                item.href === "/admin"
-                  ? pathname === "/admin"
-                  : pathname === item.href ||
-                    pathname.startsWith(`${item.href}/`);
+              const active = item.href === bestHref;
               const Icon = item.icon;
               const badge = item.href === PENDING_NEWS_HREF ? pendingNews : 0;
               return (

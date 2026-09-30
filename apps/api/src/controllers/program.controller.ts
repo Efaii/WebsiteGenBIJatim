@@ -8,19 +8,21 @@ import { ApiError } from '../lib/api-error';
 import { CmsRequest } from '../middlewares/cms-session.middleware';
 import { sendSuccess } from '../middlewares/request-context.middleware';
 import { assertScopeAccess } from '../services/cms-scope.service';
-import { assertPublicationTransition } from '../domain/status-transitions';
+import { assertProgramRoleTransition, assertPublicationTransition } from '../domain/status-transitions';
 import { cmsPublicationStatus } from '../domain/cms-program-status';
 import { ensureStorageRoots, privateStoragePath } from '../lib/storage';
 
 const fields = (body: Record<string, unknown>) => {
   const title = typeof body.title === 'string' ? body.title.trim() : '';
+  // `divisi` tidak diwajibkan: nilai sebenarnya diambil dari scope akun atau
+  // dari data tersimpan (lihat createProgram/updateProgram).
   const divisi = typeof body.divisi === 'string' ? body.divisi.trim() : '';
   const description = typeof body.description === 'string' ? body.description.trim() : '';
   const format = typeof body.format === 'string' ? body.format.trim() : '';
   const date = typeof body.startDate === 'string' ? new Date(body.startDate) : typeof body.dateIso === 'string' ? new Date(body.dateIso) : new Date('invalid');
   const endDate = typeof body.endDate === 'string' ? new Date(body.endDate) : date;
   const objectives = Array.isArray(body.objectives) ? body.objectives.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean) : [];
-  if (!title || !divisi || !description || !format || !objectives.length || Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime()) || endDate < date) throw new ApiError('VALIDATION_ERROR', 'Program Kerja fields are invalid.', 400);
+  if (!title || !description || !format || !objectives.length || Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime()) || endDate < date) throw new ApiError('VALIDATION_ERROR', 'Program Kerja fields are invalid.', 400);
   return { title, divisi, description, format, date, endDate, objectives };
 };
 
@@ -110,8 +112,8 @@ export const transitionProgram = async (req: CmsRequest, res: Response) => {
   assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
   const to = req.body.status as PublicationStatus;
   if (!Object.values(PublicationStatus).includes(to)) throw new ApiError('VALIDATION_ERROR', 'Invalid publication status.', 400);
-  if (to === 'APPROVED' && req.cmsSession!.cmsAccount.role !== CmsRole.ADMIN_GLOBAL) throw new ApiError('FORBIDDEN', 'Only ADMIN_GLOBAL can approve programs.', 403);
   assertPublicationTransition(program.publicationStatus, to, req.body.rejectionReason);
+  assertProgramRoleTransition(req.cmsSession!.cmsAccount.role, to);
   const updated = await prisma.programKerja.update({ where: { id: program.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
   return sendSuccess(res, updated);
 };
@@ -131,12 +133,21 @@ export const uploadProgramArtifact = async (req: CmsRequest, res: Response) => {
   if (req.file.size > 10 * 1024 * 1024 || req.file.mimetype !== 'application/pdf' || path.extname(req.file.originalname).toLowerCase() !== '.pdf' || !req.file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) throw new ApiError('UNSUPPORTED_MEDIA_TYPE', 'Only valid PDF artifacts up to 10 MB are allowed.', 415);
   const program = await prisma.programKerja.findUnique({ where: { id: req.params.id } });
   if (!program) throw new ApiError('NOT_FOUND', 'Program Kerja not found.', 404);
-  assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'read');
+  assertScopeAccess(req.cmsSession!, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
+  const kind = String(req.body.kind);
+  /*
+   * Berkas hanya untuk Program Kerja yang lahir lewat CMS: Program Kerja lama
+   * hasil rekonsiliasi tidak dapat diubah dari mana pun. Proposal diunggah
+   * pada fase draft; LPJ menyusul setelah Program Kerja disetujui.
+   */
+  if (!program.authorAccountId) throw new ApiError('FORBIDDEN', 'Program Kerja lama tidak dapat diubah.', 403);
+  if (kind === 'proposal' && !['DRAFT', 'REJECTED'].includes(program.publicationStatus)) throw new ApiError('FORBIDDEN', 'Proposal hanya dapat diunggah pada Program Kerja draft.', 403);
+  if (kind === 'lpj' && !['APPROVED', 'PUBLISHED'].includes(program.publicationStatus)) throw new ApiError('FORBIDDEN', 'LPJ hanya dapat diunggah setelah Program Kerja disetujui.', 403);
   await ensureStorageRoots();
   const storageKey = `private/program/${program.id}/${crypto.randomUUID()}${path.extname(req.file.originalname).toLowerCase()}`;
   await fs.mkdir(path.dirname(privateStoragePath(storageKey)), { recursive: true });
   await fs.writeFile(privateStoragePath(storageKey), req.file.buffer);
-  const artifact = await prisma.programArtifact.create({ data: { programKerjaId: program.id, kind: String(req.body.kind), storageKey, originalFilename: req.file.originalname, mimeType: req.file.mimetype, byteSize: req.file.size } });
+  const artifact = await prisma.programArtifact.create({ data: { programKerjaId: program.id, kind, storageKey, originalFilename: req.file.originalname, mimeType: req.file.mimetype, byteSize: req.file.size } });
   return sendSuccess(res, { id: artifact.id, kind: artifact.kind, filename: artifact.originalFilename });
 };
 

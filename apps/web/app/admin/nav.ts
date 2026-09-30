@@ -2,9 +2,11 @@ import type { LucideIcon } from "lucide-react";
 import {
   CircleHelp,
   ClipboardCheck,
+  History,
   House,
   LayoutDashboard,
   Newspaper,
+  Plus,
 } from "lucide-react";
 
 /**
@@ -84,6 +86,24 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: CircleHelp,
         roles: GLOBAL_ONLY,
       },
+    ],
+  },
+  {
+    label: "Program Kerja",
+    items: [
+      {
+        href: "/admin/proker/baru",
+        label: "Tambah",
+        icon: Plus,
+        roles: ["SEKRETARIS_DIVISI"],
+      },
+      {
+        href: "/admin/proker",
+        label: "Riwayat",
+        icon: History,
+        roles: ["SEKRETARIS_DIVISI"],
+      },
+      // Daftar lintas komisariat menyusul dari tiket #85.
     ],
   },
   {
