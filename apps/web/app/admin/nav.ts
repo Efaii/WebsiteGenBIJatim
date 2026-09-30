@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Award,
   CircleHelp,
   ClipboardCheck,
   History,
@@ -110,6 +111,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: History,
         roles: ["SEKRETARIS_DIVISI"],
       },
+    ],
+  },
+  {
+    label: "Awardee",
+    items: [
+      {
+        href: "/admin/awardee",
+        label: "Data Awardee",
+        icon: Award,
+        roles: ["SEKRETARIS_UMUM"],
+      },
+      // Impor Awardee menyusul dari tiket #88.
     ],
   },
   {
