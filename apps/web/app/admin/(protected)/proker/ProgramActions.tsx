@@ -37,17 +37,34 @@ const HINT: Record<string, string> = {
   ARCHIVED: "Program Kerja sudah diarsipkan.",
 };
 
+const VIEWER_HINT: Record<string, string> = {
+  DRAFT: "Draft ini sedang disiapkan sekretaris divisi terkait.",
+  REJECTED:
+    "Ditolak dan sedang diperbaiki sekretaris divisi terkait sebelum diajukan ulang.",
+  SUBMITTED: "Menunggu persetujuan admin global.",
+  APPROVED: "Sudah disetujui; menunggu penerbitan admin global.",
+  PUBLISHED: "Tayang di halaman program publik.",
+  ARCHIVED: "Program Kerja sudah diarsipkan.",
+};
+
 /**
  * Kartu status Program Kerja untuk sekretaris divisi: pengajuan ke admin
  * global dan tautan publik setelah terbit. Persetujuan dan penerbitan
  * dijalankan admin global (ADR 0016 semangat yang sama untuk Program Kerja).
  */
-export function ProgramActions({ program }: { program: CmsProgramItem }) {
+export function ProgramActions({
+  program,
+  canManage = true,
+}: {
+  program: CmsProgramItem;
+  canManage?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const status = program.publicationStatus;
+  const hint = (canManage ? HINT : VIEWER_HINT)[status];
 
   const submit = async () => {
     setBusy(true);
@@ -85,7 +102,7 @@ export function ProgramActions({ program }: { program: CmsProgramItem }) {
       ) : null}
 
       <div className="mt-4 flex flex-col gap-2">
-        {(status === "DRAFT" || status === "REJECTED") && (
+        {canManage && (status === "DRAFT" || status === "REJECTED") && (
           <button
             type="button"
             disabled={busy}
@@ -109,10 +126,8 @@ export function ProgramActions({ program }: { program: CmsProgramItem }) {
         )}
       </div>
 
-      {HINT[status] && (
-        <p className="mt-4 text-xs leading-relaxed text-slate-500">
-          {HINT[status]}
-        </p>
+      {hint && (
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">{hint}</p>
       )}
 
       {error && (

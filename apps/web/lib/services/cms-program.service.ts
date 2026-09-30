@@ -37,6 +37,7 @@ export type CmsProgramItem = {
   authorAccountId: string | null;
   updatedAt: string;
   artifacts: CmsProgramArtifact[];
+  commissariat?: { name: string; slug: string };
 };
 
 export type ProgramWritePayload = {

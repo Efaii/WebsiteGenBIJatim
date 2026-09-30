@@ -35,7 +35,13 @@ const KIND_LABEL: Record<string, string> = {
  * plus unggahan Proposal pada fase draft dan LPJ setelah disetujui. Program
  * Kerja lama hasil rekonsiliasi tidak menerima berkas baru.
  */
-export function ProgramArtifacts({ program }: { program: CmsProgramItem }) {
+export function ProgramArtifacts({
+  program,
+  canManage = true,
+}: {
+  program: CmsProgramItem;
+  canManage?: boolean;
+}) {
   const router = useRouter();
   const [busyKind, setBusyKind] = useState<"proposal" | "lpj" | null>(null);
   const [proposalFile, setProposalFile] = useState<File | null>(null);
@@ -47,9 +53,9 @@ export function ProgramArtifacts({ program }: { program: CmsProgramItem }) {
   const downloadable = ["APPROVED", "PUBLISHED"].includes(status);
   const isCmsOrigin = program.authorAccountId !== null;
   const canUploadProposal =
-    isCmsOrigin && ["DRAFT", "REJECTED"].includes(status);
+    canManage && isCmsOrigin && ["DRAFT", "REJECTED"].includes(status);
   const canUploadLpj =
-    isCmsOrigin && ["APPROVED", "PUBLISHED"].includes(status);
+    canManage && isCmsOrigin && ["APPROVED", "PUBLISHED"].includes(status);
 
   const upload = async (kind: "proposal" | "lpj", file: File | null) => {
     if (!file) {

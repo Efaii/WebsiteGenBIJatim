@@ -97,13 +97,18 @@ export const listCmsPrograms = async (req: CmsRequest, res: Response) => {
   const where: { publicationStatus?: PublicationStatus; commissariatId?: string; periodId?: string; divisionId?: string } = {};
   const requestedStatus = cmsPublicationStatus(req.query.status);
   if (requestedStatus) where.publicationStatus = requestedStatus;
-  if (req.cmsSession!.cmsAccount.role !== CmsRole.ADMIN_GLOBAL) {
+  /*
+   * `scope=all` membuka daftar lintas komisariat untuk ketiga peran (keputusan
+   * Korkom: koordinasi lintas komisariat). Tanpa parameter itu daftar tetap
+   * dibatasi scope akun (Riwayat divisi sekretaris).
+   */
+  if (req.query.scope !== 'all' && req.cmsSession!.cmsAccount.role !== CmsRole.ADMIN_GLOBAL) {
     const assignment = req.cmsSession!.cmsAccount.assignments[0];
     if (!assignment?.commissariatId || !assignment.periodId) throw new ApiError('FORBIDDEN', 'No active CMS assignment.', 403);
     where.commissariatId = assignment.commissariatId; where.periodId = assignment.periodId;
     if (req.cmsSession!.cmsAccount.role === CmsRole.SEKRETARIS_DIVISI) where.divisionId = assignment.divisionId ?? undefined;
   }
-  return sendSuccess(res, await prisma.programKerja.findMany({ where, include: { artifacts: true }, orderBy: { updatedAt: 'desc' } }));
+  return sendSuccess(res, await prisma.programKerja.findMany({ where, include: { artifacts: true, commissariat: { select: { name: true, slug: true } } }, orderBy: { updatedAt: 'desc' } }));
 };
 
 export const transitionProgram = async (req: CmsRequest, res: Response) => {

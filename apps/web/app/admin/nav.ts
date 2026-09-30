@@ -5,6 +5,7 @@ import {
   History,
   House,
   LayoutDashboard,
+  ListChecks,
   Newspaper,
   Plus,
 } from "lucide-react";
@@ -92,6 +93,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: "Program Kerja",
     items: [
       {
+        href: "/admin/proker/lintas",
+        label: "Lintas Komisariat",
+        icon: ListChecks,
+        roles: ["SEKRETARIS_UMUM", "SEKRETARIS_DIVISI"],
+      },
+      {
         href: "/admin/proker/baru",
         label: "Tambah",
         icon: Plus,
@@ -103,7 +110,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: History,
         roles: ["SEKRETARIS_DIVISI"],
       },
-      // Daftar lintas komisariat menyusul dari tiket #85.
+    ],
+  },
+  {
+    label: "Data",
+    items: [
+      {
+        href: "/admin/proker/lintas",
+        label: "Program Kerja",
+        icon: ListChecks,
+        roles: GLOBAL_ONLY,
+      },
+      // Awardee per periode menyusul dari tiket #87.
     ],
   },
   {

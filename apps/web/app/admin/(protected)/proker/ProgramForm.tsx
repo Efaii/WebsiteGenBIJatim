@@ -25,7 +25,13 @@ const extractMessage = (error: unknown): string => {
  * Formulir Program Kerja (buat draft baru / sunting draft atau hasil
  * penolakan). Cakupan komisariat, periode, dan divisi diambil dari akun.
  */
-export function ProgramForm({ program }: { program?: CmsProgramItem }) {
+export function ProgramForm({
+  program,
+  canManage = true,
+}: {
+  program?: CmsProgramItem;
+  canManage?: boolean;
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(program?.namaProker ?? "");
   const [description, setDescription] = useState(
@@ -45,7 +51,8 @@ export function ProgramForm({ program }: { program?: CmsProgramItem }) {
 
   const editing = Boolean(program);
   const editable =
-    !program || ["DRAFT", "REJECTED"].includes(program.publicationStatus);
+    canManage &&
+    (!program || ["DRAFT", "REJECTED"].includes(program.publicationStatus));
   const objectiveLines = objectives
     .split("\n")
     .map((line) => line.trim())
@@ -216,8 +223,9 @@ export function ProgramForm({ program }: { program?: CmsProgramItem }) {
         )}
         {!editable && program && (
           <p className="text-xs text-slate-500">
-            Program Kerja berstatus {program.publicationStatus} tidak dapat
-            disunting.
+            {canManage
+              ? `Program Kerja berstatus ${program.publicationStatus} tidak dapat disunting.`
+              : "Hanya sekretaris divisi terkait yang dapat menyunting Program Kerja ini."}
           </p>
         )}
       </div>
