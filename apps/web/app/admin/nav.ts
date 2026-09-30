@@ -1,5 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { CircleHelp, House, LayoutDashboard, Newspaper } from "lucide-react";
+import {
+  CircleHelp,
+  ClipboardCheck,
+  House,
+  LayoutDashboard,
+  Newspaper,
+} from "lucide-react";
 
 /**
  * Navigasi sidebar area admin.
@@ -78,6 +84,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         icon: CircleHelp,
         roles: GLOBAL_ONLY,
       },
+    ],
+  },
+  {
+    label: "Persetujuan",
+    items: [
+      {
+        href: "/admin/persetujuan/berita",
+        label: "Berita",
+        icon: ClipboardCheck,
+        roles: GLOBAL_ONLY,
+      },
+      // Program Kerja dan Awardee menyusul dari tiket #86 dan #89.
     ],
   },
 ];

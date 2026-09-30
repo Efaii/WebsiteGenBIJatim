@@ -83,14 +83,19 @@ export const updateNews = async (
   );
 };
 
-/** Jalankan satu langkah transisi status berita (DRAFT→…→PUBLISHED). */
+/**
+ * Jalankan satu langkah transisi status berita (DRAFT menuju PUBLISHED).
+ * `rejectionReason` wajib saat menolak; API menyimpannya sebagai catatan yang
+ * terlihat oleh pengaju.
+ */
 export const transitionNews = async (
   id: string,
   status: PublicationStatusValue,
+  rejectionReason?: string,
 ): Promise<void> => {
   await api.post(
     `/v1/news/${id}/transition`,
-    { status },
+    { status, ...(rejectionReason ? { rejectionReason } : {}) },
     { withCredentials: true },
   );
 };

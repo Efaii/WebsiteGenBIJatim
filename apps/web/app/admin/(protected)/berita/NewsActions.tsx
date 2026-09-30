@@ -9,6 +9,7 @@ import {
   type PublicationStatusValue,
 } from "@/lib/services/cms-news.service";
 import { BTN_PRIMARY, BTN_SECONDARY, PANEL } from "../../ui";
+import { NewsApprovalButtons } from "./NewsApprovalButtons";
 import {
   NEWS_STATUS_BADGE,
   NEWS_STATUS_LABEL,
@@ -115,19 +116,7 @@ export function NewsActions({
                 {busy ? "Memproses..." : "Terbitkan"}
               </button>
             )}
-            {status === "SUBMITTED" && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void run(["APPROVED", "PUBLISHED"])}
-                className={`${BTN_PRIMARY} w-full`}
-              >
-                {busy && (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                )}
-                {busy ? "Memproses..." : "Setujui & terbitkan"}
-              </button>
-            )}
+            {status === "SUBMITTED" && <NewsApprovalButtons newsId={news.id} />}
             {status === "APPROVED" && (
               <button
                 type="button"
