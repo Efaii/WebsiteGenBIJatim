@@ -17,7 +17,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { BTN_SMALL, FIELD_BASE } from "../../ui";
-import { contentToEditorHtml, sanitizeEditorHtml } from "./rich-text";
+import { contentToEditorHtml, sanitizeEditorHtml } from "@/lib/rich-text";
 
 const TOOLBAR_BUTTON =
   "inline-flex h-8 w-8 items-center justify-center rounded-thumb text-slate-600 transition-colors duration-200 hover:bg-genbi-light hover:text-genbi-blue focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/50 disabled:pointer-events-none disabled:opacity-40";
@@ -48,22 +48,24 @@ const EDITOR_CLASSES =
   "min-h-[320px] rounded-thumb border border-slate-300 bg-white px-3.5 py-3 text-sm leading-relaxed text-slate-900 outline-none transition focus:border-genbi-blue focus:ring-2 focus:ring-genbi-blue/20 [&_a]:text-genbi-blue [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-genbi-haze [&_blockquote]:pl-3 [&_blockquote]:italic [&_h2]:mt-2 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:mt-2 [&_h3]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5";
 
 /**
- * Editor teks kaya untuk isi Berita.
+ * Editor teks kaya bersama untuk isi Berita dan jawaban FAQ (modul admin).
  *
  * Toolbar dasar (tebal, miring, daftar, judul, kutipan, tautan) plus tempelan
  * dari Word: gaya teks pada span (font-weight/font-style/underline) diubah
  * menjadi tag semantik, atribut dan skrip dibuang sebelum masuk editor.
  * Komponen tidak dikendalikan nilai setelah mount supaya posisi kursor tidak
- * melompat; pemanggil mengunci instance per berita lewat prop `key`.
+ * melompat; pemanggil mengunci instance per konten lewat prop `key`.
  */
 export function RichTextEditor({
   initialHtml,
   onChange,
   disabled = false,
+  label = "Isi berita",
 }: {
   initialHtml: string;
   onChange: (html: string) => void;
   disabled?: boolean;
+  label?: string;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -72,7 +74,7 @@ export function RichTextEditor({
   useEffect(() => {
     const editor = editorRef.current;
     if (editor) editor.innerHTML = contentToEditorHtml(initialHtml);
-    // Sengaja hanya saat mount; instance dikunci per berita oleh pemanggil.
+    // Sengaja hanya saat mount; instance dikunci per konten oleh pemanggil.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -222,7 +224,7 @@ export function RichTextEditor({
         onInput={emit}
         onBlur={emit}
         onPaste={onPaste}
-        aria-label="Isi berita"
+        aria-label={label}
         aria-disabled={disabled}
         className={`${EDITOR_CLASSES} ${
           disabled ? "bg-slate-50 text-slate-400" : ""

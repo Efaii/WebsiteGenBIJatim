@@ -19,6 +19,8 @@ import {
   LABEL,
   PANEL,
 } from "../../ui";
+import { RichTextEditor } from "../rich-text/RichTextEditor";
+import { plainTextOf } from "@/lib/rich-text";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -44,6 +46,7 @@ export function FaqManager() {
   const [error, setError] = useState<string | null>(null);
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
+  const [formKey, setFormKey] = useState(0);
   const [edits, setEdits] = useState<
     Record<string, { question: string; answer: string }>
   >({});
@@ -117,22 +120,25 @@ export function FaqManager() {
           />
         </div>
         <div>
-          <label className={LABEL} htmlFor="faq-new-answer">
-            Jawaban
-          </label>
-          <textarea
-            id="faq-new-answer"
-            value={newAnswer}
-            onChange={(event) => setNewAnswer(event.target.value)}
-            placeholder="Jawaban"
-            maxLength={5000}
-            rows={3}
-            className={`${FIELD} mt-1`}
-          />
+          <span className={LABEL}>Jawaban</span>
+          <div className="mt-1">
+            <RichTextEditor
+              key={`faq-new-${formKey}`}
+              initialHtml={newAnswer}
+              onChange={setNewAnswer}
+              label="Jawaban FAQ"
+            />
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-slate-400">
+            Toolbar sama dengan isi berita; jawaban lama berformat teks polos
+            tetap tampil apa adanya.
+          </p>
         </div>
         <button
           type="button"
-          disabled={busy || !newQuestion.trim() || !newAnswer.trim()}
+          disabled={
+            busy || !newQuestion.trim() || plainTextOf(newAnswer).length === 0
+          }
           onClick={() =>
             void run(async () => {
               await createFaq({
@@ -142,6 +148,7 @@ export function FaqManager() {
               });
               setNewQuestion("");
               setNewAnswer("");
+              setFormKey((value) => value + 1);
             })
           }
           className={BTN_PRIMARY}
@@ -236,20 +243,19 @@ export function FaqManager() {
                 }
                 className={FIELD}
               />
-              <textarea
-                value={edits[item.id]?.answer ?? ""}
-                maxLength={5000}
-                rows={3}
-                onChange={(event) =>
+              <RichTextEditor
+                key={`faq-${item.id}`}
+                initialHtml={edits[item.id]?.answer ?? ""}
+                onChange={(html) =>
                   setEdits((prev) => ({
                     ...prev,
                     [item.id]: {
                       ...prev[item.id],
-                      answer: event.target.value,
+                      answer: html,
                     },
                   }))
                 }
-                className={FIELD}
+                label="Jawaban FAQ"
               />
               <div className="flex items-center gap-2">
                 <button

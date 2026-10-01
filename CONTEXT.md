@@ -102,6 +102,10 @@ _Avoid_: Static news fixture sebagai source of truth, menampilkan divisi pada at
 Berita tanpa asal komisariat yang ditulis admin global atas nama pusat GenBI Jatim; tampil di permukaan publik bersama berita komisariat, tetapi daftar CMS-nya hanya terlihat admin global.
 _Avoid_: Menempelkan kanal ini ke salah satu komisariat.
 
+**Teks kaya**:
+Format dasar (tebal, miring, daftar, tautan) yang boleh dipakai isi Berita dan jawaban FAQ; disimpan sebagai HTML tersanitasi, sedangkan konten lama berformat teks polos tetap didukung dan tampil apa adanya.
+_Avoid_: Menyimpan HTML mentah dari tempelan luar tanpa saringan, atau memasang parser markdown penuh untuk kebutuhan ini.
+
 **Akun bersama**:
 Akun CMS berbasis scope operasional, bukan identitas personal. Audit hanya dapat mengidentifikasi scope akun; admin global dapat mereset password atau menonaktifkan assignment.
 _Avoid_: Registrasi publik, audit individu.

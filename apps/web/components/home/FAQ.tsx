@@ -4,12 +4,13 @@ import { Fragment, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { MessageCircleQuestion, ArrowRight } from "lucide-react";
 import { FAQItem } from "@/types/home.types";
+import { isSafeRichHtml } from "@/lib/rich-text";
 
 /**
- * Jawaban FAQ memakai penanda **tebal** (markdown bold) untuk menandai kata
- * kunci. Hanya penanda itu yang dipakai tabel faq, jadi alih-alih memasang
- * parser markdown penuh, teks dipecah pada pasangan **...** dan bagian
- * tebalnya dirender sebagai <strong> — sisa tampilan tidak berubah.
+ * Jalur render untuk jawaban lama (teks polos): penanda **tebal** (markdown
+ * bold) menandai kata kunci — teks dipecah pada pasangan **...** dan bagian
+ * tebalnya dirender sebagai <strong>. Jawaban baru ber-HTML tersanitasi
+ * memakai jalur kaya terpisah; keduanya hidup berdampingan.
  */
 const renderAnswer = (answer: string) =>
   answer.split(/(\*\*[^*]+\*\*)/g).map((bagian, index) =>
@@ -103,7 +104,9 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
                     <div
                       key={`faq-${index}`}
                       className={`transition-colors duration-300 ${
-                        terbuka ? "bg-genbi-light" : "bg-white hover:bg-genbi-soft"
+                        terbuka
+                          ? "bg-genbi-light"
+                          : "bg-white hover:bg-genbi-soft"
                       }`}
                     >
                       <button
@@ -115,7 +118,9 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
                       >
                         <span
                           className={`text-base lg:text-lg font-semibold leading-snug pr-2 transition-colors duration-300 ${
-                            terbuka ? "text-genbi-blue" : "text-slate-900 group-hover:text-genbi-blue"
+                            terbuka
+                              ? "text-genbi-blue"
+                              : "text-slate-900 group-hover:text-genbi-blue"
                           }`}
                         >
                           {faq.question}
@@ -149,9 +154,16 @@ export const FAQ = ({ faqs }: { faqs: FAQItem[] }) => {
                         className="overflow-hidden bg-white"
                       >
                         <div className="border-t border-genbi-line px-5 lg:px-6 py-5 lg:py-6">
-                          <div className="text-slate-900 text-[15px] lg:text-base leading-relaxed whitespace-pre-line">
-                            {renderAnswer(faq.answer)}
-                          </div>
+                          {isSafeRichHtml(faq.answer) ? (
+                            <div
+                              className="text-slate-900 text-[15px] lg:text-base leading-relaxed [&_a]:text-genbi-blue [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-genbi-haze [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mt-4 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:mt-4 [&_h3]:font-semibold [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-6"
+                              dangerouslySetInnerHTML={{ __html: faq.answer }}
+                            />
+                          ) : (
+                            <div className="text-slate-900 text-[15px] lg:text-base leading-relaxed whitespace-pre-line">
+                              {renderAnswer(faq.answer)}
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     </div>

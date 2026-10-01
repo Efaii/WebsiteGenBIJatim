@@ -21,7 +21,7 @@ import {
   publicStoragePath,
   ensureStorageRoots,
 } from "../lib/storage";
-import { sanitizeNewsContent } from "../lib/rich-text";
+import { sanitizeRichText } from "../lib/rich-text";
 
 const publicNewsDir = () => publicStoragePath("news");
 const privateNewsDir = () => privateStoragePath("news");
@@ -378,7 +378,7 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
       title,
       slug: `${slug}-${Date.now()}`,
       excerpt: parsed.excerpt ?? "",
-      content: sanitizeNewsContent(parsed.content ?? ""),
+      content: sanitizeRichText(parsed.content ?? ""),
       category: parsed.category ?? null,
       image: "",
       author,
@@ -434,7 +434,7 @@ export const updateDraftNews = async (req: CmsRequest, res: Response) => {
         ? { excerpt: fields.excerpt.trim() }
         : {}),
       ...(fields.content !== undefined
-        ? { content: sanitizeNewsContent(fields.content.trim()) }
+        ? { content: sanitizeRichText(fields.content.trim()) }
         : {}),
       ...(fields.category !== undefined ? { category: fields.category } : {}),
       ...(fields.author !== undefined
@@ -505,7 +505,7 @@ export const createNewsRevision = async (req: CmsRequest, res: Response) => {
       content:
         fields.content === undefined
           ? news.content
-          : sanitizeNewsContent(fields.content),
+          : sanitizeRichText(fields.content),
       category: fields.category === undefined ? news.category : fields.category,
       publicationStatus: "DRAFT",
     },
@@ -572,7 +572,7 @@ export const updateNewsRevision = async (req: CmsRequest, res: Response) => {
         : {}),
       ...(fields.excerpt !== undefined ? { excerpt: fields.excerpt } : {}),
       ...(fields.content !== undefined
-        ? { content: sanitizeNewsContent(fields.content) }
+        ? { content: sanitizeRichText(fields.content) }
         : {}),
       ...(fields.category !== undefined ? { category: fields.category } : {}),
       publicationStatus: "DRAFT",

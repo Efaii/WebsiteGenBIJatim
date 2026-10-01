@@ -1,11 +1,12 @@
 /*
- * Utilitas teks kaya Berita (sisi klien).
+ * Utilitas teks kaya (sisi klien).
  *
- * Editor menyimpan HTML sederhana: paragraf, tebal, miring, garis bawah,
- * coret, daftar, judul, kutipan, dan tautan. Fungsi di sini menyiapkan konten
- * lama (teks polos) untuk editor, membaca teks polos untuk validasi, dan
- * membersihkan HTML tempelan (mis. dari Word) sebelum dimasukkan ke editor.
- * Server tetap menyaring ulang sebelum menyimpan (lib/rich-text.ts di API).
+ * Editor admin (isi Berita dan jawaban FAQ) menyimpan HTML sederhana:
+ * paragraf, tebal, miring, garis bawah, coret, daftar, judul, kutipan, dan
+ * tautan. Fungsi di sini menyiapkan konten lama (teks polos) untuk editor,
+ * membaca teks polos untuk validasi, membersihkan HTML tempelan (mis. dari
+ * Word), dan menjaga gerbang render aman untuk halaman publik. Server tetap
+ * menyaring ulang sebelum menyimpan (lib/rich-text.ts di API).
  */
 
 const ALLOWED_TAGS = new Set([
@@ -47,6 +48,20 @@ const SAFE_URL = /^(https?:|mailto:)/i;
 
 export const isRichHtml = (value: string): boolean =>
   /<(p|br|strong|b|em|i|u|s|ul|ol|li|h2|h3|blockquote|a)[\s>/]/i.test(value);
+
+/*
+ * Gerbang render halaman publik: hanya bentuk HTML yang dikenal dan bebas
+ * elemen berbahaya yang dirender mentah. Konten baru sudah disaring di API;
+ * ini sabuk pengaman untuk baris lama yang dibuat sebelum editor teks kaya.
+ */
+const RICH_CONTENT =
+  /<(p|br|strong|b|em|i|u|s|ul|ol|li|h2|h3|blockquote|a)[\s>/]/i;
+const DANGEROUS_CONTENT = /<(script|iframe|style|object|embed|link|meta)\b/i;
+
+export const isSafeRichHtml = (value: string): boolean =>
+  RICH_CONTENT.test(value) &&
+  !DANGEROUS_CONTENT.test(value) &&
+  !/\son\w+\s*=/i.test(value);
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

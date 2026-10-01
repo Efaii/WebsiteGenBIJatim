@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { ApiError } from "../lib/api-error";
+import { sanitizeRichText } from "../lib/rich-text";
 import { sendSuccess } from "../middlewares/request-context.middleware";
 
 /*
@@ -23,6 +24,31 @@ const requireText = (value: unknown, field: string, max: number): string => {
   return value.trim();
 };
 
+/*
+ * Jawaban FAQ memakai teks kaya: disaring lebih dulu (hanya tag/atribut
+ * presentasi yang lolos), lalu diukur panjangnya supaya skrip atau gaya
+ * berbahaya tidak pernah masuk database. Jawaban lama berformat teks polos
+ * tetap diterima karena penyaring meneruskan teks apa adanya.
+ */
+const requireRichAnswer = (value: unknown, max: number): string => {
+  if (typeof value !== "string") {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `answer harus berupa teks 1-${max} karakter.`,
+      400,
+    );
+  }
+  const sanitized = sanitizeRichText(value);
+  if (sanitized.length === 0 || sanitized.length > max) {
+    throw new ApiError(
+      "VALIDATION_ERROR",
+      `answer harus berupa teks 1-${max} karakter.`,
+      400,
+    );
+  }
+  return sanitized;
+};
+
 const orderedFaqs = () =>
   prisma.faq.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
 
@@ -39,7 +65,7 @@ export const listCmsFaqs = async (_req: Request, res: Response) =>
 
 export const createFaq = async (req: Request, res: Response) => {
   const question = requireText(req.body?.question, "question", 300);
-  const answer = requireText(req.body?.answer, "answer", 5000);
+  const answer = requireRichAnswer(req.body?.answer, 5000);
   const isActive =
     req.body?.isActive === undefined ? true : Boolean(req.body.isActive);
   const max = await prisma.faq.aggregate({ _max: { order: true } });
@@ -56,7 +82,7 @@ export const updateFaq = async (req: Request, res: Response) => {
   if (req.body?.question !== undefined)
     data.question = requireText(req.body.question, "question", 300);
   if (req.body?.answer !== undefined)
-    data.answer = requireText(req.body.answer, "answer", 5000);
+    data.answer = requireRichAnswer(req.body.answer, 5000);
   if (req.body?.isActive !== undefined)
     data.isActive = Boolean(req.body.isActive);
   if (Object.keys(data).length === 0) {

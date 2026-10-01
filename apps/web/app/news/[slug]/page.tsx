@@ -14,6 +14,7 @@ import {
   type PublicNewsSummary,
 } from "@/lib/services/news.service";
 import { newsBylineParts } from "@/lib/news-byline";
+import { isSafeRichHtml } from "@/lib/rich-text";
 
 /**
  * Awalan dateline pada paragraf pertama ("Surabaya — ...", "Gresik — ...").
@@ -39,20 +40,6 @@ const renderInline = (text: string) =>
       part
     ),
   );
-
-/**
- * Konten kaya (hasil editor admin) dirender sebagai HTML; hanya bentuk yang
- * dikenali dan bebas elemen berbahaya yang memakai jalur HTML. Konten baru
- * sudah disaring di API; saringan di sini adalah sabuk pengaman untuk baris
- * lama yang dibuat sebelum editor teks kaya ada.
- */
-const RICH_CONTENT =
-  /<(p|br|strong|b|em|i|u|s|ul|ol|li|h2|h3|blockquote|a)[\s>/]/i;
-const DANGEROUS_CONTENT = /<(script|iframe|style|object|embed|link|meta)\b/i;
-const isSafeRichContent = (value: string) =>
-  RICH_CONTENT.test(value) &&
-  !DANGEROUS_CONTENT.test(value) &&
-  !/\son\w+\s*=/i.test(value);
 
 export async function generateMetadata({
   params,
@@ -151,7 +138,7 @@ export default async function NewsDetailPage({
             <div className="lg:col-span-8 lg:row-start-2">
               {/* Tanpa animasi masuk: isi berita langsung tampil utuh. */}
               <div className="max-w-[68ch] space-y-6 text-[1.0625rem] leading-[1.8] text-slate-700">
-                {isSafeRichContent(news.content ?? "") ? (
+                {isSafeRichHtml(news.content ?? "") ? (
                   <div
                     className="[&_a]:text-genbi-blue [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-genbi-haze [&_blockquote]:pl-4 [&_blockquote]:italic [&_h2]:mt-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-900 [&_h3]:mt-5 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-slate-900 [&_li]:my-1 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
                     dangerouslySetInnerHTML={{ __html: news.content }}

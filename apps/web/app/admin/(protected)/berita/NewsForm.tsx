@@ -11,8 +11,8 @@ import {
   type NewsCategoryValue,
 } from "@/lib/services/cms-news.service";
 import { BTN_PRIMARY, FIELD, FILE_INPUT, LABEL, PANEL } from "../../ui";
-import { RichTextEditor } from "./RichTextEditor";
-import { plainTextOf } from "./rich-text";
+import { RichTextEditor } from "../rich-text/RichTextEditor";
+import { plainTextOf } from "@/lib/rich-text";
 import { newsBylineParts } from "@/lib/news-byline";
 
 const extractMessage = (error: unknown): string => {
