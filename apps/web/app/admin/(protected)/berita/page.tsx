@@ -5,6 +5,7 @@ import { cmsApiGet } from "@/lib/cms-api";
 import { getCmsPageSession } from "@/lib/cms-guard";
 import type { CmsNewsItem } from "@/lib/services/cms-news.service";
 import { newsAssetUrl } from "@/lib/services/news.service";
+import { newsBylineParts, newsBylineText } from "@/lib/news-byline";
 import { BTN_PRIMARY, PANEL } from "../../ui";
 import { FeatureSlotCards, type SlotCardNews } from "./FeatureSlotCards";
 import { SlotSelect } from "./SlotSelect";
@@ -153,8 +154,12 @@ export default async function AdminNewsListPage() {
                               {item.title}
                             </span>
                             <span className="mt-0.5 block text-xs text-slate-500">
-                              {item.author}
-                              {item.publisher ? ` - ${item.publisher}` : ""}
+                              {newsBylineText(
+                                newsBylineParts({
+                                  author: item.author,
+                                  publisher: item.publisher,
+                                }),
+                              )}
                             </span>
                           </td>
                           <td className="px-5 py-3 text-slate-600">

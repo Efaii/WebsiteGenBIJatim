@@ -4,8 +4,10 @@ import api from "@/lib/api";
 export type CmsSessionInfo = {
   accountId: string;
   username: string | null;
+  displayName: string | null;
   role: "ADMIN_GLOBAL" | "SEKRETARIS_UMUM" | "SEKRETARIS_DIVISI";
   mustChangePassword: boolean;
+  commissariatName: string | null;
 };
 
 /**

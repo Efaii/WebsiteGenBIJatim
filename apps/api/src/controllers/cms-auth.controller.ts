@@ -129,10 +129,19 @@ export const changeCmsPassword = async (req: CmsRequest, res: Response) => {
  */
 export const currentCms = async (req: CmsRequest, res: Response) => {
   const account = req.cmsSession!.cmsAccount;
+  const assignment = account.assignments[0] ?? null;
+  const commissariat = assignment?.commissariatId
+    ? await prisma.commissariat.findUnique({
+        where: { id: assignment.commissariatId },
+        select: { name: true },
+      })
+    : null;
   return sendSuccess(res, {
     accountId: account.id,
     username: account.user.username,
+    displayName: account.user.name ?? null,
     role: account.role,
     mustChangePassword: account.mustChangePassword,
+    commissariatName: commissariat?.name ?? null,
   });
 };

@@ -13,18 +13,7 @@ import {
   newsAssetUrl,
   type PublicNewsSummary,
 } from "@/lib/services/news.service";
-
-const formatDate = (value: string | null | undefined) => {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? ""
-    : date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-};
+import { newsBylineParts } from "@/lib/news-byline";
 
 /**
  * Awalan dateline pada paragraf pertama ("Surabaya — ...", "Gresik — ...").
@@ -111,7 +100,11 @@ export default async function NewsDetailPage({
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
-  const publishedLabel = formatDate(news.publishedAt);
+  const byline = newsBylineParts({
+    author: news.author,
+    publisher: news.publisher,
+    publishedAt: news.publishedAt,
+  });
 
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans text-slate-900">
@@ -133,20 +126,20 @@ export default async function NewsDetailPage({
 
               <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
                 <span className="font-semibold text-slate-900">
-                  {news.author}
+                  {byline.author}
                 </span>
-                {news.publisher ? (
+                {byline.publisher ? (
                   <span>
                     <span aria-hidden="true">- </span>
                     <span className="font-medium text-genbi-blue">
-                      {news.publisher}
+                      {byline.publisher}
                     </span>
                   </span>
                 ) : null}
-                {publishedLabel ? (
+                {byline.dateLabel ? (
                   <>
                     <span aria-hidden="true">·</span>
-                    <span>{publishedLabel}</span>
+                    <span>{byline.dateLabel}</span>
                   </>
                 ) : null}
               </div>

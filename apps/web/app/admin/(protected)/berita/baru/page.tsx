@@ -1,5 +1,6 @@
 import { getCmsPageSession } from "@/lib/cms-guard";
 import { NewsForm } from "../NewsForm";
+import { newsAuthorFallback } from "@/lib/news-byline";
 
 export const metadata = { title: "Berita Baru" };
 
@@ -19,7 +20,10 @@ export default async function AdminNewsNewPage() {
             : "Disimpan sebagai draft dulu. Lengkapi cover dan isi, lalu ajukan lewat halaman kelola berita."}
         </p>
       </div>
-      <NewsForm />
+      <NewsForm
+        commissariatName={session.commissariatName}
+        authorFallback={newsAuthorFallback(session.role, session.displayName)}
+      />
     </div>
   );
 }

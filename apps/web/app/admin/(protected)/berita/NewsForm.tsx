@@ -13,6 +13,7 @@ import {
 import { BTN_PRIMARY, FIELD, FILE_INPUT, LABEL, PANEL } from "../../ui";
 import { RichTextEditor } from "./RichTextEditor";
 import { plainTextOf } from "./rich-text";
+import { newsBylineParts } from "@/lib/news-byline";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -28,7 +29,15 @@ const extractMessage = (error: unknown): string => {
  * Formulir berita (buat draft baru / sunting draft) memakai jalur kanonik.
  * Cover opsional; server mengonversinya ke WebP otomatis.
  */
-export function NewsForm({ news }: { news?: CmsNewsItem }) {
+export function NewsForm({
+  news,
+  commissariatName = null,
+  authorFallback = "GenBI Jatim",
+}: {
+  news?: CmsNewsItem;
+  commissariatName?: string | null;
+  authorFallback?: string;
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(news?.title ?? "");
   const [author, setAuthor] = useState(news?.author ?? "");
@@ -53,6 +62,11 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
     title.trim().length > 0 &&
     excerpt.trim().length > 0 &&
     plainTextOf(content).length > 0;
+  const bylinePreview = newsBylineParts({
+    author: author.trim() || authorFallback,
+    publisher: commissariatName,
+    publishedAt: news?.publishedAt ?? null,
+  });
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,8 +108,18 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       <div>
         <h2 className="text-sm font-semibold text-slate-900">Isi berita</h2>
         <p className="mt-1 text-xs leading-relaxed text-slate-500">
-          Lengkapi judul, nama penerbit, kategori, ringkasan, isi, dan cover.
-          Draft bisa disimpan kapan saja.
+          Lengkapi judul, nama penerbit, kategori, ringkasan, isi, dan gambar
+          utama. Draft bisa disimpan kapan saja.
+        </p>
+        <p className="mt-3 rounded-thumb border border-genbi-line bg-genbi-soft/70 px-3.5 py-2.5 text-xs leading-relaxed text-slate-600">
+          <span className="font-semibold text-slate-900">
+            Komisariat penerbit:{" "}
+          </span>
+          {commissariatName ?? "GenBI Jatim (kanal pusat)"}
+          <span className="text-slate-400">
+            {" "}
+            — otomatis dari akun; tampil di halaman publik.
+          </span>
         </p>
       </div>
 
@@ -126,8 +150,28 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           className={`${FIELD} mt-1`}
         />
         <p className="mt-1 text-xs leading-relaxed text-slate-400">
-          Nama orang yang menerbitkan berita ini; tampil di halaman berita
-          publik bersama asal komisariat.
+          Nama orang yang menerbitkan berita ini. Kosongkan untuk memakai nama
+          akun Anda.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-slate-500">
+          Tampil sebagai:{" "}
+          <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="font-semibold text-slate-900">
+              {bylinePreview.author}
+            </span>
+            {bylinePreview.publisher ? (
+              <span>
+                <span aria-hidden="true">- </span>
+                <span className="font-medium text-genbi-blue">
+                  {bylinePreview.publisher}
+                </span>
+              </span>
+            ) : null}
+            <span aria-hidden="true">·</span>
+            <span>
+              {bylinePreview.dateLabel ?? "(tanggal terbit menyusul)"}
+            </span>
+          </span>
         </p>
       </div>
 
@@ -166,9 +210,15 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           onChange={(event) => setExcerpt(event.target.value)}
           className={`${FIELD} mt-1`}
         />
-        <p className="mt-1 text-right text-xs text-slate-400">
-          {excerpt.length}/280
-        </p>
+        <div className="mt-1 flex items-start justify-between gap-3">
+          <p className="text-xs leading-relaxed text-slate-400">
+            Tampil sebagai paragraf pembuka di kartu daftar berita dan kartu
+            beranda, sekaligus deskripsi saat tautan dibagikan.
+          </p>
+          <p className="shrink-0 text-xs tabular-nums text-slate-400">
+            {excerpt.length}/280
+          </p>
+        </div>
       </div>
 
       <div>
@@ -188,7 +238,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       </div>
 
       <div>
-        <p className={LABEL}>Cover</p>
+        <p className={LABEL}>Gambar utama (thumbnail)</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {activeCover ? (
             <>
@@ -202,7 +252,9 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
               </span>
             </>
           ) : (
-            <span className="text-xs text-slate-500">Belum ada cover.</span>
+            <span className="text-xs text-slate-500">
+              Belum ada gambar utama.
+            </span>
           )}
         </div>
         <input
@@ -213,8 +265,9 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
           className={`${FILE_INPUT} mt-3`}
         />
         <p className="mt-2 text-xs leading-relaxed text-slate-400">
-          Otomatis dikonversi ke WebP (maks 1920px) saat diunggah. Wajib ada
-          sebelum terbit.
+          Tampil di kartu berita (beranda & daftar berita), sebagai gambar
+          pertama di halaman detail, dan sebagai gambar saat tautan dibagikan.
+          Otomatis dikonversi ke WebP (maks 1920px); wajib ada sebelum terbit.
         </p>
       </div>
 

@@ -8,6 +8,7 @@ import { NewsActions } from "../NewsActions";
 import { NewsFeatureSlot } from "../NewsFeatureSlot";
 import { NewsForm } from "../NewsForm";
 import { NewsGallery } from "../NewsGallery";
+import { newsAuthorFallback } from "@/lib/news-byline";
 
 export const metadata = { title: "Kelola Berita" };
 
@@ -41,7 +42,14 @@ export default async function AdminNewsDetailPage({
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-6">
-          <NewsForm news={item} />
+          <NewsForm
+            news={item}
+            commissariatName={session.commissariatName}
+            authorFallback={newsAuthorFallback(
+              session.role,
+              session.displayName,
+            )}
+          />
           {isGlobal && <NewsGallery news={item} />}
         </div>
         <div className="space-y-6 xl:sticky xl:top-24">

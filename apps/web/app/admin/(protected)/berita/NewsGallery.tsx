@@ -26,7 +26,7 @@ const extractMessage = (error: unknown): string => {
 };
 
 /**
- * Galeri pendukung berita: sampai enam gambar ber-role GALLERY di samping
+ * Galeri dokumentasi berita: sampai enam gambar ber-role GALLERY di samping
  * satu gambar utama (cover). Urutan menentukan tampilan publik; berkas yang
  * dihapus ikut dibersihkan dari storage.
  */
@@ -70,22 +70,25 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
   return (
     <section className={`${PANEL} p-6`}>
       <h2 className="text-sm font-semibold text-slate-900">
-        Galeri pendukung ({gallery.length}/{GALLERY_LIMIT})
+        Galeri dokumentasi ({gallery.length}/{GALLERY_LIMIT})
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">
-        Gambar utama tetap satu (cover, dikelola di formulir atas). Sampai enam
-        gambar pendukung; unggahan dikonversi WebP otomatis dan urutan di sini
-        menentukan tampilan publik.
+        Gambar utama tetap satu (thumbnail, dikelola di formulir atas). Galeri
+        tampil sebagai slide berikutnya di halaman detail berita; hingga 4
+        gambar pertama ikut tampil di kartu besar beranda. Maksimal 6 gambar,
+        otomatis dikonversi WebP; urutan di sini menentukan tampilan publik.
       </p>
       {cover && (
         <p className="mt-2 break-all text-xs text-slate-500">
-          Gambar utama: {cover.storageKey} ({cover.status})
+          Gambar utama (thumbnail): {cover.storageKey} ({cover.status})
         </p>
       )}
 
       <div className="mt-4 space-y-2">
         {gallery.length === 0 && (
-          <p className="text-xs text-slate-400">Belum ada gambar pendukung.</p>
+          <p className="text-xs text-slate-400">
+            Belum ada gambar dokumentasi.
+          </p>
         )}
         {gallery.map((asset, index) => (
           <div
@@ -162,7 +165,7 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
         />
         {gallery.length >= GALLERY_LIMIT && (
           <p className="mt-2 text-xs text-amber-700">
-            Batas {GALLERY_LIMIT} gambar pendukung tercapai; hapus salah satu
+            Batas {GALLERY_LIMIT} gambar dokumentasi tercapai; hapus salah satu
             untuk menambah.
           </p>
         )}

@@ -11,6 +11,7 @@ import {
   newsStatusClass,
 } from "../../berita/status";
 import { BTN_SMALL, PANEL } from "../../../ui";
+import { newsBylineParts, newsBylineText } from "@/lib/news-byline";
 
 /**
  * Kartu antrean persetujuan untuk satu Berita.
@@ -35,8 +36,12 @@ export function NewsApprovalCard({ news }: { news: CmsNewsItem }) {
             </h2>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            {news.author}
-            {news.publisher ? ` - ${news.publisher}` : ""}
+            {newsBylineText(
+              newsBylineParts({
+                author: news.author,
+                publisher: news.publisher,
+              }),
+            )}
           </p>
           <p className="mt-0.5 text-xs text-slate-400">
             {news.category ?? "Tanpa kategori"}, diperbarui{" "}
