@@ -98,6 +98,10 @@ _Avoid_: Divisi sebagai role global.
 Konten publik hasil liputan yang diinput sekretaris umum atau sekretaris divisi pada scope komisariatnya lalu diterbitkan setelah disetujui admin global, atau ditulis dan diterbitkan langsung oleh admin global. Atribusi menampilkan nama penerbit (nama orang yang mengajukan), asal komisariat, dan tanggal terbit; divisi tidak ditampilkan. Data berita dimulai dari database kosong pada release awal.
 _Avoid_: Static news fixture sebagai source of truth, menampilkan divisi pada atribusi.
 
+**Kanal GenBI Jatim**:
+Berita tanpa asal komisariat yang ditulis admin global atas nama pusat GenBI Jatim; tampil di permukaan publik bersama berita komisariat, tetapi daftar CMS-nya hanya terlihat admin global.
+_Avoid_: Menempelkan kanal ini ke salah satu komisariat.
+
 **Akun bersama**:
 Akun CMS berbasis scope operasional, bukan identitas personal. Audit hanya dapat mengidentifikasi scope akun; admin global dapat mereset password atau menonaktifkan assignment.
 _Avoid_: Registrasi publik, audit individu.
