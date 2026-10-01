@@ -1,5 +1,11 @@
 import api from "@/lib/api";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+/** URL unduhan template impor (dihasilkan API dari header parser). */
+export const cmsAwardeeImportTemplateUrl = () =>
+  `${API_URL}/v1/membership-imports/template`;
+
 export type CmsAwardeePublicationStatus =
   | "DRAFT"
   | "SUBMITTED"

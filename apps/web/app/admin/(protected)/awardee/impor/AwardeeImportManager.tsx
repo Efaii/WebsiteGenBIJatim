@@ -425,8 +425,8 @@ export function AwardeeImportManager({
           Unggah berkas
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-slate-600">
-          Format kolom: Komisariat, Nama, Jabatan, Divisi, Prodi. Satu sheet
-          data, berkas .xlsx maksimal 10 MB.
+          Format kolom: Komisariat, Nama Lengkap, Jabatan, Divisi, Prodi. Satu
+          sheet data, berkas .xlsx maksimal 10 MB.
         </p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
