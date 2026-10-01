@@ -397,7 +397,7 @@ export function HomeEditor({
   return (
     <div className="grid items-start gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
       {/* --- PANEL FORMULIR --- */}
-      <aside className={`${PANEL} p-6 xl:sticky xl:top-24`}>
+      <aside className={`${PANEL} p-6`}>
         <h1 className="font-heading text-lg font-bold text-slate-900">
           Editor Beranda
         </h1>
