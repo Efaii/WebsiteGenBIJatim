@@ -1,143 +1,107 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  CircleHelp,
-  ExternalLink,
-  House,
-  Newspaper,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cmsApiGet } from "@/lib/cms-api";
 import { getCmsPageSession } from "@/lib/cms-guard";
-import type { CmsFaqItem } from "@/lib/services/cms-faq.service";
-import type { CmsNewsItem } from "@/lib/services/cms-news.service";
-import { ADMIN_ROLE_LABELS, type AdminRole } from "../nav";
+import type { CmsOverview } from "@/lib/services/cms-overview.service";
+import {
+  BarList,
+  ChartPanel,
+  DonutChart,
+  StatCard,
+  TrendBars,
+} from "./DashboardCharts";
+import { NEWS_STATUS_LABEL } from "./berita/status";
+import { PROGRAM_STATUS_LABEL } from "./proker/status";
 import { PANEL } from "../ui";
 
 export const metadata = { title: "Ringkasan" };
 
-type Shortcut = {
-  href: string;
-  icon: LucideIcon;
-  title: string;
-  description: string;
+const ROLE_DESCRIPTIONS: Record<CmsOverview["role"], string> = {
+  ADMIN_GLOBAL:
+    "Pantau data Awardee, Program Kerja, dan Berita, lalu tangani permintaan persetujuan dari satu halaman.",
+  SEKRETARIS_UMUM:
+    "Angka di bawah mencakup komisariat dan periode akun Anda: Awardee, Program Kerja, dan Berita.",
+  SEKRETARIS_DIVISI:
+    "Angka di bawah mencakup divisi, komisariat, dan periode akun Anda: Program Kerja dan Berita.",
 };
 
-const GLOBAL_SHORTCUTS: Shortcut[] = [
-  {
-    href: "/admin/beranda",
-    icon: House,
-    title: "Beranda",
-    description:
-      "Ubah teks hero, Tentang GenBI, Pilar, dan Sejarah Perjalanan beserta medianya. Perubahan tayang setelah Simpan.",
-  },
-  {
-    href: "/admin/berita",
-    icon: Newspaper,
-    title: "Berita",
-    description:
-      "Tulis, sunting, dan terbitkan berita. Atur juga posisi tampilnya di bagian Berita pada beranda.",
-  },
-  {
-    href: "/admin/faq",
-    icon: CircleHelp,
-    title: "FAQ",
-    description:
-      "Kelola pertanyaan yang tampil di bagian FAQ beranda: tambah, ubah, urutkan, aktifkan.",
-  },
-];
-
-const ROLE_DESCRIPTIONS: Record<Exclude<AdminRole, "ADMIN_GLOBAL">, string> = {
-  SEKRETARIS_UMUM:
-    "Wewenang Anda mencakup Berita, Program Kerja, dan Awardee untuk komisariat dan periode yang ditetapkan pada akun. Menu di sidebar mengikuti wewenang tersebut.",
-  SEKRETARIS_DIVISI:
-    "Wewenang Anda mencakup Berita dan Program Kerja pada divisi, komisariat, dan periode yang ditetapkan pada akun. Menu di sidebar mengikuti wewenang tersebut.",
+const STATUS_COLOR: Record<string, string> = {
+  PUBLISHED: "#10b981",
+  SUBMITTED: "#f59e0b",
+  APPROVED: "#1e63ff",
+  DRAFT: "#94a3b8",
+  REJECTED: "#ef4444",
+  ARCHIVED: "#cbd5e1",
 };
 
 /**
- * Ringkasan area admin.
+ * Ringkasan area admin: dashboard data Awardee, Program Kerja, dan Berita
+ * plus antrean persetujuan untuk admin global.
  *
- * Admin global melihat angka status dan pintasan pengelolaan konten; peran
- * sekretaris melihat ringkasan wewenangnya sendiri, selaras dengan menu
- * sidebar yang mengikuti peran. Angka status dibaca dari API kanonik yang sama
- * dengan halaman lainnya; bila API tidak menjawab, kalimat status cukup
- * dihilangkan.
+ * Seluruh angka dibaca dari `GET /v1/overview` (API kanonik, role-aware);
+ * chart memakai SVG/CSS murni sehingga tetap ringan. Bila API tidak menjawab,
+ * halaman menampilkan panel informasi tanpa angka.
  */
 export default async function AdminHomePage() {
-  const session = await getCmsPageSession();
+  await getCmsPageSession();
+  const overview = await cmsApiGet<CmsOverview>("/v1/overview");
 
-  if (session.role !== "ADMIN_GLOBAL") {
+  if (!overview) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Ringkasan
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-            Halaman admin menampilkan menu dan pintasan sesuai wewenang peran
-            akun Anda.
-          </p>
-        </div>
-
-        <section className={`${PANEL} p-6 md:p-8`}>
-          <p className="text-sm font-semibold uppercase tracking-wider text-genbi-blue">
-            Halo, {session.username ?? "pengguna"}
-          </p>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-            Anda masuk sebagai{" "}
-            <strong className="font-semibold text-slate-900">
-              {ADMIN_ROLE_LABELS[session.role]}
-            </strong>
-            . {ROLE_DESCRIPTIONS[session.role]}
-          </p>
-        </section>
-
-        <section className={`${PANEL} overflow-hidden`}>
-          <h2 className="border-b border-genbi-line px-6 py-4 text-sm font-semibold text-slate-900 md:px-8">
-            Pintasan
-          </h2>
-          <ul className="divide-y divide-genbi-line">
-            <li>
-              <a
-                href="/"
-                target="_blank"
-                rel="noreferrer"
-                className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-genbi-soft md:px-8"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-thumb bg-genbi-light text-genbi-blue">
-                  <ExternalLink className="h-5 w-5" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-slate-900 transition-colors duration-200 group-hover:text-genbi-blue-hover">
-                    Lihat situs publik
-                  </span>
-                  <span className="mt-0.5 block text-sm leading-relaxed text-slate-500">
-                    Buka beranda GenBI Jatim di tab baru untuk memeriksa hasil.
-                  </span>
-                </span>
-                <ArrowRight
-                  className="h-5 w-5 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-genbi-blue"
-                  aria-hidden
-                />
-              </a>
-            </li>
-          </ul>
-        </section>
-      </div>
+      <section
+        className={`${PANEL} p-6 text-sm leading-relaxed text-slate-600`}
+      >
+        Ringkasan tidak dapat dimuat dari API. Pastikan server API berjalan,
+        lalu muat ulang halaman.
+      </section>
     );
   }
 
-  const [news, faqs] = await Promise.all([
-    cmsApiGet<CmsNewsItem[]>("/v1/news/cms"),
-    cmsApiGet<CmsFaqItem[]>("/v1/faqs/cms"),
-  ]);
+  const {
+    cards,
+    approvals,
+    awardeeChart,
+    programByStatus,
+    newsByStatus,
+    newsMonthly,
+  } = overview;
+  const isAdmin = overview.role === "ADMIN_GLOBAL";
 
-  const stats =
-    news === null || faqs === null
-      ? null
-      : `${news.length} berita (${
-          news.filter((item) => item.publicationStatus === "PUBLISHED").length
-        } terbit) dan ${faqs.length} FAQ`;
+  const programChartItems = programByStatus.map((entry) => ({
+    label: PROGRAM_STATUS_LABEL[entry.status] ?? entry.status,
+    value: entry.value,
+    color: STATUS_COLOR[entry.status] ?? "#1e63ff",
+  }));
+  const newsChartItems = newsByStatus.map((entry) => ({
+    label: NEWS_STATUS_LABEL[entry.status] ?? entry.status,
+    value: entry.value,
+    color: STATUS_COLOR[entry.status] ?? "#1e63ff",
+  }));
+
+  const approvalRows = approvals
+    ? [
+        {
+          label: "Berita menunggu persetujuan",
+          count: approvals.news,
+          href: "/admin/persetujuan/berita",
+        },
+        {
+          label: "Program Kerja menunggu persetujuan",
+          count: approvals.program,
+          href: "/admin/persetujuan/program-kerja",
+        },
+        {
+          label: "Awardee menunggu persetujuan",
+          count: approvals.awardee,
+          href: "/admin/persetujuan/awardee",
+        },
+        {
+          label: "Batch impor Awardee menunggu persetujuan",
+          count: approvals.imports,
+          href: "/admin/persetujuan/awardee",
+        },
+      ]
+    : [];
 
   return (
     <div className="space-y-6">
@@ -146,81 +110,115 @@ export default async function AdminHomePage() {
           Ringkasan
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
-          Kelola konten beranda, berita, dan FAQ GenBI Jawa Timur dari satu
-          tempat.
+          {ROLE_DESCRIPTIONS[overview.role]}
         </p>
       </div>
 
-      <section className={`${PANEL} p-6 md:p-8`}>
-        <p className="text-sm font-semibold uppercase tracking-wider text-genbi-blue">
-          Halo, {session.username ?? "admin"}
-        </p>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
-          Anda masuk sebagai{" "}
-          <strong className="font-semibold text-slate-900">admin global</strong>
-          . Setiap perubahan yang disimpan langsung tayang di situs publik.
-          {stats ? ` Saat ini tercatat ${stats}.` : null}
-        </p>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.awardee ? (
+          <StatCard
+            label="Awardee"
+            value={cards.awardee.total}
+            hint={`${cards.awardee.published ?? 0} terbit di halaman publik`}
+            href={isAdmin ? "/admin/persetujuan/awardee" : "/admin/awardee"}
+          />
+        ) : null}
+        <StatCard
+          label="Program Kerja"
+          value={cards.program.total}
+          hint={`${cards.program.published} terbit`}
+          href="/admin/proker/lintas"
+        />
+        <StatCard
+          label="Berita"
+          value={cards.news.total}
+          hint={`${cards.news.published} terbit`}
+          href="/admin/berita"
+        />
+        <StatCard
+          label={isAdmin ? "Menunggu persetujuan" : "Diajukan ke admin"}
+          value={cards.pendingTitles}
+          hint={
+            isAdmin
+              ? "Berita, Program Kerja, Awardee, dan batch impor"
+              : "Menunggu tinjauan admin global"
+          }
+          href={isAdmin ? "/admin/persetujuan/berita" : undefined}
+        />
       </section>
 
-      <section className={`${PANEL} overflow-hidden`}>
-        <h2 className="border-b border-genbi-line px-6 py-4 text-sm font-semibold text-slate-900 md:px-8">
-          Pintasan
-        </h2>
-        <ul className="divide-y divide-genbi-line">
-          {GLOBAL_SHORTCUTS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.href}>
+      <section
+        className={`grid gap-4 ${
+          awardeeChart ? "xl:grid-cols-3" : "xl:grid-cols-2"
+        }`}
+      >
+        {awardeeChart ? (
+          <ChartPanel
+            title={
+              isAdmin
+                ? "Awardee terbit per komisariat"
+                : "Awardee terbit per divisi"
+            }
+            description="Jumlah Awardee berstatus terbit yang tampil di halaman publik."
+          >
+            <BarList items={awardeeChart} />
+          </ChartPanel>
+        ) : null}
+        <ChartPanel
+          title="Program Kerja per status"
+          description="Sebaran status publikasi Program Kerja pada scope akun."
+        >
+          <DonutChart items={programChartItems} centerLabel="Program" />
+        </ChartPanel>
+        <ChartPanel
+          title="Berita per status"
+          description="Sebaran status publikasi Berita pada scope akun."
+        >
+          <DonutChart items={newsChartItems} centerLabel="Berita" />
+        </ChartPanel>
+      </section>
+
+      <ChartPanel
+        title="Berita terbit enam bulan terakhir"
+        description="Jumlah Berita yang resmi terbit setiap bulan."
+      >
+        <TrendBars items={newsMonthly} ariaLabel="Berita terbit per bulan" />
+      </ChartPanel>
+
+      {approvals ? (
+        <section className={`${PANEL} overflow-hidden`}>
+          <h2 className="border-b border-genbi-line px-6 py-4 text-sm font-semibold text-slate-900">
+            Permintaan persetujuan
+          </h2>
+          <ul className="divide-y divide-genbi-line">
+            {approvalRows.map((row) => (
+              <li key={row.label}>
                 <Link
-                  href={item.href}
-                  className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-genbi-soft md:px-8"
+                  href={row.href}
+                  className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-genbi-soft"
                 >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-thumb bg-genbi-light text-genbi-blue">
-                    <Icon className="h-5 w-5" aria-hidden />
+                  <span className="min-w-0 flex-1 text-sm font-medium text-slate-700">
+                    {row.label}
                   </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-slate-900 transition-colors duration-200 group-hover:text-genbi-blue-hover">
-                      {item.title}
-                    </span>
-                    <span className="mt-0.5 block text-sm leading-relaxed text-slate-500">
-                      {item.description}
-                    </span>
+                  <span
+                    className={`inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-sm font-bold tabular-nums ${
+                      row.count > 0
+                        ? "bg-genbi-blue text-white"
+                        : "bg-genbi-soft text-slate-500"
+                    }`}
+                  >
+                    {row.count}
                   </span>
                   <ArrowRight
-                    className="h-5 w-5 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-genbi-blue"
+                    className="h-4 w-4 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-genbi-blue"
                     aria-hidden
                   />
                 </Link>
               </li>
-            );
-          })}
-          <li>
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="group flex items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-genbi-soft md:px-8"
-            >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-thumb bg-genbi-light text-genbi-blue">
-                <ExternalLink className="h-5 w-5" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-slate-900 transition-colors duration-200 group-hover:text-genbi-blue-hover">
-                  Lihat situs publik
-                </span>
-                <span className="mt-0.5 block text-sm leading-relaxed text-slate-500">
-                  Buka beranda GenBI Jatim di tab baru untuk memeriksa hasil.
-                </span>
-              </span>
-              <ArrowRight
-                className="h-5 w-5 shrink-0 text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-genbi-blue"
-                aria-hidden
-              />
-            </a>
-          </li>
-        </ul>
-      </section>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -1012,9 +1012,11 @@ export function HomeEditor({
         {/*
           Komposisi mengikuti urutan Beranda apa adanya. Pembungkus pertama
           memberi contain untuk elemen `fixed` (navbar) lewat transform, supaya
-          pratinjau tidak menutupi antarmuka CMS.
+          pratinjau tidak menutupi antarmuka CMS. Pratinjau memanjang mengikuti
+          tinggi halaman (tanpa batas tinggi) dan hanya menggulir horizontal
+          untuk lebar 1280px.
         */}
-        <div className="max-h-[80vh] overflow-auto rounded-2xl border border-genbi-line bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-genbi-line bg-white">
           <div className="min-w-[1280px]">
             <div className="relative" style={{ transform: "translateZ(0)" }}>
               <div className="min-h-screen bg-white font-sans selection:bg-genbi-haze selection:text-slate-900">

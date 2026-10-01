@@ -21,6 +21,7 @@ import {
   publicStoragePath,
   ensureStorageRoots,
 } from "../lib/storage";
+import { sanitizeNewsContent } from "../lib/rich-text";
 
 const publicNewsDir = () => publicStoragePath("news");
 const privateNewsDir = () => privateStoragePath("news");
@@ -84,11 +85,11 @@ const stageNewsCoverBuffer = async (file: Express.Multer.File) => {
 };
 
 /*
- * Galeri berita (ADR 0010): sampai 4 gambar pendukung ber-role GALLERY per
- * berita. Draft menstaging (promosi saat terbit); berita terbit menulis
- * langsung ke publik.
+ * Galeri berita: sampai 6 gambar pendukung ber-role GALLERY per berita
+ * (dinaikkan dari 4 sesuai permintaan editor). Draft menstaging (promosi saat
+ * terbit); berita terbit menulis langsung ke publik.
  */
-const NEWS_GALLERY_LIMIT = 4;
+const NEWS_GALLERY_LIMIT = 6;
 
 const savePublicNewsAssetBuffer = async (file: Express.Multer.File) => {
   assertImageSignature(file);
@@ -377,7 +378,7 @@ export const createDraftNews = async (req: CmsRequest, res: Response) => {
       title,
       slug: `${slug}-${Date.now()}`,
       excerpt: parsed.excerpt ?? "",
-      content: parsed.content ?? "",
+      content: sanitizeNewsContent(parsed.content ?? ""),
       category: parsed.category ?? null,
       image: "",
       author,
@@ -433,7 +434,7 @@ export const updateDraftNews = async (req: CmsRequest, res: Response) => {
         ? { excerpt: fields.excerpt.trim() }
         : {}),
       ...(fields.content !== undefined
-        ? { content: fields.content.trim() }
+        ? { content: sanitizeNewsContent(fields.content.trim()) }
         : {}),
       ...(fields.category !== undefined ? { category: fields.category } : {}),
       ...(fields.author !== undefined
@@ -501,7 +502,10 @@ export const createNewsRevision = async (req: CmsRequest, res: Response) => {
         : news.title,
       slug: news.slug,
       excerpt: fields.excerpt ?? news.excerpt,
-      content: fields.content ?? news.content,
+      content:
+        fields.content === undefined
+          ? news.content
+          : sanitizeNewsContent(fields.content),
       category: fields.category === undefined ? news.category : fields.category,
       publicationStatus: "DRAFT",
     },
@@ -567,7 +571,9 @@ export const updateNewsRevision = async (req: CmsRequest, res: Response) => {
         ? { title: normalizeNewsText(fields.title, "title", 160) }
         : {}),
       ...(fields.excerpt !== undefined ? { excerpt: fields.excerpt } : {}),
-      ...(fields.content !== undefined ? { content: fields.content } : {}),
+      ...(fields.content !== undefined
+        ? { content: sanitizeNewsContent(fields.content) }
+        : {}),
       ...(fields.category !== undefined ? { category: fields.category } : {}),
       publicationStatus: "DRAFT",
     },

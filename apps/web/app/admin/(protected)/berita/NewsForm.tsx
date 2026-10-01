@@ -11,6 +11,8 @@ import {
   type NewsCategoryValue,
 } from "@/lib/services/cms-news.service";
 import { BTN_PRIMARY, FIELD, FILE_INPUT, LABEL, PANEL } from "../../ui";
+import { RichTextEditor } from "./RichTextEditor";
+import { plainTextOf } from "./rich-text";
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -50,7 +52,7 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
   const valid =
     title.trim().length > 0 &&
     excerpt.trim().length > 0 &&
-    content.trim().length > 0;
+    plainTextOf(content).length > 0;
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -170,18 +172,19 @@ export function NewsForm({ news }: { news?: CmsNewsItem }) {
       </div>
 
       <div>
-        <label className={LABEL} htmlFor="news-content">
-          Isi berita
-        </label>
-        <textarea
-          id="news-content"
-          value={content}
-          maxLength={50000}
-          rows={14}
-          disabled={!editable}
-          onChange={(event) => setContent(event.target.value)}
-          className={`${FIELD} mt-1`}
-        />
+        <span className={LABEL}>Isi berita</span>
+        <div className="mt-1">
+          <RichTextEditor
+            key={news?.id ?? "baru"}
+            initialHtml={content}
+            onChange={setContent}
+            disabled={!editable}
+          />
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-slate-400">
+          Gunakan toolbar untuk menebalkan, membuat daftar, kutipan, atau
+          tautan. Menempel dari Word tetap membawa tebal, miring, dan daftar.
+        </p>
       </div>
 
       <div>

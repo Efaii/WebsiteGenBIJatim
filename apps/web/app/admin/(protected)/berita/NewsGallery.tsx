@@ -13,7 +13,7 @@ import {
 } from "@/lib/services/cms-news.service";
 import { BTN_ICON, FILE_INPUT, PANEL } from "../../ui";
 
-const GALLERY_LIMIT = 4;
+const GALLERY_LIMIT = 6;
 
 const extractMessage = (error: unknown): string => {
   if (typeof error === "object" && error !== null) {
@@ -26,9 +26,9 @@ const extractMessage = (error: unknown): string => {
 };
 
 /**
- * Galeri pendukung berita (ADR 0010): sampai empat gambar ber-role GALLERY di
- * samping satu gambar utama (cover). Urutan menentukan tampilan publik; berkas
- * yang dihapus ikut dibersihkan dari storage.
+ * Galeri pendukung berita: sampai enam gambar ber-role GALLERY di samping
+ * satu gambar utama (cover). Urutan menentukan tampilan publik; berkas yang
+ * dihapus ikut dibersihkan dari storage.
  */
 export function NewsGallery({ news }: { news: CmsNewsItem }) {
   const router = useRouter();
@@ -73,7 +73,7 @@ export function NewsGallery({ news }: { news: CmsNewsItem }) {
         Galeri pendukung ({gallery.length}/{GALLERY_LIMIT})
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-slate-500">
-        Gambar utama tetap satu (cover, dikelola di formulir atas). Sampai empat
+        Gambar utama tetap satu (cover, dikelola di formulir atas). Sampai enam
         gambar pendukung; unggahan dikonversi WebP otomatis dan urutan di sini
         menentukan tampilan publik.
       </p>

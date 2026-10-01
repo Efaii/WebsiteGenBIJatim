@@ -40,7 +40,7 @@ export const FILE_INPUT =
 
 /** Tautan navigasi sidebar admin. */
 export const NAV_LINK =
-  "flex items-center gap-2.5 rounded-thumb px-3 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-genbi-soft hover:text-genbi-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/50";
+  "flex items-center gap-2.5 rounded-thumb px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-200 hover:bg-genbi-soft hover:text-genbi-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/50";
 
 /** Keadaan aktif NAV_LINK: latar aksen lembut dengan teks biru. */
 export const NAV_LINK_ACTIVE =

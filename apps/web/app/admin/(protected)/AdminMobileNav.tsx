@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import type { AdminRole } from "../nav";
 import { BTN_ICON } from "../ui";
@@ -77,8 +79,26 @@ export function AdminMobileNav({ role }: { role: AdminRole }) {
               aria-label="Navigasi admin"
               className="absolute inset-y-0 left-0 w-72 max-w-[85%] overflow-y-auto border-r border-genbi-line bg-white p-5 shadow-[0_24px_60px_-30px_rgba(16,42,92,0.45)] outline-none"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-900">Navigasi</p>
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <Link
+                  href="/admin"
+                  onClick={() => close(false)}
+                  className="flex min-w-0 items-center gap-2.5"
+                >
+                  <span className="relative h-8 w-8 shrink-0">
+                    <Image
+                      src="/assets/logos/genbi.svg"
+                      alt=""
+                      fill
+                      sizes="32px"
+                      className="object-contain"
+                    />
+                  </span>
+                  <span className="truncate text-base font-bold tracking-tight">
+                    <span className="text-genbi-ink">GenBI</span>{" "}
+                    <span className="text-genbi-brand-red">Jatim</span>
+                  </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => close(true)}
