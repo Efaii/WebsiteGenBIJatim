@@ -8,13 +8,13 @@ import {
   ChartPanel,
   DonutChart,
   StatCard,
-  TrendBars,
+  TrendArea,
 } from "./DashboardCharts";
 import { NEWS_STATUS_LABEL } from "./berita/status";
 import { PROGRAM_STATUS_LABEL } from "./proker/status";
 import { PANEL } from "../ui";
 
-export const metadata = { title: "Ringkasan" };
+export const metadata = { title: "Dashboard" };
 
 const ROLE_DESCRIPTIONS: Record<CmsOverview["role"], string> = {
   ADMIN_GLOBAL:
@@ -35,7 +35,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 /**
- * Ringkasan area admin: dashboard data Awardee, Program Kerja, dan Berita
+ * Dashboard area admin: data Awardee, Program Kerja, dan Berita
  * plus antrean persetujuan untuk admin global.
  *
  * Seluruh angka dibaca dari `GET /v1/overview` (API kanonik, role-aware);
@@ -51,7 +51,7 @@ export default async function AdminHomePage() {
       <section
         className={`${PANEL} p-6 text-sm leading-relaxed text-slate-600`}
       >
-        Ringkasan tidak dapat dimuat dari API. Pastikan server API berjalan,
+        Dashboard tidak dapat dimuat dari API. Pastikan server API berjalan,
         lalu muat ulang halaman.
       </section>
     );
@@ -107,7 +107,7 @@ export default async function AdminHomePage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Ringkasan
+          Dashboard
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
           {ROLE_DESCRIPTIONS[overview.role]}
@@ -182,7 +182,7 @@ export default async function AdminHomePage() {
         title="Berita terbit enam bulan terakhir"
         description="Jumlah Berita yang resmi terbit setiap bulan."
       >
-        <TrendBars items={newsMonthly} ariaLabel="Berita terbit per bulan" />
+        <TrendArea items={newsMonthly} ariaLabel="Berita terbit per bulan" />
       </ChartPanel>
 
       {approvals ? (

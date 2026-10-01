@@ -1,9 +1,9 @@
 import Link from "next/link";
 
 /*
- * Komponen dashboard Ringkasan: kartu angka, bilah horizontal, donat, dan
- * tren bulanan. Semuanya SVG/CSS murni tanpa pustaka chart supaya bundle
- * tetap kecil dan warna mengikuti token admin (`genbi-*` plus warna semantik
+ * Komponen dashboard: kartu angka, bilah horizontal, donat, dan tren
+ * bulanan. Semuanya SVG/CSS murni tanpa pustaka chart supaya bundle tetap
+ * kecil dan warna mengikuti token admin (`genbi-*` plus warna semantik
  * status). Statis tanpa animasi, sesuai dial MOTION 2.
  */
 
@@ -141,7 +141,7 @@ export function DonutChart({
     <div className="flex flex-wrap items-center gap-5">
       <svg
         viewBox="0 0 120 120"
-        className="h-32 w-32 shrink-0"
+        className="h-52 w-52 shrink-0"
         role="img"
         aria-label={`${centerLabel}: ${items
           .map((item) => `${item.label} ${item.value}`)
@@ -198,6 +198,9 @@ export function DonutChart({
             <span className="font-semibold tabular-nums text-slate-900">
               {item.value}
             </span>
+            <span className="w-10 text-right tabular-nums text-slate-500">
+              {Math.round((item.value / total) * 100)}%
+            </span>
           </li>
         ))}
       </ul>
@@ -205,51 +208,103 @@ export function DonutChart({
   );
 }
 
-/** Tren batang sederhana per bulan (mis. berita terbit 6 bulan terakhir). */
-export function TrendBars({
+/**
+ * Tren area/garis per bulan (mis. berita terbit 6 bulan terakhir).
+ *
+ * Bulan bernilai nol tetap tampil di garis dasar lengkap dengan label
+ * bulannya, supaya lubang data tidak menyamar jadi ketiadaan kategori.
+ */
+export function TrendArea({
   items,
   ariaLabel,
 }: {
   items: Array<{ label: string; value: number }>;
   ariaLabel: string;
 }) {
+  if (items.length === 0)
+    return <p className="text-sm text-slate-500">Belum ada data.</p>;
+  const width = 640;
+  const height = 190;
+  const padX = 26;
+  const padTop = 30;
+  const padBottom = 36;
+  const innerWidth = width - padX * 2;
+  const innerHeight = height - padTop - padBottom;
   const max = Math.max(...items.map((item) => item.value), 1);
+  const step = items.length > 1 ? innerWidth / (items.length - 1) : 0;
+  const baseY = padTop + innerHeight;
+  const points = items.map((item, index) => ({
+    ...item,
+    x: padX + step * index,
+    y: baseY - (item.value / max) * innerHeight,
+  }));
+  const linePath = points
+    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`)
+    .join(" ");
+  const first = points[0];
+  const last = points[points.length - 1];
+  const areaPath = `${linePath} L${last.x},${baseY} L${first.x},${baseY} Z`;
+
   return (
-    <div>
-      <div
-        className="flex h-28 items-end gap-2"
-        role="img"
-        aria-label={`${ariaLabel}: ${items
-          .map((item) => `${item.label} ${item.value}`)
-          .join(", ")}`}
-      >
-        {items.map((item) => (
-          <div
-            key={item.label}
-            className="flex flex-1 flex-col items-center justify-end gap-1"
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label={`${ariaLabel}: ${items
+        .map((item) => `${item.label} ${item.value}`)
+        .join(", ")}`}
+    >
+      <defs>
+        <linearGradient id="trend-area-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#1e63ff" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#1e63ff" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <line
+        x1={padX}
+        y1={baseY}
+        x2={width - padX}
+        y2={baseY}
+        className="stroke-genbi-line"
+        strokeWidth="1"
+      />
+      <path d={areaPath} fill="url(#trend-area-fill)" />
+      <path
+        d={linePath}
+        fill="none"
+        stroke="#1e63ff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {points.map((point) => (
+        <g key={point.label}>
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="4"
+            fill="#1e63ff"
+            stroke="#ffffff"
+            strokeWidth="2"
+          />
+          <text
+            x={point.x}
+            y={point.y - 11}
+            textAnchor="middle"
+            className="fill-slate-700 text-[11px] font-semibold"
           >
-            <span className="text-[11px] font-semibold tabular-nums text-slate-700">
-              {item.value > 0 ? item.value : ""}
-            </span>
-            <div
-              className="w-full rounded-t-thumb bg-genbi-blue/85"
-              style={{
-                height: `${Math.max(pct(item.value, max), item.value > 0 ? 6 : 2)}%`,
-              }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="mt-1.5 flex gap-2 border-t border-genbi-line pt-1.5">
-        {items.map((item) => (
-          <span
-            key={item.label}
-            className="flex-1 text-center text-[11px] font-medium text-slate-500"
+            {point.value}
+          </text>
+          <text
+            x={point.x}
+            y={height - 12}
+            textAnchor="middle"
+            className="fill-slate-500 text-[11px] font-medium"
           >
-            {item.label}
-          </span>
-        ))}
-      </div>
-    </div>
+            {point.label}
+          </text>
+        </g>
+      ))}
+    </svg>
   );
 }

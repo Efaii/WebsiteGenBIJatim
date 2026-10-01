@@ -63,7 +63,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       {
         href: "/admin",
-        label: "Ringkasan",
+        label: "Dashboard",
         icon: LayoutDashboard,
         roles: ALL_ROLES,
       },
