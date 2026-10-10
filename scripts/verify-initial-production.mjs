@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { parseDatabaseUrl } from './legacy-schema-preflight.mjs';
+import { parseMysqlCommandArgs } from './mysql-command.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -98,8 +99,10 @@ const run = (command, args, { input } = {}) => new Promise((resolve, reject) => 
   if (input) child.stdin.end(input); else child.stdin.end();
 });
 
+const runMysql = (args, options) => run(process.env.MYSQL_BIN ?? 'mysql', [...parseMysqlCommandArgs(), ...args], options);
+
 const queryRows = async (connection, sql) => {
-  const output = await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['--batch', '--raw', '--skip-column-names', '-e', sql]));
+  const output = await runMysql(mysqlArgs(connection, ['--batch', '--raw', '--skip-column-names', '-e', sql]));
   return output.split(/\r?\n/).filter((line) => line !== '').map((line) => line.split('\t'));
 };
 

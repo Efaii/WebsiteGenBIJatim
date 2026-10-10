@@ -3,7 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { readRestoreEvidence, restoreEvidenceSha256, validateRestoreEvidence } from './check-schema-readiness.mjs';
+import { prismaMigrationSet, prismaMigrationSetHash, readRestoreEvidence, restoreEvidenceSha256, validateRestoreEvidence } from './check-schema-readiness.mjs';
+import { parseMysqlCommandArgs } from './mysql-command.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const requiredLegacyTables = [
@@ -202,8 +203,8 @@ export function migrationHistoryReady(report) {
     && (discrepancies.failedOrRolledBack ?? []).length === 0;
 }
 
-export function migrationPlanHash({ database, actions, schemaFingerprint: fingerprint, migrationDiscrepancies }) {
-  return createHash('sha256').update(JSON.stringify({ database, actions, schemaFingerprint: fingerprint, migrationDiscrepancies })).digest('hex');
+export function migrationPlanHash({ database, actions, schemaFingerprint: fingerprint, migrationDiscrepancies, migrationSetHash }) {
+  return createHash('sha256').update(JSON.stringify({ database, actions, schemaFingerprint: fingerprint, migrationDiscrepancies, migrationSetHash })).digest('hex');
 }
 
 export function compareRestore(source, restored) {
@@ -312,8 +313,12 @@ async function run(command, args, { input, capture = true } = {}) {
   });
 }
 
+async function runMysql(args, options) {
+  return run(process.env.MYSQL_BIN ?? 'mysql', [...parseMysqlCommandArgs(), ...args], options);
+}
+
 async function query(connection, sql) {
-  const output = await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['--batch', '--raw', '--skip-column-names', '-e', sql]));
+  const output = await runMysql(mysqlArgs(connection, ['--batch', '--raw', '--skip-column-names', '-e', sql]));
   return output.trim() ? output.trim().split(/\r?\n/).map((line) => line.split('\t')) : [];
 }
 
@@ -392,11 +397,11 @@ async function restoreBackup(connection, dumpFile, restoreDatabase) {
   if (!dump.length) throw new Error('Backup file is empty; refusing to restore it.');
   const sourceReport = await inspect(connection);
   const checksum = createHash('sha256').update(originalDump).digest('hex');
-  await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', `CREATE DATABASE ${quoteIdentifier(restoreDatabase)} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`]), { capture: false });
+  await runMysql(mysqlArgs(connection, ['-e', `CREATE DATABASE ${quoteIdentifier(restoreDatabase)} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`]), { capture: false });
   let verified = false;
   let restoredReport;
   try {
-    await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs({ ...connection, database: restoreDatabase }, [], true), { input: Buffer.from(`USE \`${restoreDatabase}\`;\n${dump}`), capture: false });
+    await runMysql(mysqlArgs({ ...connection, database: restoreDatabase }, [], true), { input: Buffer.from(`USE \`${restoreDatabase}\`;\n${dump}`), capture: false });
     const report = await inspect({ ...connection, database: restoreDatabase });
     const differences = compareRestore(sourceReport, report);
     if (differences.length) throw new Error(`Restore verification mismatch: ${differences.join('; ')}.`);
@@ -406,7 +411,7 @@ async function restoreBackup(connection, dumpFile, restoreDatabase) {
     throw new Error(`Backup restore/verification failed. Temporary database ${restoreDatabase} was ${process.env.KEEP_RESTORE_DATABASE === '1' ? 'retained for diagnosis' : 'created only for this failed check and is eligible for cleanup'}; it was not marked ready for data migration. ${error.message}`);
   } finally {
     if (verified || process.env.KEEP_RESTORE_DATABASE !== '1') {
-      await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', `DROP DATABASE ${quoteIdentifier(restoreDatabase)}`]), { capture: false });
+      await runMysql(mysqlArgs(connection, ['-e', `DROP DATABASE ${quoteIdentifier(restoreDatabase)}`]), { capture: false });
     }
   }
   const sourceAfter = await inspect(connection);
@@ -453,8 +458,10 @@ async function main() {
   const idColumn = report.columns[program].find(({ name }) => name.toLowerCase() === 'id');
   if (!idColumn) throw new Error('Legacy program_kerja.id is missing; refusing automatic schema changes.');
   const actions = buildProgramSchemaPlan({ tables: report.tables, columns: report.columns, indexes: report.indexes, foreignKeys: report.foreignKeys, triggers: report.triggers, programIdType: idColumn.type.toUpperCase() });
-  const planHash = migrationPlanHash({ database: report.database, actions, schemaFingerprint: report.schemaFingerprint, migrationDiscrepancies: report.migrationDiscrepancies });
-  const plan = { generatedAt: new Date().toISOString(), database: report.database, schemaFingerprint: report.schemaFingerprint, planHash, destructiveOperations: 0, actions, migrationDiscrepancies: report.migrationDiscrepancies, repositorySchemaDiscrepancies: report.repositorySchemaDiscrepancies };
+  const migrationSet = await prismaMigrationSet(path.join(root, 'apps/api/prisma/migrations'));
+  const migrationSetHash = prismaMigrationSetHash(migrationSet);
+  const planHash = migrationPlanHash({ database: report.database, actions, schemaFingerprint: report.schemaFingerprint, migrationDiscrepancies: report.migrationDiscrepancies, migrationSetHash });
+  const plan = { generatedAt: new Date().toISOString(), database: report.database, schemaFingerprint: report.schemaFingerprint, planHash, migrationSetHash, migrations: migrationSet, destructiveOperations: 0, actions, migrationDiscrepancies: report.migrationDiscrepancies, repositorySchemaDiscrepancies: report.repositorySchemaDiscrepancies };
   if (command === 'plan') {
     console.log(JSON.stringify({ inspection: report, plan }, null, 2));
     return;
@@ -478,7 +485,7 @@ async function main() {
       const restoreEvidence = await readRestoreEvidence();
       validateRestoreEvidence(restoreEvidence, { database: connection.database });
       const readinessRestoreEvidence = { status: restoreEvidence.status, sourceDatabase: restoreEvidence.sourceDatabase, restoreDatabase: restoreEvidence.restoreDatabase, backupSha256: restoreEvidence.backupSha256, expiresAt: restoreEvidence.expiresAt, verifiedAt: restoreEvidence.verifiedAt, evidenceSha256: restoreEvidence.evidenceSha256 };
-      await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: [], migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence, migrationDiscrepancies: report.migrationDiscrepancies, planHash, schemaFingerprint: report.schemaFingerprint, verifiedAt: new Date().toISOString() });
+      await writeReadiness('ready', { database: connection.database, expiresAt: readinessExpiresAt, applied: [], migrationApplied: true, dataMigrationReady: true, schemaApproval: approvalPhrase, restoreEvidence: readinessRestoreEvidence, migrationDiscrepancies: report.migrationDiscrepancies, migrationSet, migrationSetHash, planHash, schemaFingerprint: report.schemaFingerprint, verifiedAt: new Date().toISOString() });
       console.log(JSON.stringify({ schemaReady: true, dataMigrationReady: true, verifiedAt: new Date().toISOString(), planHash }, null, 2));
       return;
     } catch (error) {
@@ -513,7 +520,7 @@ async function main() {
   }
   await writeReadiness('blocked', { database: connection.database, reason: 'Schema execution is in progress; data migration is blocked.', actions, planHash, schemaFingerprint: report.schemaFingerprint });
   try {
-    for (const action of actions) await run(process.env.MYSQL_BIN ?? 'mysql', mysqlArgs(connection, ['-e', action.sql], true), { capture: false });
+    for (const action of actions) await runMysql(mysqlArgs(connection, ['-e', action.sql], true), { capture: false });
     const verified = await inspect(connection);
     const remaining = buildProgramSchemaPlan({ tables: verified.tables, columns: verified.columns, indexes: verified.indexes, foreignKeys: verified.foreignKeys, triggers: verified.triggers, programIdType: idColumn.type.toUpperCase() });
     if (remaining.length) throw new Error(`Schema execution incomplete; ${remaining.length} approved additive operation(s) remain. Data migration is blocked.`);

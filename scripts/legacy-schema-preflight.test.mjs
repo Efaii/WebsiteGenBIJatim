@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, stagingAcceptance, stagingAcceptanceReason, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
-import { assertSchemaReady, restoreEvidenceSha256, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
+import { fileURLToPath } from 'node:url';
+import { buildAdditivePlan, buildProgramSchemaPlan, compareRestore, legacyPhotoReferences, migrationHistoryReady, migrationPlanHash, missingRequiredTables, parseDatabaseUrl, requiredLegacyTables, sanitizeBackupSql, stagingAcceptance, stagingAcceptanceReason, structuralSchemaDiscrepancies } from './legacy-schema-preflight.mjs';
+import { assertSchemaReady, prismaMigrationSet, prismaMigrationSetHash, restoreEvidenceSha256, validateRestoreEvidence, validateSchemaReadiness } from './check-schema-readiness.mjs';
 import { repositorySchemaDiscrepancies } from './legacy-schema-preflight.mjs';
+import { parseMysqlCommandArgs } from './mysql-command.mjs';
 
 test('parses mysql connection details without exposing the password', () => {
   assert.deepEqual(parseDatabaseUrl('mysql://operator:p%40ss@localhost:3307/legacy_db'), {
     host: 'localhost', port: '3307', user: 'operator', password: 'p@ss', database: 'legacy_db',
   });
+});
+
+test('validates optional mysql command prefixes for private container use', () => {
+  assert.deepEqual(parseMysqlCommandArgs(JSON.stringify(['compose', 'exec', '-T', 'db', 'mysql'])), ['compose', 'exec', '-T', 'db', 'mysql']);
+  assert.deepEqual(parseMysqlCommandArgs(''), []);
+  assert.throws(() => parseMysqlCommandArgs('not-json'), /JSON array of command-line strings/);
+  assert.throws(() => parseMysqlCommandArgs('["compose",4]'), /JSON array of command-line strings/);
 });
 
 test('counts populated legacy photo references', () => {
@@ -63,6 +72,19 @@ test('rejects backup directives that could redirect a restore to production', ()
   assert.equal(sanitizeBackupSql('INSERT INTO program_kerja VALUES (1);', 'genbi_jatim'), 'INSERT INTO program_kerja VALUES (1);');
 });
 
+test('hashes the exact sorted SQL files in the Prisma migration inventory', async () => {
+  const migrations = await prismaMigrationSet(fileURLToPath(new URL('../apps/api/prisma/migrations', import.meta.url)));
+  assert.equal(migrations.length, 13);
+  assert.deepEqual(migrations.map(({ name }) => name), [...migrations.map(({ name }) => name)].sort());
+  assert.ok(migrations.every(({ sha256 }) => /^[a-f0-9]{64}$/.test(sha256)));
+  assert.match(prismaMigrationSetHash(migrations), /^[a-f0-9]{64}$/);
+});
+
+test('schema plan hash binds exact Prisma migration set digest', () => {
+  const base = { database: 'db', actions: [], schemaFingerprint: 'schema', migrationDiscrepancies: {}, migrationSetHash: 'a'.repeat(64) };
+  assert.notEqual(migrationPlanHash(base), migrationPlanHash({ ...base, migrationSetHash: 'b'.repeat(64) }));
+});
+
 test('fails closed when schema readiness evidence is absent', async () => {
   await assert.rejects(() => assertSchemaReady(), /Schema readiness evidence is missing|Schema readiness is/);
 });
@@ -73,6 +95,8 @@ test('rejects expired or mismatched readiness and restore evidence', () => {
   const validRestoreUnsigned = { status: 'verified', sourceDatabase: 'db', restoreDatabase: 'genbi_restore_test', backupSha256: 'a'.repeat(64), verifiedAt: '2026-09-22T00:00:00.000Z', expiresAt: '2026-09-24T00:00:00.000Z', source: { database: 'db', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables.map((table) => table.toUpperCase()), programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 }, restoredDatabase: { database: 'genbi_restore_test', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables, programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 }, sourceAfter: { database: 'db', requiredLegacyTables: legacyTables, missingRequiredTables: [], tables: legacyTables, programCount: 1, programsWithLegacyPhotos: 1, legacyPhotoReferenceCount: 1 } };
   const validRestore = { ...validRestoreUnsigned, evidenceSha256: restoreEvidenceSha256(validRestoreUnsigned) };
   const validReadiness = { status: 'ready', planHash: 'abc', migrationApplied: true, dataMigrationReady: true, schemaApproval: 'SETUJUI SCHEMA MIGRASI', restoreEvidence: { status: validRestore.status, sourceDatabase: validRestore.sourceDatabase, restoreDatabase: validRestore.restoreDatabase, backupSha256: validRestore.backupSha256, verifiedAt: validRestore.verifiedAt, expiresAt: validRestore.expiresAt, evidenceSha256: validRestore.evidenceSha256 } };
+  const migrationSet = [{ name: '20260222133426_init_genbi_schema', sha256: 'c'.repeat(64) }];
+  const migrationReadiness = { migrationSet, migrationSetHash: prismaMigrationSetHash(migrationSet) };
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-22T23:59:00.000Z' }, { database: 'db', now }), /expired/);
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: 'not-a-date' }, { database: 'db', now }), /expired|invalid/);
   assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'other', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /targets/);
@@ -83,10 +107,13 @@ test('rejects expired or mismatched readiness and restore evidence', () => {
   assert.doesNotThrow(() => validateRestoreEvidence(validRestore, { database: 'db', now }));
   const partialRestore = { ...validRestoreUnsigned, source: { ...validRestoreUnsigned.source, tables: undefined } };
   assert.throws(() => validateRestoreEvidence({ ...partialRestore, evidenceSha256: restoreEvidenceSha256(partialRestore) }, { database: 'db', now }), /partial/);
-  assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: { ...validRestore, backupSha256: 'b'.repeat(64) }, now }), /does not match/);
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, ...migrationReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: { ...validRestore, backupSha256: 'b'.repeat(64) }, now }), /does not match/);
   assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', now }), /does not confirm deployed migration history/);
-  assert.throws(() => validateSchemaReadiness({ status: 'ready', database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z', migrationApplied: true, dataMigrationReady: true }, { database: 'db', now }), /missing exact schema approval/);
-  assert.doesNotThrow(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: validRestore, now }));
+  assert.throws(() => validateSchemaReadiness({ status: 'ready', ...migrationReadiness, database: 'db', planHash: 'abc', expiresAt: '2026-09-24T00:00:00.000Z', migrationApplied: true, dataMigrationReady: true }, { database: 'db', now }), /missing exact schema approval/);
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: validRestore, now }), /migration inventory/);
+  assert.doesNotThrow(() => validateSchemaReadiness({ ...validReadiness, ...migrationReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: validRestore, now }));
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, ...migrationReadiness, database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', planHash: 'different-reviewed-plan', restoreEvidence: validRestore, now }), /planHash/);
+  assert.throws(() => validateSchemaReadiness({ ...validReadiness, ...migrationReadiness, migrationSet: [{ ...migrationSet[0], sha256: 'd'.repeat(64) }], database: 'db', expiresAt: '2026-09-24T00:00:00.000Z' }, { database: 'db', restoreEvidence: validRestore, now }), /inventory digest/);
 });
 
 test('reports nullable-date migration discrepancies without auto-modifying legacy columns', () => {
