@@ -66,6 +66,14 @@ apps/api/data/images/
 # Media mentah proker (duplikat sebagian, tetap lokal)
 data/proker/
 
+# Media mentah struktur organisasi & foto berita (sumber mentah, tetap lokal;
+# hasil olahan ada di apps/web/public/assets/struktur & apps/api/public/uploads)
+data/Struktur Organisasi Korkom/
+data/berita/
+
+# Runtime storage privat API (staged news, proposal/LPJ) — data runtime lokal, bukan sumber
+apps/api/private/
+
 # Environment / perangkat alat lokal
 .kilo/
 
@@ -87,3 +95,9 @@ apps/api/e2e-private/
 
 # Dump database lokal (dapat memuat data pribadi awardee)
 backups/
+
+# Production deployment environment and image-transfer artifacts.
+.env.production
+.env.production.*
+*.tar
+*.tar.gz
