@@ -215,6 +215,8 @@ npm run dev
 
 ## 📦 Build untuk Production
 
+Untuk rencana deployment VPS berbasis Docker Compose, prasyarat, transfer image, penanganan data, dan langkah operasi baca [panduan persiapan deployment](docs/production-deployment.md). Panduan ini belum berarti situs sudah di-deploy.
+
 ```bash
 # Build semua apps & packages
 npm run build

@@ -145,7 +145,7 @@ _Avoid_: Menghapus dokumentasi Program kerja ketika menghapus halaman Dokumen um
 ## Batas Permukaan
 
 **Permukaan publik**:
-Bagian situs yang dapat dilihat tanpa login: seluruh route publik di `apps/web/app` (Beranda, Profil, Komisariat, Program kerja, Awardee, Berita, Kalender, Dokumen, Kontak) beserta komponen bersama yang dipakainya (Navbar, Footer, Card, Button). Kualitas permukaan ini diukur dari perilaku di browser, bukan dari keberhasilan build.
+Bagian situs yang dapat dilihat tanpa login: route Beranda, Profil, Komisariat, Program kerja, Awardee, Berita, dan Kontak beserta komponen bersama yang dipakainya (Navbar, Footer, Card, Button). Kualitas permukaan ini diukur dari perilaku di browser, bukan dari keberhasilan build.
 _Avoid_: Menyamakan permukaan publik dengan seluruh aplikasi, atau menganggap komponen bersama sebagai milik CMS.
 
 **Permukaan CMS**:
@@ -171,20 +171,20 @@ Teks dan media Beranda yang dikelola admin global melalui CMS: judul dan subteks
 _Avoid_: Mencampur konten beranda dengan Konten statis disengaja, atau menganggap seluruh bagian Beranda dapat diedit.
 
 **Profil**:
-Halaman publik tentang organisasi yang menggantikan "Tentang Kami" pada navigasi dan dipilih per periode kepengurusan. Bagian naratif (visi, misi, nilai, pilar) bersifat lintas periode; bagian yang bergantung periode mengikuti periode yang dipilih.
+Halaman publik tentang organisasi yang menggantikan "Tentang Kami" pada navigasi dan dipilih per periode kepengurusan. Bagian naratif (visi dan misi) bersifat lintas periode; bagian yang bergantung periode (koordinator, struktur pengurus, program kerja, dan cerita) mengikuti periode yang dipilih. Konten tingkat korwil disajikan sebagai konten statis disengaja.
 _Avoid_: Menyebut Profil sebagai Tentang Kami, atau mencampur data beberapa periode dalam satu tampilan.
 
 **Struktur organisasi**:
-Susunan pengurus satu komisariat pada satu periode, ditampilkan sebagai BPH terlebih dahulu lalu per divisi. Setiap entri memuat nama dan jabatan, dan diturunkan dari Membership; anggota tanpa divisi tidak ditampilkan di sini.
-_Avoid_: Menyimpan jabatan di sumber manual terpisah, atau memasukkan anggota tanpa divisi ke struktur.
+Susunan pengurus pada satu periode. Di halaman Komisariat, ditampilkan sebagai BPH terlebih dahulu lalu per divisi, diturunkan dari Membership, dan anggota tanpa divisi tidak ditampilkan. Di halaman Profil, struktur tingkat korwil disajikan dari konten statis disengaja karena belum ada sumber datanya.
+_Avoid_: Menyimpan jabatan struktur komisariat di sumber manual terpisah, atau memasukkan anggota tanpa divisi ke struktur.
 
 **Umpan kegiatan terakhir**:
 Daftar kegiatan pada halaman Komisariat yang hanya memuat program kerja dengan tanggal kalender yang sudah berlangsung, diurutkan dari yang paling baru. Untuk rentang dan rangkaian sesi, tanggal yang dipakai adalah tanggal selesai.
 _Avoid_: Memasukkan tanggal rencana, memakai tanggal mulai sebagai penanda selesai.
 
 **Mitra Strategis**:
-Sembilan perguruan tinggi mitra Bank Indonesia tempat Komisariat GenBI berada. Cakupan mitra pada judul bagian Beranda adalah Suramadu-Bojonegoro, bukan Jawa Timur, mengikuti keputusan pemilik produk.
-_Avoid_: Memakai "Jawa Timur" pada judul bagian mitra, atau menyebut mitra sebagai klien.
+Sembilan perguruan tinggi mitra Bank Indonesia tempat Komisariat GenBI berada. Bagian Beranda hanya menampilkan label "9 Kampus Mitra GenBI" dan deretan logo statis; keterangan cakupan "Suramadu-Bojonegoro" dihapus dari judul Beranda mengikuti keputusan pemilik produk.
+_Avoid_: Memakai "Jawa Timur" pada judul bagian mitra, menambahkan kembali keterangan cakupan pada judul Beranda, atau menyebut mitra sebagai klien.
 
 **Pilar GenBI**:
 Tiga peran yang dijalankan anggota GenBI sebagai mitra Bank Indonesia, dan ketiganya bukan sinonim: **Front-liners** menyampaikan informasi dan edukasi kepada masyarakat, **Agent of Change** menginisiasi gagasan dan aksi nyata atas tantangan sosial, **Future Leaders** menyiapkan kapasitas kepemimpinan dan jejaring anggota.
@@ -337,5 +337,5 @@ Database local baru yang bersih dari record test dan dipakai sebagai sumber init
 _Avoid_: Mempromosikan database development yang masih berisi komisariat, periode, divisi, atau membership test.
 
 **Membership release 2025/2026**:
-Seluruh 619 baris pada workbook anggota resmi dipetakan ke periode `2025/2026` dan boleh dipublikasikan setelah validasi import. Normalisasi sumber yang disepakati adalah `BPH 1`, `BPH 2`, dan `BPH 3` menjadi `BPH`, serta typo `Linkungan` menjadi `Lingkungan`; nama `Media Komunikasi & Hubungan Luar` dipertahankan.
+Seluruh 623 baris pada workbook anggota resmi dipetakan ke periode `2025/2026` dan boleh dipublikasikan setelah validasi import. Normalisasi sumber yang disepakati: `BPH 1`-`BPH 3` menjadi `BPH`; typo `Linkungan` menjadi `Lingkungan`; jabatan BPH diseragamkan menjadi Ketua Umum, Wakil Ketua, Sekretaris Umum, Wakil Sekretaris, Bendahara Umum, dan Wakil Bendahara (nomor I/1 = Umum, II/2 = Wakil); jabatan divisi diseragamkan menjadi Ketua/Kepala Divisi, Wakil, Sekretaris Divisi, Bendahara Divisi, dan Staff Divisi (varian `Ketua/Kepala`, `KADIV`, `SEKDIV`, `Anggota/Staff`, `Staf Divisi`, `Wakil Divisi`); sub-divisi ITS memakai `Kepala Sub Divisi ...`; divisi gabungan UNAIR `Media Komunikasi & Hubungan Luar` dibubarkan dan anggotanya masuk `Media Komunikasi`.
 _Avoid_: Menebak periode dari tanggal import atau mempublikasikan data sebelum validasi baris selesai.
