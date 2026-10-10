@@ -218,8 +218,8 @@ const assertMembershipRelease = async (target, reportPath) => {
     if (report.status !== 'IMPORTED' || report.sourceFileHash !== membership_release_1.MEMBERSHIP_SOURCE_SHA256 || report.sourceSheet !== 'Data Final' || report.period !== membership_release_1.MEMBERSHIP_RELEASE_PERIOD || report.targetDatabase !== databaseIdentity(process.env.INITIAL_PRODUCTION_DATABASE_URL ?? '')) {
         throw new Error('Membership import report is not the approved 2025/2026 release report.');
     }
-    if (report.validation?.valid !== true || report.validation?.totalRows !== 619 || report.validation?.rejectedRows?.length !== 0 || report.postImport?.totalMemberships !== 619 || report.postImport?.activeMemberships !== 619 || report.postImport?.publishedMemberships !== 619 || report.postImport?.noDivisionMemberships !== 127) {
-        throw new Error('Membership import report does not prove the approved 619-row release.');
+    if (report.validation?.valid !== true || report.validation?.totalRows !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || report.validation?.rejectedRows?.length !== 0 || report.postImport?.totalMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || report.postImport?.activeMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || report.postImport?.publishedMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || report.postImport?.noDivisionMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL) {
+        throw new Error(`Membership import report does not prove the approved ${membership_release_1.MEMBERSHIP_EXPECTED_TOTAL}-row release.`);
     }
     const [total, active, published, noDivision, periods, commissariats, targetCommissariats, targetDivisions] = await Promise.all([
         target.membership.count(),
@@ -234,7 +234,7 @@ const assertMembershipRelease = async (target, reportPath) => {
             select: { name: true, commissariat: { select: { slug: true } }, _count: { select: { memberships: true } } },
         }),
     ]);
-    if (total !== 619 || active !== 619 || published !== 619 || noDivision !== 127 || periods !== 9 || commissariats !== 9) {
+    if (total !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || active !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || published !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || noDivision !== membership_release_1.MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL || periods !== 9 || commissariats !== 9) {
         throw new Error(`Target Membership release mismatch: total=${total}, active=${active}, published=${published}, noDivision=${noDivision}, periods=${periods}, commissariats=${commissariats}.`);
     }
     const actualSlugs = new Set(targetCommissariats.map(({ slug }) => slug));
@@ -330,7 +330,7 @@ const main = async () => {
         if (targetPrograms || targetPhotos || targetArtifacts || targetRevisions) {
             throw new Error(`Target Program Kerja area is not empty: programs=${targetPrograms}, photos=${targetPhotos}, artifacts=${targetArtifacts}, revisions=${targetRevisions}.`);
         }
-        if (targetMemberships !== 619 || targetCommissariats.length !== 9 || targetPeriods.length !== 9) {
+        if (targetMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || targetCommissariats.length !== 9 || targetPeriods.length !== 9) {
             throw new Error(`Target Membership foundation is invalid: memberships=${targetMemberships}, commissariats=${targetCommissariats.length}, periods=${targetPeriods.length}.`);
         }
         const targetCommissariatBySlug = new Map(targetCommissariats.map((item) => [item.slug, item.id]));
@@ -465,7 +465,7 @@ const main = async () => {
             dataApproval: DATA_APPROVAL,
             programPeriodApproval: sourcePeriods.has(null) ? PROGRAM_PERIOD_APPROVAL : null,
             sourceUntouched: true,
-            membershipPreserved: targetMemberships === 619,
+            membershipPreserved: targetMemberships === membership_release_1.MEMBERSHIP_EXPECTED_TOTAL,
             membershipRelease: membership,
         };
         const paths = writeReport(report);

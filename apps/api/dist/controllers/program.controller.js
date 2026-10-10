@@ -17,13 +17,15 @@ const cms_program_status_1 = require("../domain/cms-program-status");
 const storage_1 = require("../lib/storage");
 const fields = (body) => {
     const title = typeof body.title === 'string' ? body.title.trim() : '';
+    // `divisi` tidak diwajibkan: nilai sebenarnya diambil dari scope akun atau
+    // dari data tersimpan (lihat createProgram/updateProgram).
     const divisi = typeof body.divisi === 'string' ? body.divisi.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const format = typeof body.format === 'string' ? body.format.trim() : '';
     const date = typeof body.startDate === 'string' ? new Date(body.startDate) : typeof body.dateIso === 'string' ? new Date(body.dateIso) : new Date('invalid');
     const endDate = typeof body.endDate === 'string' ? new Date(body.endDate) : date;
     const objectives = Array.isArray(body.objectives) ? body.objectives.filter((item) => typeof item === 'string').map((item) => item.trim()).filter(Boolean) : [];
-    if (!title || !divisi || !description || !format || !objectives.length || Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime()) || endDate < date)
+    if (!title || !description || !format || !objectives.length || Number.isNaN(date.getTime()) || Number.isNaN(endDate.getTime()) || endDate < date)
         throw new api_error_1.ApiError('VALIDATION_ERROR', 'Program Kerja fields are invalid.', 400);
     return { title, divisi, description, format, date, endDate, objectives };
 };
@@ -102,6 +104,7 @@ const transitionProgramRevision = async (req, res) => {
         }
         return next;
     });
+    await prisma_1.prisma.auditEvent.create({ data: { cmsAccountId: req.cmsSession.cmsAccount.id, action: to, entity: 'PROGRAM_REVISION', entityId: revision.id, oldStatus: revision.publicationStatus, newStatus: to } });
     return (0, request_context_middleware_1.sendSuccess)(res, updated);
 };
 exports.transitionProgramRevision = transitionProgramRevision;
@@ -110,7 +113,12 @@ const listCmsPrograms = async (req, res) => {
     const requestedStatus = (0, cms_program_status_1.cmsPublicationStatus)(req.query.status);
     if (requestedStatus)
         where.publicationStatus = requestedStatus;
-    if (req.cmsSession.cmsAccount.role !== client_1.CmsRole.ADMIN_GLOBAL) {
+    /*
+     * `scope=all` membuka daftar lintas komisariat untuk ketiga peran (keputusan
+     * Korkom: koordinasi lintas komisariat). Tanpa parameter itu daftar tetap
+     * dibatasi scope akun (Riwayat divisi sekretaris).
+     */
+    if (req.query.scope !== 'all' && req.cmsSession.cmsAccount.role !== client_1.CmsRole.ADMIN_GLOBAL) {
         const assignment = req.cmsSession.cmsAccount.assignments[0];
         if (!assignment?.commissariatId || !assignment.periodId)
             throw new api_error_1.ApiError('FORBIDDEN', 'No active CMS assignment.', 403);
@@ -119,7 +127,7 @@ const listCmsPrograms = async (req, res) => {
         if (req.cmsSession.cmsAccount.role === client_1.CmsRole.SEKRETARIS_DIVISI)
             where.divisionId = assignment.divisionId ?? undefined;
     }
-    return (0, request_context_middleware_1.sendSuccess)(res, await prisma_1.prisma.programKerja.findMany({ where, include: { artifacts: true }, orderBy: { updatedAt: 'desc' } }));
+    return (0, request_context_middleware_1.sendSuccess)(res, await prisma_1.prisma.programKerja.findMany({ where, include: { artifacts: true, commissariat: { select: { name: true, slug: true } } }, orderBy: { updatedAt: 'desc' } }));
 };
 exports.listCmsPrograms = listCmsPrograms;
 const transitionProgram = async (req, res) => {
@@ -130,10 +138,10 @@ const transitionProgram = async (req, res) => {
     const to = req.body.status;
     if (!Object.values(client_1.PublicationStatus).includes(to))
         throw new api_error_1.ApiError('VALIDATION_ERROR', 'Invalid publication status.', 400);
-    if (to === 'APPROVED' && req.cmsSession.cmsAccount.role !== client_1.CmsRole.ADMIN_GLOBAL)
-        throw new api_error_1.ApiError('FORBIDDEN', 'Only ADMIN_GLOBAL can approve programs.', 403);
     (0, status_transitions_1.assertPublicationTransition)(program.publicationStatus, to, req.body.rejectionReason);
+    (0, status_transitions_1.assertProgramRoleTransition)(req.cmsSession.cmsAccount.role, to);
     const updated = await prisma_1.prisma.programKerja.update({ where: { id: program.id }, data: { publicationStatus: to, rejectionReason: to === 'REJECTED' ? req.body.rejectionReason : null } });
+    await prisma_1.prisma.auditEvent.create({ data: { cmsAccountId: req.cmsSession.cmsAccountId, action: to, entity: 'PROGRAM', entityId: program.id, oldStatus: program.publicationStatus, newStatus: to } });
     return (0, request_context_middleware_1.sendSuccess)(res, updated);
 };
 exports.transitionProgram = transitionProgram;
@@ -157,12 +165,24 @@ const uploadProgramArtifact = async (req, res) => {
     const program = await prisma_1.prisma.programKerja.findUnique({ where: { id: req.params.id } });
     if (!program)
         throw new api_error_1.ApiError('NOT_FOUND', 'Program Kerja not found.', 404);
-    (0, cms_scope_service_1.assertScopeAccess)(req.cmsSession, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'read');
+    (0, cms_scope_service_1.assertScopeAccess)(req.cmsSession, { commissariatId: program.commissariatId, periodId: program.periodId ?? undefined, divisionId: program.divisionId ?? undefined }, 'write');
+    const kind = String(req.body.kind);
+    /*
+     * Berkas hanya untuk Program Kerja yang lahir lewat CMS: Program Kerja lama
+     * hasil rekonsiliasi tidak dapat diubah dari mana pun. Proposal diunggah
+     * pada fase draft; LPJ menyusul setelah Program Kerja disetujui.
+     */
+    if (!program.authorAccountId)
+        throw new api_error_1.ApiError('FORBIDDEN', 'Program Kerja lama tidak dapat diubah.', 403);
+    if (kind === 'proposal' && !['DRAFT', 'REJECTED'].includes(program.publicationStatus))
+        throw new api_error_1.ApiError('FORBIDDEN', 'Proposal hanya dapat diunggah pada Program Kerja draft.', 403);
+    if (kind === 'lpj' && !['APPROVED', 'PUBLISHED'].includes(program.publicationStatus))
+        throw new api_error_1.ApiError('FORBIDDEN', 'LPJ hanya dapat diunggah setelah Program Kerja disetujui.', 403);
     await (0, storage_1.ensureStorageRoots)();
     const storageKey = `private/program/${program.id}/${crypto_1.default.randomUUID()}${path_1.default.extname(req.file.originalname).toLowerCase()}`;
     await promises_1.default.mkdir(path_1.default.dirname((0, storage_1.privateStoragePath)(storageKey)), { recursive: true });
     await promises_1.default.writeFile((0, storage_1.privateStoragePath)(storageKey), req.file.buffer);
-    const artifact = await prisma_1.prisma.programArtifact.create({ data: { programKerjaId: program.id, kind: String(req.body.kind), storageKey, originalFilename: req.file.originalname, mimeType: req.file.mimetype, byteSize: req.file.size } });
+    const artifact = await prisma_1.prisma.programArtifact.create({ data: { programKerjaId: program.id, kind, storageKey, originalFilename: req.file.originalname, mimeType: req.file.mimetype, byteSize: req.file.size } });
     return (0, request_context_middleware_1.sendSuccess)(res, { id: artifact.id, kind: artifact.kind, filename: artifact.originalFilename });
 };
 exports.uploadProgramArtifact = uploadProgramArtifact;

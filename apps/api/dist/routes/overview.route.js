@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const client_1 = require("@prisma/client");
+const asyncHandler_1 = require("../middlewares/asyncHandler");
+const cms_session_middleware_1 = require("../middlewares/cms-session.middleware");
+const overview_controller_1 = require("../controllers/overview.controller");
+const router = (0, express_1.Router)();
+router.get("/", cms_session_middleware_1.requireCmsSession, (0, cms_session_middleware_1.requireCmsRole)(client_1.CmsRole.ADMIN_GLOBAL, client_1.CmsRole.SEKRETARIS_UMUM, client_1.CmsRole.SEKRETARIS_DIVISI), (0, asyncHandler_1.asyncHandler)(overview_controller_1.getOverview));
+exports.default = router;

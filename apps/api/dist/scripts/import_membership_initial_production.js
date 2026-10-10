@@ -124,9 +124,9 @@ const main = async () => {
     const parsed = (0, membership_import_service_1.parseMembershipWorkbook)(buffer, { periodLabel: membership_release_1.MEMBERSHIP_RELEASE_PERIOD });
     const runDir = path_1.default.join(REPORT_DIR, `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto_1.default.createHash('sha256').update(buffer).digest('hex').slice(0, 12)}`);
     const validation = (0, membership_import_service_1.validateMembershipSource)(parsed, {
-        expectedTotalRows: 619,
+        expectedTotalRows: membership_release_1.MEMBERSHIP_EXPECTED_TOTAL,
         expectedCommissariatCounts: membership_release_1.MEMBERSHIP_EXPECTED_COUNTS,
-        expectedNoDivisionCount: 127,
+        expectedNoDivisionCount: membership_release_1.MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL,
         expectedDivisionNames: membership_release_1.MEMBERSHIP_RELEASE_DIVISIONS,
         requireDivisionCatalog: true,
     });
@@ -225,7 +225,7 @@ const main = async () => {
                 tx.membership.count({ where: { period: { label: membership_release_1.MEMBERSHIP_RELEASE_PERIOD }, publicationStatus: 'PUBLISHED' } }),
                 tx.membership.count({ where: { period: { label: membership_release_1.MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } }),
             ]);
-            if (releasePeriodCount !== membership_release_1.MEMBERSHIP_RELEASE_COMMISSARIATS.length || totalMemberships !== 619 || activeMemberships !== 619 || publishedMemberships !== 619 || noDivisionMemberships !== 127) {
+            if (releasePeriodCount !== membership_release_1.MEMBERSHIP_RELEASE_COMMISSARIATS.length || totalMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || activeMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || publishedMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_TOTAL || noDivisionMemberships !== membership_release_1.MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL) {
                 throw new Error(`Post-import membership totals do not match the approved release: total=${totalMemberships}, active=${activeMemberships}, published=${publishedMemberships}, noDivision=${noDivisionMemberships}.`);
             }
             for (const [slug, expectedCount] of Object.entries(membership_release_1.MEMBERSHIP_EXPECTED_COUNTS)) {

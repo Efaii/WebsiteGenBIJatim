@@ -9,10 +9,14 @@ const undated = (0, public_program_1.programDate)(null, null);
 strict_1.default.equal(undated.date, 'Periode 2025/2026');
 strict_1.default.equal(undated.dateLabel, 'Periode 2025/2026');
 strict_1.default.equal(undated.dateIso, null);
-const dated = (0, public_program_1.programDate)(new Date('2025-02-03T00:00:00.000Z'), 'ignored label');
+const dated = (0, public_program_1.programDate)(new Date('2025-02-03T00:00:00.000Z'), null);
 strict_1.default.equal(dated.dateIso, '2025-02-03');
 strict_1.default.equal(dated.dateLabel, null);
 strict_1.default.equal(dated.date, new Date('2025-02-03T00:00:00.000Z').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }));
+// Rentang: tanggal selesai jadi tanggal kalender, label teks tetap diteruskan.
+const ranged = (0, public_program_1.programDate)(new Date('2025-11-08T00:00:00.000Z'), '5 Oktober - 8 November 2025');
+strict_1.default.equal(ranged.dateIso, '2025-11-08');
+strict_1.default.equal(ranged.dateLabel, '5 Oktober - 8 November 2025');
 strict_1.default.deepEqual((0, public_program_1.programGallery)(['/legacy-1.webp', null, '/legacy-2.webp', '/legacy-1.webp'], [
     { filePath: '/uploads-1.webp' },
     { filePath: '/legacy-2.webp' },
