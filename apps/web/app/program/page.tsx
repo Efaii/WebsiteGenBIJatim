@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
@@ -19,6 +20,7 @@ export default async function ProgramListPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
+  await connection();
   const { q, page } = await searchParams;
   const programs = publicProgramItems(await getAllPrograms());
 
