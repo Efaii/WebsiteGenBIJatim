@@ -11,6 +11,8 @@ import {
 import {
   MEMBERSHIP_EXPECTED_COUNTS,
   MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS,
+  MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL,
+  MEMBERSHIP_EXPECTED_TOTAL,
   MEMBERSHIP_RELEASE_DIVISIONS,
   MEMBERSHIP_RELEASE_COMMISSARIATS,
   MEMBERSHIP_RELEASE_PERIOD,
@@ -131,9 +133,9 @@ const main = async () => {
   const parsed = parseMembershipWorkbook(buffer, { periodLabel: MEMBERSHIP_RELEASE_PERIOD });
   const runDir = path.join(REPORT_DIR, `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 12)}`);
   const validation = validateMembershipSource(parsed, {
-    expectedTotalRows: 619,
+    expectedTotalRows: MEMBERSHIP_EXPECTED_TOTAL,
     expectedCommissariatCounts: MEMBERSHIP_EXPECTED_COUNTS,
-    expectedNoDivisionCount: 127,
+    expectedNoDivisionCount: MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL,
     expectedDivisionNames: MEMBERSHIP_RELEASE_DIVISIONS,
     requireDivisionCatalog: true,
   });
@@ -233,7 +235,7 @@ const main = async () => {
         tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, publicationStatus: 'PUBLISHED' } }),
         tx.membership.count({ where: { period: { label: MEMBERSHIP_RELEASE_PERIOD }, divisionId: null } }),
       ]);
-      if (releasePeriodCount !== MEMBERSHIP_RELEASE_COMMISSARIATS.length || totalMemberships !== 619 || activeMemberships !== 619 || publishedMemberships !== 619 || noDivisionMemberships !== 127) {
+      if (releasePeriodCount !== MEMBERSHIP_RELEASE_COMMISSARIATS.length || totalMemberships !== MEMBERSHIP_EXPECTED_TOTAL || activeMemberships !== MEMBERSHIP_EXPECTED_TOTAL || publishedMemberships !== MEMBERSHIP_EXPECTED_TOTAL || noDivisionMemberships !== MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL) {
         throw new Error(`Post-import membership totals do not match the approved release: total=${totalMemberships}, active=${activeMemberships}, published=${publishedMemberships}, noDivision=${noDivisionMemberships}.`);
       }
 

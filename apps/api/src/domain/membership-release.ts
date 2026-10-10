@@ -1,13 +1,13 @@
 export const MEMBERSHIP_RELEASE_PERIOD = '2025/2026';
-export const MEMBERSHIP_SOURCE_SHA256 = 'c8559cd5cdcf2b92f4f107dac122be47c6f63eaaddbcd7045212278fa2f65ae7';
+export const MEMBERSHIP_SOURCE_SHA256 = '231139a99cebb32504a131e70662d195be9e1aac30277fad1c5168fce47ad831';
 
 export const MEMBERSHIP_RELEASE_COMMISSARIATS = [
   { slug: 'its', name: 'ITS', university: 'Institut Teknologi Sepuluh Nopember', logo: '/assets/logos/its.webp', expectedCount: 87 },
   { slug: 'pens', name: 'PENS', university: 'Politeknik Elektronika Negeri Surabaya', logo: '/assets/logos/pens.webp', expectedCount: 48 },
   { slug: 'uin-madura', name: 'UIN Madura', university: 'UIN Madura', logo: '/assets/logos/uinMadura.webp', expectedCount: 50 },
   { slug: 'uinsa', name: 'UINSA', university: 'UIN Sunan Ampel Surabaya', logo: '/assets/logos/uinsa.webp', expectedCount: 83 },
-  { slug: 'unair', name: 'UNAIR', university: 'Universitas Airlangga', logo: '/assets/logos/unair.webp', expectedCount: 112 },
-  { slug: 'unesa', name: 'UNESA', university: 'Universitas Negeri Surabaya', logo: '/assets/logos/unesa.webp', expectedCount: 64 },
+  { slug: 'unair', name: 'UNAIR', university: 'Universitas Airlangga', logo: '/assets/logos/unair.webp', expectedCount: 114 },
+  { slug: 'unesa', name: 'UNESA', university: 'Universitas Negeri Surabaya', logo: '/assets/logos/unesa.webp', expectedCount: 66 },
   { slug: 'unugiri', name: 'UNUGIRI', university: 'Universitas Nahdlatul Ulama Sunan Giri', logo: '/assets/logos/unugiri.webp', expectedCount: 50 },
   { slug: 'upnvjt', name: 'UPN Veteran Jatim', university: 'UPN Veteran Jawa Timur', logo: '/assets/logos/upnvjt.webp', expectedCount: 50 },
   { slug: 'utm', name: 'UTM', university: 'Universitas Trunojoyo Madura', logo: '/assets/logos/utm.webp', expectedCount: 75 },
@@ -17,24 +17,33 @@ export const MEMBERSHIP_EXPECTED_COUNTS = Object.fromEntries(
   MEMBERSHIP_RELEASE_COMMISSARIATS.map((item) => [item.slug, item.expectedCount]),
 ) as Record<string, number>;
 
+export const MEMBERSHIP_EXPECTED_TOTAL = MEMBERSHIP_RELEASE_COMMISSARIATS.reduce(
+  (total, item) => total + item.expectedCount,
+  0,
+);
+
 export const MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS: Record<string, number> = {
   its: 46,
   pens: 2,
   'uin-madura': 1,
-  uinsa: 34,
-  unair: 30,
+  uinsa: 24,
+  unair: 28,
   unesa: 0,
   unugiri: 0,
   upnvjt: 0,
-  utm: 14,
+  utm: 0,
 };
+
+export const MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL = Object.values(
+  MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS,
+).reduce((total, count) => total + count, 0);
 
 export const MEMBERSHIP_RELEASE_DIVISIONS: Record<string, readonly string[]> = {
   its: ['Hubungan Masyarakat', 'Sosial dan Lingkungan', 'Media dan Publikasi', 'Pengembangan Organisasi', 'BPH'],
   pens: ['Media Informasi & Komunikasi', 'Lingkungan Hidup & Sosial', 'Kesehatan Masyarakat', 'Pengembangan Sumber Daya Mahasiswa', 'BPH', 'Ekonomi Kreatif', 'Pendidikan & Kreativitas'],
   'uin-madura': ['BPH', 'Lingkungan Hidup & Kesehatan Masyarakat', 'Kewirausahaan', 'Komunikasi & Informasi', 'Pendidikan'],
   uinsa: ['Media Informasi', 'Pendidikan', 'Pengembangan Sumber Daya Mahasiswa', 'Lingkungan Hidup', 'BPH', 'Pariwisata & Ekonomi Kreatif', 'Kesehatan & Sosial Masyarakat'],
-  unair: ['Media Komunikasi', 'Ekonomi Kreatif', 'Hubungan Luar', 'Kontrol Mutu Internal', 'Pengembangan Sumber Daya Mahasiswa', 'Pengabdian Masyarakat', 'BPH', 'Pendidikan', 'Media Komunikasi & Hubungan Luar'],
+  unair: ['Media Komunikasi', 'Ekonomi Kreatif', 'Hubungan Luar', 'Kontrol Mutu Internal', 'Pengembangan Sumber Daya Mahasiswa', 'Pengabdian Masyarakat', 'BPH', 'Pendidikan'],
   unesa: ['BPH', 'Pengembangan Sumber Daya Mahasiswa', 'Sosial dan Lingkungan', 'Kesehatan Masyarakat', 'Media dan Informasi', 'Ekonomi Kreatif', 'Pendidikan', 'Hubungan Eksternal'],
   unugiri: ['BPH', 'Media Informasi', 'Lingkungan Hidup', 'Kewirausahaan', 'Sosial Masyarakat', 'Pendidikan'],
   upnvjt: ['Ekonomi Kreatif', 'Pendidikan', 'Pengembangan Sumber Daya Mahasiswa', 'BPH', 'Media Komunikasi', 'Sosial Lingkungan', 'Hubungan Eksternal'],

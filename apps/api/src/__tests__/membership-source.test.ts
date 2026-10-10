@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { canonicalCommissariatSlug, normalizeMembershipDivision, parseMembershipWorkbook, validateMembershipSource } from '../services/membership-import.service';
-import { MEMBERSHIP_EXPECTED_COUNTS, MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS, MEMBERSHIP_RELEASE_DIVISIONS, MEMBERSHIP_RELEASE_PERIOD, MEMBERSHIP_SOURCE_SHA256 } from '../domain/membership-release';
+import { MEMBERSHIP_EXPECTED_COUNTS, MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS, MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL, MEMBERSHIP_EXPECTED_TOTAL, MEMBERSHIP_RELEASE_DIVISIONS, MEMBERSHIP_RELEASE_PERIOD, MEMBERSHIP_SOURCE_SHA256 } from '../domain/membership-release';
 import XLSX from '@e965/xlsx';
 
 assert.equal(normalizeMembershipDivision('BPH 1', { commissariatSlug: 'unugiri', periodLabel: MEMBERSHIP_RELEASE_PERIOD }), 'BPH');
@@ -33,11 +33,11 @@ assert.equal(parsed.rows[0].normalized.divisi, 'BPH');
 const sourcePath = path.resolve(__dirname, '../../../../data/anggota/data_genbi_final_db.xlsx');
 const sourceBuffer = fs.readFileSync(sourcePath);
 const sourceParsed = parseMembershipWorkbook(sourceBuffer, { periodLabel: MEMBERSHIP_RELEASE_PERIOD });
-const sourceValidation = validateMembershipSource(sourceParsed, { expectedTotalRows: 619, expectedCommissariatCounts: MEMBERSHIP_EXPECTED_COUNTS, expectedNoDivisionCount: 127, expectedDivisionNames: MEMBERSHIP_RELEASE_DIVISIONS });
+const sourceValidation = validateMembershipSource(sourceParsed, { expectedTotalRows: MEMBERSHIP_EXPECTED_TOTAL, expectedCommissariatCounts: MEMBERSHIP_EXPECTED_COUNTS, expectedNoDivisionCount: MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL, expectedDivisionNames: MEMBERSHIP_RELEASE_DIVISIONS });
 assert.equal(sourceParsed.hash, MEMBERSHIP_SOURCE_SHA256);
 assert.equal(sourceValidation.valid, true);
-assert.equal(sourceValidation.totalRows, 619);
-assert.equal(sourceValidation.noDivisionCount, 127);
+assert.equal(sourceValidation.totalRows, MEMBERSHIP_EXPECTED_TOTAL);
+assert.equal(sourceValidation.noDivisionCount, MEMBERSHIP_EXPECTED_NO_DIVISION_TOTAL);
 assert.deepEqual(sourceValidation.commissariatCounts, MEMBERSHIP_EXPECTED_COUNTS);
 assert.deepEqual(sourceValidation.noDivisionCounts, MEMBERSHIP_EXPECTED_NO_DIVISION_COUNTS);
 
