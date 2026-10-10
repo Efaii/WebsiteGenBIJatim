@@ -7,16 +7,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: genbi_jatim_test
-        ports: ['3306:3306']
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
-          --health-interval=10s --health-timeout=5s --health-retries=10
     env:
       DATABASE_URL: mysql://root:root@127.0.0.1:3306/genbi_jatim_test
       ADMIN_USERNAME: ci-admin
@@ -32,6 +22,23 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Start MySQL (mysql:8.4, lower_case_table_names=1)
+        run: |
+          docker run -d --name ci-mysql \
+            -e MYSQL_ROOT_PASSWORD=root \
+            -e MYSQL_ROOT_HOST=% \
+            -e MYSQL_DATABASE=genbi_jatim_test \
+            -p 3306:3306 \
+            mysql:8.4 --lower-case-table-names=1
+          ready=0
+          for i in {1..30}; do
+            if docker exec ci-mysql mysqladmin ping -uroot -proot --silent >/dev/null 2>&1; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then docker logs ci-mysql; exit 1; fi
+          lctn=$(docker exec ci-mysql mysql -uroot -proot -N -e "SELECT @@lower_case_table_names;")
+          if [ "$lctn" != "1" ]; then echo "lower_case_table_names=$lctn (expected 1)"; docker logs ci-mysql; exit 1; fi
+          echo "MySQL ready (mysql:8.4, lower_case_table_names=1)"
       - run: npm ci
       - name: Verify install is reproducible
         run: npm ls --depth=0
