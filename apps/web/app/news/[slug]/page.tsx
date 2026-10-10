@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/navbar";
@@ -46,6 +47,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
   const news = await getNewsBySlug(slug);
   if (!news) return { title: "Berita tidak ditemukan | GenBI Jatim" };
@@ -73,6 +75,7 @@ export default async function NewsDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await connection();
   const { slug } = await params;
   const news = await getNewsBySlug(slug);
   if (!news) notFound();

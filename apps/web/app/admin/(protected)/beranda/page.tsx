@@ -20,8 +20,8 @@ export default async function CmsBerandaPage() {
 
   const [homeData, latestNews, featuredNews, content] = await Promise.all([
     getHomeData().catch(() => null),
-    getRecentNews(3).catch(() => null),
-    getFeaturedNews(3).catch(() => null),
+    getRecentNews(3, { fresh: true }).catch(() => null),
+    getFeaturedNews(3, { fresh: true }).catch(() => null),
     getHomeContent(),
   ]);
 

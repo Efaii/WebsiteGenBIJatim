@@ -2,219 +2,242 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/Card";
-import {
-  FadeIn,
-  SlideUp,
-  StaggerContainer,
-  StaggerItem,
-} from "@/components/MotionWrapper";
-import { PageBackground } from "@/components/PageBackground";
-import Image from "next/image";
+import { Container } from "@/components/Container";
+import { StateMessage } from "@/components/StateMessage";
 import {
   newsAssetUrl,
   type PublicNewsSummary,
 } from "@/lib/services/news.service";
-import { ArrowRight, Calendar, Search } from "lucide-react";
+import { ArrowRight, Newspaper, Search } from "lucide-react";
 
-interface NewsClientProps {
-  initialNews: PublicNewsSummary[];
-}
+/** Berita + label tanggal yang sudah diformat server (lihat page.tsx). */
+export type NewsListItem = PublicNewsSummary & { dateLabel: string | null };
 
-export default function NewsClient({ initialNews }: NewsClientProps) {
+/**
+ * Halaman arsip berita.
+ *
+ * Rombakan ini menyelaraskan halaman dengan sistem visual halaman lain:
+ * latar `genbi-soft` dengan gradien atas, judul terpusat, kontrol filter
+ * `rounded-md` satu baris (kategori + pencarian), dan kartu putih
+ * `rounded-feature` yang sama dengan kartu berita di beranda. Tanpa animasi
+ * masuk; hanya transisi hover, mengikuti halaman detail berita.
+ *
+ * Tanggal TIDAK diformat di sini: label datang dari server supaya hasil
+ * render server dan klien tidak pernah berbeda (pola yang sama dengan
+ * section berita di beranda).
+ */
+
+/** Gaya judul halaman yang sama dengan halaman komisariat dan awardee. */
+const PAGE_TITLE_CLASS =
+  "font-heading text-[2rem] font-bold tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]";
+
+const ALL = "All";
+
+/**
+ * Urutan tampil chip kategori mengikuti enum API; kategori yang belum
+ * terdaftar tetap ikut tampil di belakang supaya tidak ada berita yang
+ * hanya bisa ditemukan lewat "Semua".
+ */
+const CATEGORY_ORDER = ["KEGIATAN", "WEBINAR", "SOSIAL", "EDUKASI", "PELATIHAN"];
+
+const categoryLabel = (value: string) =>
+  value === ALL ? "Semua" : value.charAt(0) + value.slice(1).toLowerCase();
+
+export default function NewsClient({
+  initialNews,
+}: {
+  initialNews: NewsListItem[];
+}) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | "All">(
-    "All",
-  );
+  const [selectedCategory, setSelectedCategory] = useState<string>(ALL);
 
-  // Nilai kategori HARUS sama dengan enum NewsCategory di API (huruf besar),
-  // kalau tidak filter tidak akan pernah cocok.
-  const categories = [
-    "All",
-    "KEGIATAN",
-    "WEBINAR",
-    "SOSIAL",
-    "EDUKASI",
-    "PELATIHAN",
-  ];
-
-  const categoryLabel = (value: string) =>
-    value === "All" ? "Semua" : value.charAt(0) + value.slice(1).toLowerCase();
-
-  const filteredNews = initialNews.filter((news) => {
-    const matchesSearch = news.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "All" || news.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  // Chip dibangun dari data yang benar-benar ada, bukan daftar tetap: filter
+  // yang pasti kosong tidak perlu ditampilkan.
+  const presentCategories = Array.from(
+    new Set(
+      initialNews
+        .map((news) => news.category)
+        .filter((category): category is string => Boolean(category)),
+    ),
+  ).sort((a, b) => {
+    const orderA = CATEGORY_ORDER.indexOf(a);
+    const orderB = CATEGORY_ORDER.indexOf(b);
+    return (
+      (orderA === -1 ? CATEGORY_ORDER.length : orderA) -
+        (orderB === -1 ? CATEGORY_ORDER.length : orderB) ||
+      a.localeCompare(b)
+    );
   });
+  const categories = [ALL, ...presentCategories];
+
+  const normalizedQuery = searchTerm.trim().toLowerCase();
+  const filteredNews = initialNews.filter((news) => {
+    const matchesCategory =
+      selectedCategory === ALL || news.category === selectedCategory;
+    const matchesQuery =
+      normalizedQuery === "" ||
+      `${news.title} ${news.excerpt} ${news.category ?? ""}`
+        .toLowerCase()
+        .includes(normalizedQuery);
+    return matchesCategory && matchesQuery;
+  });
+  const isFiltering = selectedCategory !== ALL || normalizedQuery !== "";
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent text-white selection:bg-cyan-500 selection:text-white relative overflow-clip">
+    <div className="relative flex min-h-screen flex-col overflow-clip bg-genbi-soft text-slate-900 selection:bg-genbi-blue selection:text-white">
       <Navbar />
 
-      {/* Background Blobs (Standardized) */}
-      <PageBackground variant="default" />
+      {/* Latar hero yang mencair ke warna halaman, sama seperti halaman daftar lain. */}
+      <div className="pointer-events-none absolute left-0 right-0 top-0 -z-10 h-[500px] bg-gradient-to-b from-genbi-light to-genbi-soft" />
 
-      <main className="flex-1 container mx-auto px-4 py-12 relative z-10">
-        <SlideUp className="flex flex-col items-center space-y-4 mb-12 text-center">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">
-            Berita & Kegiatan Jatim
-          </h1>
-          <p className="text-lg text-blue-100/70 max-w-2xl">
-            Informasi terkini, artikel, dan highlight kegiatan GenBI tingkat
-            provinsi Jawa Timur.
-          </p>
-        </SlideUp>
+      <main className="relative z-10 flex-1 pt-28 pb-20">
+        <Container>
+          {/* Judul halaman */}
+          <header className="mx-auto mb-10 max-w-3xl text-center">
+            <h1 className={PAGE_TITLE_CLASS}>Berita & Kegiatan Jatim</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
+              Informasi terkini, artikel, dan highlight kegiatan GenBI tingkat
+              provinsi Jawa Timur.
+            </p>
+          </header>
 
-        {/* Search & Filter */}
-        <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-between">
-          {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-4 md:pb-0 w-full md:w-auto no-scrollbar">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === cat
-                    ? "bg-cyan-500/20 text-cyan-200 border border-cyan-500/30 shadow-lg shadow-cyan-500/10"
-                    : "bg-white/5 text-blue-100/80 hover:bg-white/10 hover:text-white border border-white/10"
-                }`}
-              >
-                {categoryLabel(cat)}
-              </button>
-            ))}
-          </div>
+          {/* Filter kategori + pencarian, satu baris seperti toolbar awardee. */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {categories.map((category) => {
+              const isActive = selectedCategory === category;
+              return (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                  aria-pressed={isActive}
+                  className={`h-10 cursor-pointer rounded-md border px-3.5 text-sm font-semibold shadow-sm transition-colors focus-visible:border-genbi-blue focus-visible:outline-none ${
+                    isActive
+                      ? "border-genbi-blue bg-genbi-blue text-white hover:bg-genbi-blue-hover"
+                      : "border-genbi-line bg-white text-slate-600 hover:border-genbi-bright hover:text-genbi-blue"
+                  }`}
+                >
+                  {categoryLabel(category)}
+                </button>
+              );
+            })}
 
-          {/* Search */}
-          <div className="w-full md:w-72">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Cari berita..."
-                className="w-full h-11 pl-10 pr-4 rounded-xl border border-white/10 bg-white/5 text-white focus:outline-none focus:border-cyan-400/50 focus:ring-0 placeholder:text-blue-200/40 transition-all font-medium text-sm"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+            <div className="relative min-w-[220px] flex-1 basis-[240px] md:ml-auto md:max-w-xs">
+              <Search
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                aria-hidden="true"
               />
-              <svg
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-200/50"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                aria-label="Cari berita"
+                placeholder="Cari berita..."
+                className="h-10 w-full rounded-md border border-genbi-line bg-white pl-10 pr-3.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-500 hover:border-genbi-bright focus:border-genbi-blue focus:outline-none"
+              />
             </div>
           </div>
-        </div>
 
-        {/* News Grid */}
-        {filteredNews.length > 0 ? (
-          <StaggerContainer
-            key={selectedCategory + searchTerm} // Force re-render on filter change
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {filteredNews.map((news) => (
-              <StaggerItem key={news.id}>
-                <Link
-                  href={`/news/${news.slug}`}
-                  className="block h-full"
-                >
-                  <Card className="group bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer">
-                    <div
-                      className="h-48 w-full bg-blue-900/40 relative overflow-hidden flex items-center justify-center"
-                    >
-                      {/* Image or Placeholder */}
-                      {news.coverImage ? (
+          {/* Jumlah hasil */}
+          <p className="mt-4 text-sm text-slate-500">
+            {isFiltering ? (
+              <>
+                Menampilkan{" "}
+                <span className="font-semibold text-slate-700">
+                  {filteredNews.length}
+                </span>{" "}
+                dari{" "}
+                <span className="font-semibold text-slate-700">
+                  {initialNews.length}
+                </span>{" "}
+                berita.
+              </>
+            ) : (
+              <>
+                <span className="font-semibold text-slate-700">
+                  {initialNews.length}
+                </span>{" "}
+                berita.
+              </>
+            )}
+          </p>
+
+          {/* Daftar berita */}
+          {filteredNews.length > 0 ? (
+            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filteredNews.map((news) => {
+                const cover =
+                  newsAssetUrl(news.images?.[0] ?? news.coverImage) ?? null;
+                const secondary = news.category
+                  ? categoryLabel(news.category)
+                  : null;
+                return (
+                  <Link
+                    key={news.id}
+                    href={`/news/${news.slug}`}
+                    className="group flex h-full flex-col overflow-hidden rounded-feature border border-genbi-line bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-genbi-bright hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-genbi-blue/60"
+                  >
+                    <div className="relative aspect-[2/1] w-full shrink-0 overflow-hidden bg-genbi-light">
+                      {cover ? (
                         <Image
-                          src={newsAssetUrl(news.coverImage) ?? news.coverImage}
+                          src={cover}
                           alt={news.title}
                           fill
-                          unoptimized
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover transform group-hover:scale-110 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
                         />
                       ) : (
-                        <div className="text-primary/20 transform group-hover:scale-110 transition-transform duration-500">
-                          <svg
-                            className="w-20 h-20"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z" />
-                          </svg>
-                        </div>
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <Newspaper
+                            className="h-10 w-10 text-slate-300"
+                            aria-hidden="true"
+                          />
+                        </span>
                       )}
-                      <div className="absolute top-4 left-4">
-                        <span className="px-3 py-1 bg-black/40 backdrop-blur-md border border-white/10 text-white text-xs font-bold rounded-full shadow-sm">
-                          {news.category}
-                        </span>
-                      </div>
                     </div>
-                    <CardHeader className="p-6 pb-2">
-                      <div className="text-xs font-medium text-blue-200/60 mb-2 flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-                          {news.publishedAt
-                            ? new Date(news.publishedAt).toLocaleDateString("id-ID", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              })
-                            : "GenBI Jawa Timur"}
-                        </span>
-                      </div>
-                      <CardTitle className="text-xl font-bold leading-snug text-white group-hover:text-cyan-300 transition-colors line-clamp-2">
+
+                    <div className="flex flex-1 flex-col p-5 md:p-6">
+                      {(news.dateLabel || secondary) && (
+                        <p className="text-[13px] font-medium text-slate-500">
+                          {news.dateLabel}
+                          {news.dateLabel && secondary ? (
+                            <span aria-hidden="true"> · </span>
+                          ) : null}
+                          {secondary}
+                        </p>
+                      )}
+                      <h2 className="mt-2 line-clamp-2 text-lg font-bold leading-snug text-slate-900 transition-colors duration-200 group-hover:text-genbi-blue">
                         {news.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 pt-2 flex-1">
-                      <p className="text-blue-100/70 text-sm leading-relaxed line-clamp-3">
+                      </h2>
+                      <p className="mt-3 line-clamp-2 text-[15px] leading-relaxed text-slate-600">
                         {news.excerpt}
                       </p>
-                    </CardContent>
-                    <CardFooter className="p-6 pt-0 mt-auto">
-                      <span className="text-sm font-semibold text-cyan-200 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Baca Selengkapnya <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                      <span className="mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold text-genbi-blue">
+                        Baca Selengkapnya
+                        <ArrowRight
+                          className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                          aria-hidden="true"
+                        />
                       </span>
-                    </CardFooter>
-                  </Card>
-                </Link>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-blue-200/50 mb-4">
-              <Search className="w-7 h-7" aria-hidden="true" />
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-            <h3 className="text-lg font-semibold text-white">
-              Tidak ada berita ditemukan
-            </h3>
-            <p className="text-blue-100/60">
-              Coba ubah kata kunci pencarian atau kategori.
-            </p>
-          </div>
-        )}
+          ) : (
+            <StateMessage
+              className="mt-6"
+              title="Tidak ada berita yang cocok"
+              description="Coba ubah kata kunci pencarian atau pilih kategori lain."
+            />
+          )}
+        </Container>
       </main>
 
-      <div className="relative border-t border-white/10">
-        <div className="absolute inset-0 bg-blue-950/50 backdrop-blur-3xl -z-10"></div>
+      <div className="relative border-t border-genbi-line bg-white">
         <Footer />
       </div>
     </div>
