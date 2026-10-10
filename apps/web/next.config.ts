@@ -19,6 +19,7 @@ const isLocalApi = ["localhost", "127.0.0.1", "::1"].includes(apiUrl.hostname);
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@repo/types"],
+  output: "standalone",
   images: {
     ...(isLocalApi ? { dangerouslyAllowLocalIP: true } : {}),
     remotePatterns: [

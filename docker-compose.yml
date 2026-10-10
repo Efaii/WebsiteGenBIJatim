@@ -1,0 +1,133 @@
+name: genbi-jatim
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    command: --lower-case-table-names=1
+    environment:
+      MYSQL_DATABASE: ${DATABASE_NAME:?Set DATABASE_NAME in .env.production}
+      MYSQL_USER: ${DATABASE_USER:?Set DATABASE_USER in .env.production}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env.production}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env.production}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks: [private]
+
+  preflight:
+    image: genbi-jatim-api:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env.production}
+      USE_DB_PUSH: ${USE_DB_PUSH:-false}
+      SCHEMA_MIGRATION_APPROVAL: ${SCHEMA_MIGRATION_APPROVAL:-}
+      MIGRATION_GUARD_DATABASE_NAME: ${DATABASE_NAME:?Set DATABASE_NAME in .env.production}
+      SCHEMA_READINESS_PATH: /evidence/schema-readiness.json
+      RESTORE_EVIDENCE_PATH: /evidence/restore-verification.json
+      SCHEMA_PLAN_HASH: ${SCHEMA_PLAN_HASH:?Set SCHEMA_PLAN_HASH to the reviewed plan hash}
+      PRISMA_MIGRATIONS_PATH: /workspace/apps/api/prisma/migrations
+    volumes:
+      - ${MIGRATION_EVIDENCE_DIR:-./artifacts/migration}:/evidence:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "node /workspace/scripts/check-migration-mode.mjs && node /workspace/scripts/check-schema-readiness.mjs && /workspace/node_modules/.bin/prisma migrate status --schema prisma/schema.prisma"]
+    networks: [private]
+
+  api:
+    image: genbi-jatim-api:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env.production}
+      CORS_ORIGIN: https://${SITE_DOMAIN}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env.production}
+      SESSION_COOKIE_SECRET: ${SESSION_COOKIE_SECRET:?Set SESSION_COOKIE_SECRET in .env.production}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env.production}
+      PUBLIC_STORAGE_ROOT: /data/public
+      PRIVATE_STORAGE_ROOT: /data/private
+      TRUST_PROXY_HOPS: ${TRUST_PROXY_HOPS:-1}
+    volumes:
+      - api_public:/data/public
+      - api_private:/data/private
+    depends_on:
+      db:
+        condition: service_healthy
+      preflight:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    stop_grace_period: 30s
+    networks: [private]
+
+  web:
+    image: genbi-jatim-web:${IMAGE_TAG:-local}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://${SITE_DOMAIN}/api
+        SITE_URL: https://${SITE_DOMAIN}
+        NEXT_PUBLIC_NEWS_PREVIEW: ${NEXT_PUBLIC_NEWS_PREVIEW:-0}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      API_URL: http://api:5000/api
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [private]
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks: [private]
+
+volumes:
+  mysql_data:
+  api_public:
+  api_private:
+  caddy_data:
+  caddy_config:
+
+networks:
+  private:
+    driver: bridge

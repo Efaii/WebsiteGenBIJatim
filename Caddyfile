@@ -1,0 +1,29 @@
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 55MB
+	}
+
+	@proker path /uploads/proker/*
+	handle @proker {
+		reverse_proxy web:3000 {
+			header_down Cache-Control "public, max-age=31536000, immutable"
+		}
+	}
+
+	@uploads path /uploads/*
+	handle @uploads {
+		reverse_proxy api:5000 {
+			header_down Cache-Control "public, max-age=86400"
+		}
+	}
+
+	@api path /api/* /health /ready
+	handle @api {
+		reverse_proxy api:5000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
