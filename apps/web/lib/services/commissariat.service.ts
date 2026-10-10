@@ -1,6 +1,10 @@
 import { CommissariatData } from "@repo/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
+const PUBLIC_CACHE = { next: { revalidate: 60 } } as const;
 
 export type CommissariatSummary = {
   id: string;
@@ -16,20 +20,20 @@ export type CommissariatSummary = {
 };
 
 export const getAllCommissariats = async (): Promise<CommissariatSummary[]> => {
-  const res = await fetch(`${API_BASE}/commissariats`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/commissariats`, PUBLIC_CACHE);
   if (!res.ok) throw new Error(`Failed to fetch commissariats: ${res.status}`);
   return await res.json();
 };
 
 export const getCommissariatBySlug = async (slug: string): Promise<CommissariatData | null> => {
-  const res = await fetch(`${API_BASE}/commissariats/${slug}`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/commissariats/${slug}`, PUBLIC_CACHE);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to fetch commissariat ${slug}: ${res.status}`);
   return await res.json();
 };
 
 export const getCommissariatCount = async (): Promise<number> => {
-  const res = await fetch(`${API_BASE}/commissariats`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/commissariats`, PUBLIC_CACHE);
   if (!res.ok) throw new Error(`Failed to fetch commissariats: ${res.status}`);
   const data = await res.json();
   return Array.isArray(data) ? data.length : 0;
@@ -40,7 +44,7 @@ export const getGlobalCommissariatStats = async (): Promise<{
   totalCommissariats: number;
   totalMembers: number;
 }> => {
-  const res = await fetch(`${API_BASE}/commissariats/stats`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/commissariats/stats`, PUBLIC_CACHE);
   if (!res.ok) throw new Error(`Failed to fetch commissariat stats: ${res.status}`);
   return await res.json();
 };
@@ -59,7 +63,7 @@ export const getCommissariatStructure = async (
 ): Promise<CommissariatStructure | null> => {
   const res = await fetch(
     `${API_BASE}/v1/commissariats/${slug}/structure?period=${encodeURIComponent(period)}`,
-    { cache: "no-store" },
+    PUBLIC_CACHE,
   );
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Failed to fetch structure for ${slug}: ${res.status}`);
@@ -82,7 +86,7 @@ export const getCommissariatAwardees = async (
 ): Promise<CommissariatAwardee[]> => {
   const res = await fetch(
     `${API_BASE}/v1/awardees?period=${encodeURIComponent(period)}&commissariatSlug=${encodeURIComponent(slug)}`,
-    { cache: "no-store" },
+    PUBLIC_CACHE,
   );
   if (!res.ok) throw new Error(`Failed to fetch awardees for ${slug}: ${res.status}`);
   const body = await res.json();

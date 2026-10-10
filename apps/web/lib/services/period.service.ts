@@ -1,4 +1,8 @@
-import api from "@/lib/api";
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
+const PUBLIC_CACHE = { next: { revalidate: 60 } } as const;
 
 export type PublicPeriods = { periods: string[]; defaultPeriod: string };
 
@@ -9,8 +13,10 @@ export type PublicPeriods = { periods: string[]; defaultPeriod: string };
  * error dilempar dan halaman yang memutuskan tampilannya.
  */
 export const getPublicPeriods = async (): Promise<PublicPeriods> => {
-  const response = await api.get<{ data?: PublicPeriods }>("/v1/periods");
-  const data = response.data.data;
+  const response = await fetch(`${API_BASE}/v1/periods`, PUBLIC_CACHE);
+  if (!response.ok) throw new Error(`Public periods API error: ${response.status}`);
+  const body = await response.json();
+  const data = body.data as PublicPeriods | undefined;
   if (!data || !Array.isArray(data.periods)) {
     throw new Error("Public periods API returned an unexpected shape");
   }
@@ -26,8 +32,8 @@ export const periodFromSlug = (slug: string, periods: string[]) =>
 
 /** True when the period already has published public data (used for empty states). */
 export const getPeriodHasData = async (period: string): Promise<boolean> => {
-  const response = await api.get<{ data?: { summary?: { total?: number } } }>("/v1/awardees", {
-    params: { period },
-  });
-  return (response.data.data?.summary?.total ?? 0) > 0;
+  const response = await fetch(`${API_BASE}/v1/awardees?period=${encodeURIComponent(period)}`, PUBLIC_CACHE);
+  if (!response.ok) throw new Error(`Awardee API error: ${response.status}`);
+  const body = await response.json();
+  return (body.data?.summary?.total ?? 0) > 0;
 };

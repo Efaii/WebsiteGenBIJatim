@@ -1,6 +1,10 @@
 import { ProkerData } from "@/app/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
+const PUBLIC_CACHE = { next: { revalidate: 60 } } as const;
 
 /**
  * Program kerja publik.
@@ -12,17 +16,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
  * yang membuat halaman tampak berisi padahal datanya karangan.
  */
 export const getAllPrograms = async (): Promise<ProkerData[]> => {
-  const res = await fetch(`${API_BASE}/commissariats/proker`, {
-    cache: "no-store",
-  });
+  const res = await fetch(`${API_BASE}/commissariats/proker`, PUBLIC_CACHE);
   if (!res.ok) throw new Error(`Program list API error: ${res.status}`);
   return await res.json();
 };
 
 export const getProgramById = async (id: string): Promise<ProkerData | null> => {
-  const res = await fetch(`${API_BASE}/commissariats/proker/${id}`, {
-    cache: "no-store",
-  });
+  const res = await fetch(`${API_BASE}/commissariats/proker/${id}`, PUBLIC_CACHE);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`Program detail API error: ${res.status}`);
   return await res.json();

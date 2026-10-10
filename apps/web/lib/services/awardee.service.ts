@@ -1,7 +1,11 @@
 import { Awardee } from "@repo/types";
 import { z } from "zod";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
+const PUBLIC_CACHE = { next: { revalidate: 60 } } as const;
 const awardeeSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -13,9 +17,7 @@ const awardeeSchema = z.object({
 });
 
 export const getAwardees = async (): Promise<Awardee[]> => {
-  const response = await fetch(`${API_BASE}/awardee?periodLabel=2025%2F2026`, {
-    cache: "no-store",
-  });
+  const response = await fetch(`${API_BASE}/awardee?periodLabel=2025%2F2026`, PUBLIC_CACHE);
   if (!response.ok) throw new Error("Awardee API error");
   const body = await response.json();
   const data = Array.isArray(body) ? body : body?.data;
@@ -33,9 +35,7 @@ export type PublicAwardeesResponse = {
 
 /** Public awardee list for one period, with the per-commissariat summary. */
 export const getPublicAwardees = async (period: string): Promise<PublicAwardeesResponse> => {
-  const response = await fetch(`${API_BASE}/v1/awardees?period=${encodeURIComponent(period)}`, {
-    cache: "no-store",
-  });
+  const response = await fetch(`${API_BASE}/v1/awardees?period=${encodeURIComponent(period)}`, PUBLIC_CACHE);
   if (!response.ok) throw new Error(`Awardee API error: ${response.status}`);
   const body = await response.json();
   const data = body?.data ?? {};

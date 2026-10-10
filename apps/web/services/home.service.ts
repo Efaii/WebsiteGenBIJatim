@@ -5,8 +5,8 @@ import { HomeDataResponse } from "../types/home.types";
 //
 // Berkasnya WebP hasil rasterisasi dari SVG aslinya (lihat
 // .playwright-mcp/fase-9/convert.mjs). SVG lamanya adalah hasil auto-trace
-// dengan presisi absurd — 9 berkas itu totalnya 4,56 MB, dan karena marquee
-// menduplikasi daftarnya, browser harus mengurai 4,56 MB data path lalu
+// dengan presisi absurd — 9 berkas itu totalnya 4,56 MB. Saat marquee masih dipakai di Beranda (sekarang dihapus), daftar
+// diduplikasi sehingga browser harus mengurai 4,56 MB data path lalu
 // merasterisasi 18 instance tepat saat pengguna men-scroll ke section Mitra.
 // Versi WebP-nya 189 KB untuk sembilan berkas (turun 96%), dan tetap tajam
 // karena dirender pada 288 px untuk ukuran tampil maksimum 96 px.
@@ -58,7 +58,10 @@ export const STATIC_COMMISSARIATS = [
   },
 ];
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
 
 /*
  * Data Beranda dari jalur kanonik: FAQ publik `/v1/faqs` (aktif, terurut);
