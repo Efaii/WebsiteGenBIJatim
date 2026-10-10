@@ -117,34 +117,34 @@ export const profilDivisions: ProfilDivision[] = [
   {
     title: "Badan Pengurus Harian",
     images: [
-      "/assets/struktur/bph.png",
-      "/assets/struktur/bph-1.png",
-      "/assets/struktur/bph-2.png",
-      "/assets/struktur/bph-3.png",
+      "/assets/struktur/bph.webp",
+      "/assets/struktur/bph-1.webp",
+      "/assets/struktur/bph-2.webp",
+      "/assets/struktur/bph-3.webp",
     ],
   },
   {
     title: "Pengembangan & Pendidikan",
     images: [
-      "/assets/struktur/pengembangan-pendidikan.png",
-      "/assets/struktur/pengembangan-pendidikan-1.png",
-      "/assets/struktur/pengembangan-pendidikan-2.png",
+      "/assets/struktur/pengembangan-pendidikan.webp",
+      "/assets/struktur/pengembangan-pendidikan-1.webp",
+      "/assets/struktur/pengembangan-pendidikan-2.webp",
     ],
   },
   {
     title: "Sinergi Komisariat",
     images: [
-      "/assets/struktur/sinerkom.png",
-      "/assets/struktur/sinerkom-1.png",
-      "/assets/struktur/sinerkom-2.png",
+      "/assets/struktur/sinerkom.webp",
+      "/assets/struktur/sinerkom-1.webp",
+      "/assets/struktur/sinerkom-2.webp",
     ],
   },
   {
     title: "Public Relation & Media Komunikasi",
     images: [
-      "/assets/struktur/pr-media-komunikasi.png",
-      "/assets/struktur/pr-media-komunikasi-1.png",
-      "/assets/struktur/pr-media-komunikasi-2.png",
+      "/assets/struktur/pr-media-komunikasi.webp",
+      "/assets/struktur/pr-media-komunikasi-1.webp",
+      "/assets/struktur/pr-media-komunikasi-2.webp",
     ],
   },
 ];
