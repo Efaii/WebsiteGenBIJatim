@@ -1,10 +1,35 @@
 import Image from "next/image";
 import Link from "next/link";
+import {
+  CalendarDays,
+  Instagram,
+  LayoutGrid,
+  Mail,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import type { ProkerData } from "@repo/types";
+import { Container } from "@/components/Container";
+import { BackLink } from "@/components/BackLink";
+import type { Document, ProkerData } from "@repo/types";
 import { periodSlug } from "@/lib/services/period.service";
-import type { CommissariatAwardee, CommissariatStructure } from "@/lib/services/commissariat.service";
+import type {
+  CommissariatAwardee,
+  CommissariatStructure,
+} from "@/lib/services/commissariat.service";
+import { publicProgramItems } from "@/lib/program-presentation.mjs";
+import { CommissariatTabs } from "./CommissariatTabs";
+import { ArsipPanel } from "./panels/ArsipPanel";
+import { StructurePanel } from "./panels/StructurePanel";
+import {
+  commissariatDisplayName,
+  contactEmail,
+  instagramLabel,
+  instagramUrl,
+  isMeaningfulText,
+  tidyText,
+} from "./display";
 
 type CommissariatDetailData = {
   slug: string;
@@ -15,6 +40,10 @@ type CommissariatDetailData = {
   cover_image: string;
   description: string;
   memberCount?: number;
+  socials?: { instagram?: string; email?: string };
+  instagram?: string;
+  email?: string;
+  documents?: Document[];
   proker: ProkerData[];
 };
 
@@ -24,172 +53,223 @@ type Props = {
   period: string;
   structure: CommissariatStructure | null;
   awardees: CommissariatAwardee[];
+  initialTab?: string;
 };
 
-const MemberRow = ({ name, position }: { name: string; position: string }) => (
-  <li className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-4 py-2.5">
-    <span className="text-sm font-semibold text-slate-900">{name}</span>
-    <span className="text-xs font-medium uppercase tracking-wider text-blue-600">{position}</span>
-  </li>
-);
+const TAB_IDS = ["profil", "proker", "awardee", "arsip"] as const;
 
-export default function CommissariatDetail({ data, periods, period, structure, awardees }: Props) {
-  const hasStructure = Boolean(structure && (structure.bph.length > 0 || structure.divisions.length > 0));
+/**
+ * Halaman detail komisariat.
+ *
+ * Identitas komisariat diringkas jadi satu kartu informasi tanpa gambar
+ * (logo, nama, angka ringkas, periode, sosial media), lalu isi berat dipisah
+ * menjadi tab "Profil & Kepengurusan", "Program Kerja", dan "Data Awardee"
+ * lewat `CommissariatTabs`.
+ */
+export default function CommissariatDetail({
+  data,
+  periods,
+  period,
+  structure,
+  awardees,
+  initialTab,
+}: Props) {
+  const documents = data.documents ?? [];
+  // Proker yang batal/belum terbit tidak ikut tampil, sejalan dengan /program.
+  const proker = publicProgramItems(data.proker ?? []);
+  const memberCount = data.memberCount ?? awardees.length;
+  const divisionCount = structure?.divisions.length ?? 0;
+  const instagram = instagramUrl(data.socials?.instagram || data.instagram);
+  const email = contactEmail(data.socials?.email || data.email);
+  const description = isMeaningfulText(data.description)
+    ? tidyText(data.description)
+    : "";
+  const displayName = commissariatDisplayName(data.name);
+  const multiPeriods = periods.length > 1;
+
+  // Tab untuk tautan periode: turun ke "profil" kalau arsip tidak tersedia.
+  const requestedTab = TAB_IDS.find((id) => id === initialTab) ?? "profil";
+  const activeTabForLinks =
+    requestedTab === "arsip" && documents.length === 0 ? "profil" : requestedTab;
+
+  const periodHref = (label: string) => {
+    const params = new URLSearchParams();
+    params.set("periode", periodSlug(label));
+    if (activeTabForLinks !== "profil") params.set("tab", activeTabForLinks);
+    return `/commissariat/${data.slug}?${params.toString()}`;
+  };
+
+  // API bisa mengirim src yang tidak bisa dipakai next/image; jaga seperti
+  // halaman daftar komisariat.
+  const logoSrc =
+    typeof data.logo_univ === "string" &&
+    (data.logo_univ.startsWith("/") || /^https?:\/\//.test(data.logo_univ))
+      ? data.logo_univ
+      : "/assets/logos/genbi.svg";
+
+  const stats: Array<{ icon: LucideIcon; value: number; label: string }> = [];
+  if (memberCount > 0) {
+    stats.push({ icon: Users, value: memberCount, label: "Anggota" });
+  }
+  if (proker.length > 0) {
+    stats.push({ icon: CalendarDays, value: proker.length, label: "Program Kerja" });
+  }
+  if (divisionCount > 0) {
+    stats.push({ icon: LayoutGrid, value: divisionCount, label: "Divisi" });
+  }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="relative flex min-h-screen flex-col overflow-clip bg-genbi-soft text-slate-900 selection:bg-genbi-blue selection:text-white">
       <Navbar />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-gradient-to-b from-genbi-light to-genbi-soft" />
 
-      {/* --- HEADER --- */}
-      <section className="relative overflow-hidden bg-blue-950 pb-16 pt-28 text-white">
-        {data.cover_image && (
-          <Image src={data.cover_image} alt={data.name} fill sizes="100vw" className="object-cover opacity-25" priority />
-        )}
-        <div className="container relative z-10 mx-auto max-w-6xl px-6">
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-white/20 bg-white/10 p-3">
-              <Image
-                src={data.logo_univ || "/assets/logos/genbi.svg"}
-                alt={`${data.name} Logo`}
-                width={80}
-                height={80}
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{data.name}</h1>
-              <p className="mt-2 text-blue-100/80">{data.university}</p>
-              {data.description && (
-                <p className="mt-4 max-w-3xl text-sm leading-relaxed text-blue-100/70">{data.description}</p>
-              )}
-              <p className="mt-4 text-sm font-semibold text-cyan-300">{data.memberCount ?? 0} anggota</p>
-            </div>
+      <main className="relative z-10 flex-1 pb-20 pt-24">
+        <Container>
+          {/*
+            Breadcrumb "Komisariat > nama" diganti tombol kembali atas
+            permintaan pemilik produk: pengunjung awam langsung tahu cara
+            kembali. Perilaku sama dengan halaman detail program (riwayat
+            peramban, fallback ke daftar komisariat).
+          */}
+          <div className="mb-4">
+            <BackLink
+              label="Kembali ke Komisariat"
+              fallbackHref="/commissariat"
+            />
           </div>
-        </div>
-      </section>
 
-      <main className="container mx-auto max-w-6xl flex-1 px-6 py-12">
-        {/* --- PERIOD SELECTOR --- */}
-        <div className="mb-10 flex flex-wrap items-center gap-2">
-          <span className="mr-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Periode</span>
-          {periods.map((item) => (
-            <Link
-              key={item}
-              href={`/commissariat/${data.slug}?periode=${periodSlug(item)}`}
-              className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
-                item === period
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
-              }`}
-            >
-              {item}
-            </Link>
-          ))}
-        </div>
-
-        {/* --- STRUKTUR ORGANISASI --- */}
-        <section className="mb-14">
-          <h2 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">Struktur Organisasi</h2>
-          {hasStructure ? (
-            <div className="space-y-8">
-              {structure!.bph.length > 0 && (
-                <div>
-                  <h3 className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-blue-600">BPH</h3>
-                  <ul className="grid gap-2 md:grid-cols-2">
-                    {structure!.bph.map((member) => (
-                      <MemberRow key={`bph-${member.name}-${member.position}`} {...member} />
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {structure!.divisions.map((division) => (
-                <div key={division.name}>
-                  <h3 className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-blue-600">{division.name}</h3>
-                  <ul className="grid gap-2 md:grid-cols-2">
-                    {division.members.map((member) => (
-                      <MemberRow key={`${division.name}-${member.name}-${member.position}`} {...member} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4 text-sm text-slate-500">
-              Struktur pengurus periode {period} belum tersedia.
-            </p>
-          )}
-        </section>
-
-        {/* --- PROGRAM KERJA --- */}
-        <section className="mb-14">
-          <h2 className="mb-6 text-2xl font-bold tracking-tight text-slate-900">Program Kerja</h2>
-          {data.proker.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {data.proker.map((program) => (
-                <Link
-                  key={String(program.id)}
-                  href={`/program/${program.id}`}
-                  className="group flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
+          {/* Kartu identitas ringkas: tanpa gambar sampul, fokus ke informasi. */}
+          <section
+            aria-labelledby="komisariat-heading"
+            className="rounded-card border border-genbi-line bg-white p-5 shadow-sm md:p-6"
+          >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-media border border-genbi-line bg-white p-2 shadow-sm md:h-20 md:w-20 md:p-2.5">
+                <Image
+                  src={logoSrc}
+                  alt={`Logo ${data.university}`}
+                  width={80}
+                  height={80}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h1
+                  id="komisariat-heading"
+                  className="font-heading text-2xl font-bold tracking-tight text-slate-900 md:text-3xl"
                 >
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
-                      {program.divisi || "Program"}
-                    </p>
-                    <h3 className="mt-2 font-bold leading-snug text-slate-900 group-hover:text-blue-700">
-                      {program.title}
-                    </h3>
-                  </div>
-                  <p className="mt-4 text-xs font-semibold text-slate-500">{program.dateLabel || program.date}</p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4 text-sm text-slate-500">
-              Belum ada program kerja publik untuk komisariat ini.
-            </p>
-          )}
-        </section>
-
-        {/* --- AWARDEE --- */}
-        <section className="mb-6">
-          <h2 className="mb-2 text-2xl font-bold tracking-tight text-slate-900">Awardee</h2>
-          <p className="mb-6 text-sm text-slate-500">
-            {awardees.length} penerima beasiswa pada periode {period}.
-          </p>
-          {awardees.length > 0 ? (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50">
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Nama</th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Divisi</th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Jabatan</th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">Prodi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {awardees.map((awardee) => (
-                      <tr key={awardee.id} className="hover:bg-slate-50/60">
-                        <td className="px-5 py-3 text-sm font-semibold text-slate-900">{awardee.name}</td>
-                        <td className="px-5 py-3 text-sm text-slate-600">{awardee.division}</td>
-                        <td className="px-5 py-3 text-sm text-slate-600">{awardee.position}</td>
-                        <td className="px-5 py-3 text-sm text-slate-600">{awardee.studyProgram}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  {displayName}
+                </h1>
+                <p className="mt-0.5 text-sm text-slate-500 md:text-base">
+                  {data.university}
+                </p>
+                {description.length > 0 && (
+                  <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-slate-600">
+                    {description}
+                  </p>
+                )}
               </div>
             </div>
-          ) : (
-            <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4 text-sm text-slate-500">
-              Data awardee periode {period} belum tersedia.
-            </p>
-          )}
-        </section>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-genbi-line pt-4">
+              {stats.length > 0 && (
+                <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  {stats.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                      <li
+                        key={stat.label}
+                        className="flex items-center gap-2 text-sm text-slate-600"
+                      >
+                        <Icon
+                          className="h-4 w-4 text-genbi-blue"
+                          aria-hidden="true"
+                        />
+                        <span className="font-bold tabular-nums text-slate-900">
+                          {stat.value}
+                        </span>
+                        <span>{stat.label}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {(instagram || email) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {instagram && (
+                    <a
+                      href={instagram}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-genbi-line bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-genbi-bright hover:text-genbi-blue active:scale-[0.98]"
+                    >
+                      <Instagram className="h-3.5 w-3.5" aria-hidden="true" />
+                      {instagramLabel(
+                        data.socials?.instagram || data.instagram,
+                      )}
+                    </a>
+                  )}
+                  {email && (
+                    <a
+                      href={`mailto:${email}`}
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-genbi-line bg-white px-3 py-1.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-genbi-bright hover:text-genbi-blue active:scale-[0.98]"
+                    >
+                      <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{email}</span>
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {multiPeriods && (
+                <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                  <span className="text-sm font-semibold text-slate-500">
+                    Periode
+                  </span>
+                  {periods.map((label) => {
+                    const active = label === period;
+                    return (
+                      <Link
+                        key={label}
+                        href={periodHref(label)}
+                        aria-current={active ? "page" : undefined}
+                        className={`rounded-full border px-3.5 py-1.5 text-[13px] transition-colors active:scale-[0.98] ${
+                          active
+                            ? "border-genbi-blue bg-genbi-blue font-bold text-white shadow-sm"
+                            : "border-genbi-line bg-white font-semibold text-slate-600 hover:border-genbi-bright hover:text-genbi-blue"
+                        }`}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+        </Container>
+
+        <div className="mt-10 md:mt-12">
+          <CommissariatTabs
+            initialTab={initialTab}
+            periodSlugParam={multiPeriods ? periodSlug(period) : null}
+            structurePanel={
+              <StructurePanel structure={structure} period={period} />
+            }
+            arsipPanel={
+              documents.length > 0 ? (
+                <ArsipPanel documents={documents} />
+              ) : null
+            }
+            proker={proker}
+            awardees={awardees}
+            awardeePeriod={period}
+          />
+        </div>
       </main>
 
-      <div className="border-t border-slate-200 bg-white">
+      <div className="relative border-t border-genbi-line bg-white">
         <Footer />
       </div>
     </div>

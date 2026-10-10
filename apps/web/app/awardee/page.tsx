@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/navbar";
@@ -75,6 +76,7 @@ export default async function AwardeePage({
     page?: string;
   }>;
 }) {
+  await connection();
   const { periode, komisariat, q, page: pageParam } = await searchParams;
 
   const { periods, defaultPeriod } = await getPublicPeriods();

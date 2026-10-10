@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import {
   getCommissariatBySlug,
   getAllCommissariats,
@@ -14,6 +15,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
   const data = await getCommissariatBySlug(slug);
   if (!data) return { title: "Komisariat Tidak Ditemukan - GenBI Jatim" };
@@ -43,10 +45,11 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ periode?: string }>;
+  searchParams: Promise<{ periode?: string; tab?: string }>;
 }) {
+  await connection();
   const { slug } = await params;
-  const { periode } = await searchParams;
+  const { periode, tab } = await searchParams;
 
   const commissariat = await getCommissariatBySlug(slug);
   if (!commissariat) notFound();
@@ -66,6 +69,7 @@ export default async function Page({
       period={period}
       structure={structure}
       awardees={awardees}
+      initialTab={tab}
     />
   );
 }
