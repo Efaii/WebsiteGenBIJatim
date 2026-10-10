@@ -31,14 +31,26 @@ export interface PilarContent {
  *   sama dengan seluruh halaman) dan SELURUH teks di dalamnya menjadi putih
  *   (judul, deskripsi, teks bullet). Penanda bullet berbalik menjadi putih
  *   supaya tetap terlihat di atas biru.
+ * - JUDUL kartu memakai aksen `--genbi-blue`, disamakan dengan highlight
+ *   "Tapi Transformasi Diri" pada judul section About (permintaan pemilik
+ *   produk). Saat kartu di-hover, judul berbalik putih lewat
+ *   `group-hover:text-white` yang sudah ada, jadi tidak ada warna yang
+ *   bertabrakan dengan latar biru.
+ * - DESKRIPSI kartu memakai near-black `text-slate-900`, sama dengan teks
+ *   bullet, supaya tidak lagi terbaca pudar (permintaan pemilik produk;
+ *   sebelumnya `text-slate-600`).
  * - Transisi 250ms. Foto TIDAK ikut berubah dan tidak punya efek skala.
- * - FOTO di dasar kartu (permintaan pemilik produk): padding BAWAH kartu
- *   dihapus (`pb-0`) supaya foto menempel tepat di dasar kartu tanpa sisa
- *   ruang, sementara jarak kiri-kanannya tetap mengikuti padding kartu. Tinggi
- *   foto dipatok tetap (`h-56`) supaya ketiganya sama tinggi dan dasar kartu
- *   sejajar; tinggi kartu mengikuti tinggi foto. Hanya sudut ATAS foto yang
- *   dibulatkan (`rounded-t-media` 24px); dua sudut bawahnya siku agar bertemu
- *   border bawah kartu tanpa lekukan.
+ * - FOTO tampil seperti cetakan yang menempel di kartu (permintaan pemilik
+ *   produk, direvisi dua kali): percobaan sebelumnya memakai bayangan jatuh
+ *   ber-offset besar (`0 18px 34px -20px`, alpha 0,45) dan justru membuat
+ *   foto terlihat melayang DI ATAS kartu. Sekarang bayangan itu diganti
+ *   garis tepi hairline (`ring-1` warna `--genbi-line`, sama dengan garis
+ *   kartu) plus bayangan kontak dua lapis yang rapat ke tepi bawah
+ *   (`0 1px 2px` alpha 0,10 dan `0 10px 20px -14px` alpha 0,35, keluarga
+ *   biru-ink yang sama), jadi foto terbaca duduk menempel di permukaan
+ *   kartu. Tata letak foto tidak diubah. Tinggi foto tetap dipatok (`h-56`)
+ *   supaya ketiganya sama tinggi dan dasar kartu sejajar; tinggi kartu
+ *   mengikuti tinggi foto.
  * - Tidak ada lagi animasi masuk: judul dan ketiga kartu langsung ter-render.
  *   Grid-nya tetap grid yang sama, jadi tata letak tidak bergeser.
  *
@@ -77,12 +89,12 @@ export function Pilar({ content }: { content: PilarContent }) {
                 `duration-[250ms]` dipakai seragam untuk latar, border, bayangan,
                 dan pergeseran naik 4px yang halus.
               */}
-              <article className="group flex h-full flex-col rounded-feature border border-genbi-line bg-white p-8 pb-0 transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:border-genbi-blue hover:bg-genbi-blue hover:shadow-[0_24px_44px_-28px_rgba(16,42,92,0.35)] md:p-9 md:pb-0">
-                <h3 className="font-heading text-xl font-bold text-slate-900 transition-colors duration-[250ms] group-hover:text-white md:text-[22px]">
+              <article className="group flex h-full flex-col rounded-feature border border-genbi-line bg-white p-8 transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:border-genbi-blue hover:bg-genbi-blue hover:shadow-[0_24px_44px_-28px_rgba(16,42,92,0.35)] md:p-9">
+                <h3 className="font-heading text-xl font-bold text-genbi-blue transition-colors duration-[250ms] group-hover:text-white md:text-[22px]">
                   {item.title}
                 </h3>
 
-                <p className="mt-4 text-[15px] leading-relaxed text-slate-600 transition-colors duration-[250ms] group-hover:text-white">
+                <p className="mt-4 text-[15px] leading-relaxed text-slate-900 transition-colors duration-[250ms] group-hover:text-white">
                   {item.description}
                 </p>
 
@@ -110,14 +122,12 @@ export function Pilar({ content }: { content: PilarContent }) {
                 </ul>
 
                 {/*
-                  Foto: jarak kiri-kanannya mengikuti padding kartu, sementara
-                  padding BAWAH kartu dihapus lewat `pb-0`, sehingga foto
-                  menempel tepat di dasar kartu tanpa sisa ruang dan batas bawah
-                  kartu sekaligus menjadi batas bawah foto.
-
-                  Sudutnya hanya dibulatkan di ATAS (`rounded-t-media` 24px).
-                  Dua sudut bawah sengaja dibiarkan siku supaya fotonya bertemu
-                  border bawah kartu tanpa lekukan di kiri-bawah dan kanan-bawah.
+                  Foto tampil seperti cetakan yang menempel di kartu: sudutnya
+                  membulat (`rounded-media` 24px), tepinya digaris hairline
+                  `--genbi-line`, dan bayangan kontaknya rapat ke tepi bawah
+                  supaya foto tidak terlihat mengambang (permintaan pemilik
+                  produk). Tata letak foto tidak diubah: tinggi (`h-56`),
+                  lebar, dan jarak padding kartu tetap sama.
 
                   `mt-auto` mendorongnya ke dasar, tingginya dipatok tetap
                   (`h-56` = 224px, setara rasio 3:2 pada lebar foto di desktop)
@@ -126,7 +136,7 @@ export function Pilar({ content }: { content: PilarContent }) {
                   tinggi foto. Hover tidak menyentuh foto.
                 */}
                 <div className="mt-auto pt-7">
-                  <div className="relative h-56 overflow-hidden rounded-t-media bg-genbi-light">
+                  <div className="relative h-56 overflow-hidden rounded-media bg-genbi-light ring-1 ring-genbi-line shadow-[0_1px_2px_rgba(16,42,92,0.10),0_10px_20px_-14px_rgba(16,42,92,0.35)]">
                     <Image
                       src={item.image}
                       alt={item.imageAlt}

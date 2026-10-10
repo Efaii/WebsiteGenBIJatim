@@ -35,9 +35,15 @@ const HERO_TINT =
  * kontras terburuk aksen jatuh ke ~2.8:1 di area peserta berbaju putih.
  * Dengan 0.66 dan stop aksen yang sekarang, kontras terburuknya ~3.3:1
  * (angka lengkapnya di HERO_HEADLINE_ACCENT).
+ *
+ * Saat video hero aktif, seluruh stop dinaikkan +0.06 (pita 0.72, tepi
+ * 0.30/0.22) atas permintaan pemilik produk: frame video bergerak dan
+ * sesekali lebih terang daripada poster, jadi pita legibilitas ikut naik.
+ * Menaikkan opasitas scrim hanya menaikkan kontras teks, sehingga angka
+ * 3.3:1 di atas tetap berlaku sebagai batas bawah, bukan nilai baru.
  */
 const HERO_SCRIM =
-  "bg-[linear-gradient(180deg,rgba(6,22,54,0.24)_0%,rgba(6,22,54,0.66)_28%,rgba(6,22,54,0.66)_76%,rgba(6,22,54,0.16)_100%)]";
+  "bg-[linear-gradient(180deg,rgba(6,22,54,0.30)_0%,rgba(6,22,54,0.72)_28%,rgba(6,22,54,0.72)_76%,rgba(6,22,54,0.22)_100%)]";
 /**
  * Peleburan tepi bawah hero ke section berikutnya.
  *

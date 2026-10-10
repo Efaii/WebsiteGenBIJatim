@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X } from "lucide-react";
 import type { GalleryImage } from "@/types/news-gallery.types";
+
+// Deteksi klien-saja untuk portal tanpa `setState` di dalam effect
+// (aturan react-hooks/set-state-in-effect): snapshot server `false`,
+// snapshot klien `true`, React menangani perbedaan saat hydration.
+const subscribeNoop = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 /**
  * Lightbox gambar berita.
@@ -12,6 +20,12 @@ import type { GalleryImage } from "@/types/news-gallery.types";
  * gambar 75vh. Menutup lewat tombol, klik backdrop, atau tombol Escape.
  * Fokus dipindah ke tombol tutup saat dibuka dan dikembalikan ke pemicunya
  * saat ditutup, dan scroll halaman dikunci selama terbuka.
+ *
+ * Dialog dirender lewat portal ke `document.body`: kalau dibiarkan di tempatnya,
+ * ia bisa terperangkap stacking context milik ancestor (mis. `main` ber-`z-10`
+ * atau wrapper ber-transform), sehingga navbar fixed tetap di atas backdrop dan
+ * tombol tutup ikut tertutup. Portal memastikan `z-[200]` berlaku di akar
+ * halaman, di halaman mana pun komponen ini dipakai.
  */
 export function ImageLightbox({
   image,
@@ -22,6 +36,11 @@ export function ImageLightbox({
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const open = Boolean(image);
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -41,9 +60,9 @@ export function ImageLightbox({
     };
   }, [open, onClose]);
 
-  if (!image) return null;
+  if (!image || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -75,6 +94,7 @@ export function ImageLightbox({
           <X size={18} />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

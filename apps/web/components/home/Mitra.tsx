@@ -6,130 +6,95 @@ import { CommissariatItem } from "@/types/home.types";
 /**
  * MitraSection
  *
- * Sebelumnya menempel di dalam About. Sekarang berdiri sendiri karena punya
- * judul sendiri.
+ * Section statis berisi sembilan logo kampus mitra, menempel tepat di bawah
+ * About (latar putih yang sama, padding atas kecil).
  *
- * Animasi marquee TIDAK diubah: list logo tetap diduplikasi lalu digeser
- * -50% dengan `animate-marquee-loop`. Yang berubah hanya ukuran logo dan
- * wrapper-nya. Card-nya sendiri tidak lagi beranimasi masuk.
+ * Animasi marquee DIHAPUS atas permintaan pemilik produk: daftar logo hanya
+ * dirender sekali dan tidak digeser lagi, jadi tidak ada salinan kedua yang
+ * perlu ditandai aria-hidden.
  *
- * Salinan kedua daftar ditandai aria-hidden supaya pembaca layar tidak
- * membacakan sembilan nama kampus dua kali.
+ * Keterangan "Suramadu-Bojonegoro" juga DIHAPUS atas permintaan yang sama
+ * karena jarak vertikalnya terasa terlalu jauh.
+ *
+ * Revisi lanjutan menyesuaikan tampilan dengan masukan pemilik produk:
+ * logo dan label diperbesar (logo tampil dua tingkatan di md ke atas,
+ * 5 di atas dan 4 di bawah; label lebih besar dan berwarna hitam), lalu
+ * jarak antar elemen diperlebar bertahap sesuai permintaan supaya section
+ * terasa lebih legah.
+ *
+ * Warna logo TIDAK disentuh: tanpa filter grayscale, overlay, atau ubah
+ * opacity. Garis bawah section adalah pembatas dengan section Pilar yang
+ * berlatar bg-genbi-soft.
  */
 export function Mitra({ commissariats }: { commissariats: CommissariatItem[] }) {
-  const { heading, subheading } = homeContent.mitra;
-
-  const logoRow = (duplicate: boolean) =>
-    commissariats.map((comm, index) => (
-      /*
-       * Ukuran slot mengecil di mobile (160px -> 80px, logo 80px -> 56px)
-       * supaya lebih banyak logo terlihat sekaligus: sebelumnya hanya 2-3 logo
-       * dalam satu waktu, sekarang 4-5 pada layar ponsel. Mulai md semuanya
-       * kembali ke ukuran semula (slot 224px, logo 96px), jadi tampilan tablet
-       * dan desktop tidak berubah.
-       *
-       * Semua logo kampus berbentuk kotak (rasio 0,85-1,00), jadi logo 56px
-       * masih muat dengan margin lega di dalam slot 80px tanpa saling geser.
-       */
-      <div
-        key={`${duplicate ? "copy" : "base"}-${comm.id}-${index}`}
-        className="relative flex w-20 shrink-0 items-center justify-center px-1 md:w-56 md:px-6"
-        title={comm.name}
-      >
-        {/*
-          TIDAK ada efek hover sama sekali pada logo: sebelumnya ada skala
-          1.05 yang memaksa browser menggambar ulang SVG berat ini pada ukuran
-          baru setiap kali kursor masuk, dan itu menambah lag. `title` tetap
-          ada karena hanya itu yang memunculkan tooltip nama kampus (bukan
-          animasi).
-        */}
-        <Image
-          src={comm.logo}
-          alt={comm.name}
-          width={180}
-          height={108}
-          /*
-           * `sizes` dipakai supaya Next memilih varian yang tepat: logo ini
-           * hanya tampil 56 px di mobile dan 96 px di desktop. Tanpa `sizes`,
-           * Next menganggapnya selebar viewport dan mengirim berkas yang jauh
-           * lebih besar dari kebutuhan.
-           */
-          sizes="(max-width: 768px) 56px, 96px"
-          className="h-14 w-auto object-contain md:h-24"
-        />
-      </div>
-    ));
+  const { heading } = homeContent.mitra;
 
   return (
     <section
       data-section="mitra"
-      className="relative overflow-hidden bg-white pb-24 pt-4 md:pb-28 md:pt-6 lg:pb-32 lg:pt-8"
+      aria-labelledby="mitra-heading"
+      className="border-b border-genbi-line bg-white pb-24 pt-10 md:pb-28 md:pt-12 lg:pb-32 lg:pt-14"
     >
-      <Container className="relative z-10">
+      <Container>
         {/*
-          Semua isi berada dalam SATU card: judul, subjudul, dan deretan logo.
-          Tinggi card dinaikkan lewat padding vertikal supaya logo punya ruang
-          atas-bawah yang lega, dan tipografinya diperkecil supaya tidak penuh.
+          Teks sumber tetap Title Case di content/home.ts dan diubah menjadi
+          huruf besar oleh CSS supaya pembaca layar tidak mengeja per huruf.
 
-          Marquee tidak disentuh: list tetap diduplikasi lalu digeser -50%
-          dengan `animate-marquee-loop`, ukuran logo dan lebar slot tetap.
-
-          Padding horizontal card sengaja NOL supaya area marquee memakai
-          seluruh lebar card dan logo bisa bergerak sampai mentok ke tepinya.
-          Padding horizontal dipindahkan ke blok judul saja.
-
-          Tidak ada mask, gradient fade, atau pembatas di dalam card:
-          satu-satunya yang memotong lintasan logo adalah `overflow-hidden`
-          milik card ini, jadi card tetap menjadi batas terluar animasi.
+          Ukuran dinaikkan dan warna memakai slate-900 (hitam) atas permintaan
+          pemilik produk supaya label lebih terbaca; tracking lebar tetap
+          dipertahankan seperti referensi.
         */}
-        <div className="overflow-hidden rounded-card border border-genbi-line bg-genbi-soft py-10 md:py-12">
-          {/* --- JUDUL & SUBJUDUL (di dalam card) --- */}
-          <div className="mx-auto max-w-2xl px-4 text-center md:px-8">
-            {/*
-              Sumber teks tetap Title Case di content/home.ts, huruf besar
-              dihasilkan CSS supaya pembaca layar tidak mengeja per huruf.
-              Ukurannya sengaja lebih kecil dari judul section lain karena
-              sekarang berada di dalam card.
-            */}
-            {/*
-              Ukuran disamakan dengan tier section yang lain (44 px di desktop,
-              32 px di mobile). Sebelumnya heading ini hanya 28 px / 20 px,
-              lebih kecil dari body text section yang sama (17 px) di mobile.
-              `tracking-tight` dipakai karena pada 44 px huruf besar tanpa
-              rapat huruf terasa terlalu renggang.
-            */}
-            <h2 className="font-heading text-[2rem] font-bold uppercase tracking-tight text-slate-900 md:text-[2.5rem] lg:text-[2.75rem]">
-              {heading}
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 md:mt-4 md:text-base">
-              {subheading}
-            </p>
-          </div>
+        <h2
+          id="mitra-heading"
+          className="text-center font-heading text-base font-bold uppercase tracking-[0.25em] text-slate-900 md:text-xl"
+        >
+          {heading}
+        </h2>
 
-          {/* --- DERETAN LOGO --- */}
-          {/*
-            Marquee TIDAK dijeda saat kursor berada di atasnya; animasi terus
-            berjalan sesuai permintaan pemilik produk. List tetap diduplikasi
-            lalu digeser -50% supaya loop-nya mulus.
-          */}
-          {/* Area marquee selebar card; card sendiri yang memotong lintasan.
-              `marquee-fade` melembutkan tepi kiri-kanan supaya logo tidak
-              terlihat terbelah keras saat melewati batas card. */}
-          <div className="marquee-fade mt-6 md:mt-8">
-            {/*
-              `optimize-gpu` (utilitas yang sudah ada di globals.css) menaikkan
-              lintasan ini ke layer kompositornya sendiri. Tanpa itu browser
-              menggambar ulang belasan logo SVG berat di setiap frame, dan di
-              situlah sensasi lag muncul.
-            */}
-            <div className="optimize-gpu flex w-max animate-marquee-loop">
-              <div className="flex shrink-0">{logoRow(false)}</div>
-              <div className="flex shrink-0" aria-hidden="true">
-                {logoRow(true)}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/*
+          Dua mode layout dalam satu daftar:
+          - mobile: grid 3 kolom, sembilan logo mengisi 3 baris penuh;
+          - md ke atas: flex wrap dengan justify-center, logo tampil dua
+            tingkatan (5 di atas, 4 di bawah) sesuai permintaan pemilik produk.
+
+          `max-w-[44rem]` di md ke atas menjaga tepat 5 logo per baris supaya
+          baris kedua berisi 4 logo dan otomatis berada di tengah.
+
+          Jarak diperlebar lagi atas permintaan pemilik produk: label ke
+          baris logo 64 px (80 px di md ke atas), antar baris logo 64 px di
+          mobile dan 80 px di md ke atas, dan antar kolom mobile 40 px.
+          Mulai lg, `max-w-[48rem]` dengan `lg:gap-x-16` membuat deretan
+          lebih menyebar. Di md, `max-w-[44rem]` + `md:gap-x-12` tetap
+          dipertahankan karena itu kunci formasi 5 + 4 (lima muat, enam
+          tidak).
+
+          `title` tetap dipakai supaya nama lengkap kampus muncul sebagai
+          tooltip. Tidak ada efek hover dan tidak ada animasi pada logo.
+        */}
+        <ul className="mx-auto mt-16 grid max-w-[44rem] grid-cols-3 place-items-center gap-x-10 gap-y-16 md:mt-20 md:flex md:flex-wrap md:items-center md:justify-center md:gap-x-12 md:gap-y-20 lg:max-w-[48rem] lg:gap-x-16">
+          {commissariats.map((comm) => (
+            <li
+              key={comm.id}
+              className="flex items-center justify-center"
+              title={comm.name}
+            >
+              {/*
+                `sizes` mengikuti ukuran tampil logo (56 px di mobile, 96 px
+                mulai md) supaya Next memilih varian berkas yang tepat; tanpa
+                itu Next menganggap logo selebar viewport dan mengirim gambar
+                yang jauh lebih besar dari kebutuhan.
+              */}
+              <Image
+                src={comm.logo}
+                alt={comm.name}
+                width={180}
+                height={108}
+                sizes="(max-width: 768px) 56px, 96px"
+                className="h-14 w-auto object-contain md:h-24"
+              />
+            </li>
+          ))}
+        </ul>
       </Container>
     </section>
   );

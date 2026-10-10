@@ -79,13 +79,14 @@ export function About({ content }: { content: AboutContent }) {
           {/* --- NARASI --- */}
           <div>
             {/*
-              Eyebrow ini sengaja dinormalkan: warna biru dan bobot semibold
-              dilepas atas permintaan pemilik produk, jadi kini near-black
-              tanpa bold. Huruf besar dan jarak antarhurufnya dipertahankan
-              supaya ia tetap terbaca sebagai label kecil di atas judul,
-              bukan sebagai paragraf.
+              Eyebrow ini pernah dinormalkan (warna biru dan bobot dilepas
+              atas permintaan pemilik produk), lalu bobotnya dikembalikan
+              karena terbaca terlalu samar: kini memakai font judul dan bold.
+              Warna biru tetap dilepas; huruf besar dan jarak antarhuruf
+              dipertahankan supaya tetap terbaca sebagai label kecil di atas
+              judul, bukan sebagai paragraf.
             */}
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-900">
+            <p className="font-heading text-sm font-bold uppercase tracking-[0.2em] text-slate-900">
               {eyebrow}
             </p>
 
@@ -101,7 +102,7 @@ export function About({ content }: { content: AboutContent }) {
               antarkata yang tidak rata ("sungai" putih). Di mobile kolomnya
               menyempit sehingga masalah itu jauh lebih terlihat.
             */}
-            <p className="mt-6 max-w-[38rem] text-base leading-relaxed text-slate-600 md:mt-7 md:text-[17px]">
+            <p className="mt-6 max-w-[38rem] text-base leading-relaxed text-slate-900 md:mt-7 md:text-[17px]">
               <strong className="font-semibold text-slate-900">
                 {paragraphLead}
               </strong>{" "}

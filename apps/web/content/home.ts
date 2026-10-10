@@ -40,27 +40,29 @@ export const homeContent = {
     /**
      * Latar video hero (opsional).
      *
-     * Cara mengaktifkan:
-     * 1. Taruh file di `apps/web/public/assets/videos/hero.mp4`.
-     * 2. Ubah `enabled` menjadi true.
+     * Status: AKTIF. Berkas ada di `apps/web/public/assets/videos/hero.mp4`,
+     * dan `enabled` bernilai true supaya fallback statis ini memutar video saat
+     * konten CMS tidak tersedia. Di CMS (ADR 0013), slot `hero.video` menunjuk
+     * path yang sama; poster `/assets/images/hero.JPG` tetap menjadi lapisan
+     * LCP dan video hanya lapisan kedua yang dipasang setelah mount (lihat
+     * HeroVideo).
      *
-     * Selama `enabled` masih false, hero memakai poster
-     * `/assets/images/hero.JPG` sebagai lapisan media, jadi tampilannya sudah
-     * final tanpa video. Poster sengaja memakai berkas yang sama dengan latar
-     * hero supaya tidak ada kejutan saat video dinyalakan.
+     * Berkas final: 1920x1080, 30 fps, H.264 High/yuv420p, tanpa audio, 2-pass
+     * ~2650 kbps, `+faststart`, durasi penuh ~17 detik, 5,4 MB.
      *
-     * Catatan: `request-size` berkas mentah boleh besar karena next/image
-     * menyajikan varian yang sudah diperkecil ke browser; yang penting dimensi
-     * aslinya cukup (>= 1920px lebar) dan subjek utamanya berada di tengah.
+     * Perintah encode:
+     * ffmpeg -i sumber.mp4 -vf "fps=30" -an -c:v libx264 -preset slow \
+     *   -b:v 2650k -pass 1 -passlogfile log -pix_fmt yuv420p \
+     *   -profile:v high -level 4.1 -f mp4 NUL
+     * ffmpeg -i sumber.mp4 -vf "fps=30" -an -c:v libx264 -preset slow \
+     *   -b:v 2650k -pass 2 -passlogfile log -pix_fmt yuv420p \
+     *   -profile:v high -level 4.1 -movflags +faststart hero.mp4
      *
-     * Panduan encode agar tetap ringan (target <= 2 MB):
-     * ffmpeg -i sumber.mp4 -vf "scale=1280:-2" -an -c:v libx264 -crf 26 \
-     *   -preset slow -movflags +faststart -t 8 hero.mp4
-     * (1280x720, tanpa audio, loop 8 detik, faststart agar bisa diputar sebelum
-     * file selesai diunduh).
+     * Anggaran <= 2 MB (ADR 0005/0013) dinaikkan menjadi 5-6 MB atas
+     * permintaan pemilik produk; batas unggah CMS di API belum ikut berubah.
      */
     video: {
-      enabled: false,
+      enabled: true,
       src: "/assets/videos/hero.mp4",
       type: "video/mp4",
       poster: "/assets/images/hero.JPG",
@@ -75,7 +77,7 @@ export const homeContent = {
    * dipertahankan sebagai fallback visual.
    *
    * Angkanya disajikan sebagai batas bawah yang tetap benar terhadap data:
-   * - Awardee 500+       : jumlah awardee terbit (619) dibulatkan ke bawah
+   * - Awardee 500+       : jumlah awardee terbit (623) dibulatkan ke bawah
    * - Program Kerja 100+ : program kerja terbit (139) dibulatkan ke bawah
    * - Tahun Berkarya 15  : dihitung dari inisiasi nasional 2011, bukan 2014
    *
@@ -96,9 +98,10 @@ export const homeContent = {
     },
     /**
      * Frasa pembuka ditebalkan seperti pada referensi desain: ia menjadi
-     * "lead-in" yang menandai subjek paragraf sebelum penjelasannya. Warnanya
-     * memakai near-black yang sama dengan judul, sementara sisa paragraf tetap
-     * abu kebiruan supaya kontrasnya terasa.
+     * "lead-in" yang menandai subjek paragraf sebelum penjelasannya. Seluruh
+     * paragraf kini memakai near-black yang sama dengan judul; sisa paragraf
+     * dulu abu kebiruan dan diganti atas permintaan pemilik produk karena
+     * kurang terlihat. Pembedanya sekarang tinggal bobot bold.
      */
     paragraphLead: "GenBI Jawa Timur",
     paragraph:
@@ -128,17 +131,14 @@ export const homeContent = {
   },
   mitra: {
     /**
-     * Judul section sengaja memakai cakupan Suramadu-Bojonegoro, bukan
-     * "Jawa Timur", sesuai keputusan pemilik produk.
-     *
-     * Label "Mitra Strategis" DIHAPUS atas permintaan pemilik produk, jadi
-     * section ini hanya punya dua baris: judul dan subjudul.
+     * Keterangan cakupan "Suramadu-Bojonegoro" DIHAPUS atas permintaan
+     * pemilik produk karena jarak vertikalnya terasa terlalu jauh. Section
+     * kini hanya berisi satu label dan deretan logo statis.
      *
      * Heading ditulis Title Case di sini dan diubah menjadi huruf besar oleh
      * CSS di komponen, supaya pembaca layar tidak mengejanya per huruf.
      */
     heading: "9 Kampus Mitra GenBI",
-    subheading: "Suramadu-Bojonegoro",
   },
   pilar: {
     /**
